@@ -47,7 +47,7 @@ const seed = {
       due:day(-1), estimateHours:2, actualMinutes:0, source:'PM-101', instructions:'Isolate the feed pump. Clean the mix pit screen, inspect coupling and seal, then verify vibration before returning the pump to service.',
       tasks:[
         {id:'T-1',type:'General',text:'Apply isolation and verify zero energy',status:'Todo'},
-        {id:'T-2',type:'Inspection',text:'Inspect mechanical seal for leakage',status:'Todo',result:null},
+        {id:'T-2',type:'Inspection',text:'Inspect mechanical seal for leakage',status:'Todo',result:null,autoCorrective:true},
         {id:'T-3',type:'Meter',text:'Record pump run hours',status:'Todo',meterId:'MTR-1'},
         {id:'T-4',type:'General',text:'Clean suction screen and work area',status:'Todo'}
       ],
@@ -71,7 +71,7 @@ const seed = {
     {
       id:'WO-2404', title:'Low gas pressure at CHP regulator', assetId:'CHP-01', type:'Corrective', priority:'Medium', status:'Open', assigneeId:'U-4',
       due:day(2), estimateHours:2, actualMinutes:0, source:'Request', instructions:'Check regulator inlet pressure, filter condition and downstream leaks.',
-      tasks:[{id:'T-9',type:'Inspection',text:'Leak test gas train',status:'Todo',result:null},{id:'T-10',type:'General',text:'Verify regulator setpoint',status:'Todo'}],
+      tasks:[{id:'T-9',type:'Inspection',text:'Leak test gas train',status:'Todo',result:null,autoCorrective:true},{id:'T-10',type:'General',text:'Verify regulator setpoint',status:'Todo'}],
       parts:[{partId:'PRT-4',planned:1,actual:0}],createdAt:new Date(Date.now()-86400000).toISOString(),completedAt:null,log:[]
     },
     {
@@ -83,7 +83,7 @@ const seed = {
     }
   ],
   pm: [
-    { id:'PM-101', name:'Feed pump monthly service', assetId:'P-201', status:'Running', mode:'fixed', trigger:{type:'time',intervalDays:30,nextDue:day(18)}, dueLead:2, tasks:[{type:'General',text:'Apply isolation and verify zero energy'},{type:'Inspection',text:'Inspect mechanical seal for leakage'},{type:'Meter',text:'Record pump run hours',meterId:'MTR-1'},{type:'General',text:'Clean suction screen and work area'}], parts:[{partId:'PRT-2',planned:1}] },
+    { id:'PM-101', name:'Feed pump monthly service', assetId:'P-201', status:'Running', mode:'fixed', trigger:{type:'time',intervalDays:30,nextDue:day(18)}, dueLead:2, tasks:[{type:'General',text:'Apply isolation and verify zero energy'},{type:'Inspection',text:'Inspect mechanical seal for leakage',autoCorrective:true},{type:'Meter',text:'Record pump run hours',meterId:'MTR-1'},{type:'General',text:'Clean suction screen and work area'}], parts:[{partId:'PRT-2',planned:1}] },
     { id:'PM-102', name:'Mixer bearing service', assetId:'MIX-03', status:'Running', mode:'floating', trigger:{type:'time',intervalDays:30,nextDue:day(22)}, dueLead:2, tasks:[{type:'General',text:'Lubricate bearing points'},{type:'Inspection',text:'Inspect gearbox for leakage'}], parts:[{partId:'PRT-3',planned:1}] },
     { id:'PM-103', name:'Weather station monthly care', assetId:'WS-01', status:'Running', mode:'fixed', trigger:{type:'time',intervalDays:30,nextDue:day(3)}, dueLead:1, tasks:[{type:'General',text:'Clean sensing surfaces'},{type:'Inspection',text:'Inspect mast and power condition'}], parts:[] },
     { id:'PM-104', name:'CHP 10,000-hour service', assetId:'CHP-01', status:'Running', mode:'fixed', trigger:{type:'meter',meterId:'MTR-2',intervalValue:500,nextThreshold:10000}, dueLead:3, tasks:[{type:'Inspection',text:'Inspect ignition and cooling systems'},{type:'Meter',text:'Record engine hours',meterId:'MTR-2'},{type:'General',text:'Replace scheduled service consumables'}], parts:[{partId:'PRT-4',planned:2},{partId:'PRT-5',planned:4}] }
@@ -154,7 +154,7 @@ function prettyDate(value){
 function formatTime(value){ return new Date(value).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
 function isActive(w){ return w.status!=='Completed' && w.status!=='Closed'; }
 function overdue(w){ return isActive(w)&&w.due<day(0); }
-function badge(text,cls){ return '<span class="badge '+(cls||statusClass(text))+'">'+escapeHTML(text)+'</span>'; }
+function badge(text,cls){ return '<span class="badge '+statusClass(cls||text)+'">'+escapeHTML(text)+'</span>'; }
 function icon(id){ return '<svg><use href="#'+id+'"/></svg>'; }
 function toast(message){
   const el=document.getElementById('toast'); if(!el) return;
@@ -369,7 +369,7 @@ function openWorkDrawer(id,tab){
       if(t.type==='Inspection') control='<span class="badges"><button class="filter-chip '+(t.result==='Pass'?'active':'')+'" data-inspection-result="'+w.id+'|'+t.id+'|Pass">Pass</button><button class="filter-chip '+(t.result==='Fail'?'active':'')+'" data-inspection-result="'+w.id+'|'+t.id+'|Fail">Fail</button></span>';
       else if(t.type==='Meter') control='<button class="secondary-btn" data-meter-task="'+w.id+'|'+t.id+'">'+(t.status==='Done'?'Recorded':'Record')+'</button>';
       else control='<input type="checkbox" '+(t.status==='Done'?'checked':'')+' data-task-toggle="'+w.id+'|'+t.id+'" aria-label="Complete task">';
-      return '<div class="task-item">'+(t.type==='Inspection'||t.type==='Meter'?'<span class="task-type">'+escapeHTML(t.type)+'</span>':control)+'<span><strong>'+escapeHTML(t.text)+'</strong><small>'+escapeHTML(t.status==='Done'?'Complete':'To do')+(t.result?' · '+escapeHTML(t.result):'')+'</small></span>'+(t.type==='Inspection'||t.type==='Meter'?control:'<span class="task-type">'+escapeHTML(t.type)+'</span>')+'</div>';
+      return '<div class="task-item">'+(t.type==='Inspection'||t.type==='Meter'?'<span class="task-type">'+escapeHTML(t.type)+'</span>':control)+'<span><strong>'+escapeHTML(t.text)+'</strong><small>'+escapeHTML(t.status==='Done'?'Complete':'To do')+(t.result?' · '+escapeHTML(t.result):'')+(t.followOnWorkId?' · Follow-on '+escapeHTML(t.followOnWorkId):'')+'</small></span>'+(t.type==='Inspection'||t.type==='Meter'?control:'<span class="task-type">'+escapeHTML(t.type)+'</span>')+'</div>';
     }).join('')+'</div>';
   } else if(drawerTab==='parts'){
     body='<div class="record-list">'+(w.parts.length?w.parts.map(function(x){
@@ -416,12 +416,18 @@ function createWorkFromPM(p,manual){
 }
 function advancePM(p){
   if(p.trigger.type==='time'){
-    let d=new Date(p.trigger.nextDue+'T12:00:00'); const now=new Date(day(0)+'T12:00:00');
-    do{d.setDate(d.getDate()+p.trigger.intervalDays);}while(d<=now);
-    p.trigger.nextDue=d.toISOString().slice(0,10);
+    if(p.mode==='floating'){
+      p.trigger.nextDue=day(p.trigger.intervalDays);
+    }else{
+      let d=new Date(p.trigger.nextDue+'T12:00:00'); const now=new Date(day(0)+'T12:00:00');
+      do{d.setDate(d.getDate()+p.trigger.intervalDays);}while(d<=now);
+      p.trigger.nextDue=d.toISOString().slice(0,10);
+    }
   }else{
     const m=meter(p.trigger.meterId);
-    while(m&&p.trigger.nextThreshold<=m.current) p.trigger.nextThreshold+=p.trigger.intervalValue;
+    if(!m) return;
+    if(p.mode==='floating') p.trigger.nextThreshold=m.current+p.trigger.intervalValue;
+    else while(p.trigger.nextThreshold<=m.current) p.trigger.nextThreshold+=p.trigger.intervalValue;
   }
 }
 function evaluatePM(showMessage){
@@ -451,6 +457,12 @@ function convertRequest(id){
   const wid=nextWorkId();
   const w={id:wid,title:r.summary,assetId:r.assetId,type:'Corrective',priority:r.urgency==='Safety critical'?'Critical':r.urgency==='Urgent'?'High':'Medium',status:'Open',assigneeId:'U-2',due:day(r.urgency==='Normal'?3:1),estimateHours:1,actualMinutes:0,source:r.id,instructions:'Created from maintenance request '+r.id+'. Confirm the reported condition, make safe and document the repair.',tasks:[{id:newTaskId(),type:'Inspection',text:'Confirm reported condition',status:'Todo',result:null},{id:newTaskId(),type:'General',text:'Complete repair or containment action',status:'Todo'}],parts:[],createdAt:new Date().toISOString(),completedAt:null,log:[{at:new Date().toISOString(),text:'Created from '+r.id+' by '+r.requester}]};
   state.workOrders.unshift(w);r.status='Converted';r.workOrderId=wid;save('Converted '+r.id+' to '+wid);render();toast(wid+' created');
+}
+function createFollowOnFromTask(parent,t){
+  if(!parent||!t||t.followOnWorkId) return t&&t.followOnWorkId;
+  const id=nextWorkId();
+  const w={id:id,title:'Corrective action: '+t.text,assetId:parent.assetId,type:'Corrective',priority:'High',status:'Open',assigneeId:parent.assigneeId,due:day(1),estimateHours:1,actualMinutes:0,source:parent.id,instructions:'Generated from a failed inspection task on '+parent.id+'. Confirm the defect, correct it safely and document verification.',tasks:[{id:newTaskId(),type:'Inspection',text:'Confirm the reported defect',status:'Todo',result:null},{id:newTaskId(),type:'General',text:'Complete corrective action and verify operation',status:'Todo'}],parts:[],createdAt:new Date().toISOString(),completedAt:null,log:[{at:new Date().toISOString(),text:'Automatically created from failed inspection on '+parent.id}]};
+  state.workOrders.unshift(w);t.followOnWorkId=id;logWork(parent,'Failed inspection generated follow-on '+id);return id;
 }
 function completeWork(id){
   const w=work(id);if(!w)return;
@@ -561,7 +573,7 @@ function setupGlobalEvents(){
     const done=e.target.closest('[data-complete-work]');if(done){completeWork(done.dataset.completeWork);return;}
     const labor=e.target.closest('[data-log-labor]');if(labor){const ref=labor.dataset.logLabor.split('|'),w=work(ref[0]),mins=Number(ref[1]);w.actualMinutes=(w.actualMinutes||0)+mins;logWork(w,mins+' min labor logged by '+userName(CURRENT_USER));save('Logged labor on '+w.id);openWorkDrawer(w.id,'labor');toast(mins+' minutes logged');return;}
     const use=e.target.closest('[data-use-part]');if(use){const ref=use.dataset.usePart.split('|');usePart(ref[0],ref[1]);return;}
-    const insp=e.target.closest('[data-inspection-result]');if(insp){const ref=insp.dataset.inspectionResult.split('|'),w=work(ref[0]),t=w.tasks.find(function(x){return x.id===ref[1];});t.result=ref[2];t.status='Done';logWork(w,'Inspection "'+t.text+'" recorded '+ref[2]);save('Completed inspection task');openWorkDrawer(w.id,'tasks');toast('Inspection result saved');return;}
+    const insp=e.target.closest('[data-inspection-result]');if(insp){const ref=insp.dataset.inspectionResult.split('|'),w=work(ref[0]),t=w.tasks.find(function(x){return x.id===ref[1];});t.result=ref[2];t.status='Done';logWork(w,'Inspection "'+t.text+'" recorded '+ref[2]);const follow=(ref[2]==='Fail'&&t.autoCorrective)?createFollowOnFromTask(w,t):null;save('Completed inspection task');updateBadges();openWorkDrawer(w.id,'tasks');toast(follow?'Inspection failed — '+follow+' created':'Inspection result saved');return;}
     const mt=e.target.closest('[data-meter-task]');if(mt){const ref=mt.dataset.meterTask.split('|'),w=work(ref[0]),t=w.tasks.find(function(x){return x.id===ref[1];});openMeterDialog(t.meterId,mt.dataset.meterTask);return;}
   });
   document.getElementById('recordDrawer').addEventListener('change',function(e){
