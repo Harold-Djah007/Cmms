@@ -109,3 +109,8 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
 }
 @media(max-width:480px){.kpi-strip{grid-template-columns:1fr 1fr}.kpi{padding:13px}.decision-row{grid-template-columns:4px 1fr}.decision-row .badges{grid-column:2;justify-content:flex-start}.info-grid,.work-summary{grid-template-columns:1fr}.pm-row{grid-template-columns:40px 1fr}.pm-row>.badge{grid-column:2;justify-self:start}.scan-entry{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+.badge.critical{background:#fde8e6;color:#a8322c}
+.badge.high{background:#fff0df;color:#a65b08}
+.badge.medium{background:#e8f1fa;color:#2c6690}
+.badge.low{background:#edf2f2;color:#607579}
