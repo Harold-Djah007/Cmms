@@ -649,8 +649,19 @@ function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === name));
   const meta = viewMeta(name);
-  document.querySelector('#pageTitle').textContent = meta.title;
-  document.querySelector('#contextLabel').textContent = meta.context;
+  if (name === 'record' && record.type === 'work') {
+    document.querySelector('#pageTitle').textContent = `WO ${record.id}`;
+    document.querySelector('#contextLabel').textContent = 'Work order';
+  } else if (name === 'record' && record.type === 'part') {
+    document.querySelector('#pageTitle').textContent = findPart(record.id)?.code || 'Part';
+    document.querySelector('#contextLabel').textContent = 'Parts & supplies';
+  } else if (name === 'record' && record.type === 'asset') {
+    document.querySelector('#pageTitle').textContent = findAsset(record.id)?.code || 'Asset';
+    document.querySelector('#contextLabel').textContent = 'Asset register';
+  } else {
+    document.querySelector('#pageTitle').textContent = meta.title;
+    document.querySelector('#contextLabel').textContent = meta.context;
+  }
   closeMenu();
   updateBottomNav(name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
