@@ -103,16 +103,16 @@
           <div class="search-results" id="searchResults" hidden></div>
         </div>
         <div class="top-actions">
-          <button class="ghost-button" id="scanButton"><svg><use href="#i-scan"/></svg><span class="hide-sm">Scan tag</span></button>
-          <button class="secondary-button" id="installButton" hidden>Install app</button>
-          <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg><span class="hide-sm">New work order</span></button>
+          <button class="ghost-button" id="scanButton"><svg><use href="#i-scan"/></svg><span class="hide-sm hide-when-inspector">Scan tag</span></button>
+          <button class="ghost-button hide-when-inspector" id="installButton" hidden>Install</button>
+          <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg><span class="hide-sm hide-when-inspector">New work order</span></button>
           <div class="role-switch" role="group" aria-label="Workspace mode">
             <button type="button" class="role-btn active" data-mode="planner">Planner</button>
             <button type="button" class="role-btn" data-mode="technician">Field</button>
           </div>
           <div class="avatar-wrap" id="userChip">
             <div class="avatar" id="userAvatar">AS</div>
-            <div class="avatar-meta hide-md">
+            <div class="avatar-meta hide-md hide-when-inspector">
               <strong id="userName">Abena Sarpong</strong>
               <small id="userRole">Operations manager</small>
             </div>
@@ -268,11 +268,12 @@
                   <tbody id="workOrderRows"></tbody>
                 </table>
               </div>
-              <div class="empty-state" id="workEmpty" hidden>
-                <svg><use href="#i-work"/></svg>
-                <h3>No matching work orders</h3>
-                <p>Change filters or raise a new job from the floor.</p>
-              </div>
+            </div>
+            <div class="work-cards" id="workOrderCards"></div>
+            <div class="empty-state" id="workEmpty" hidden>
+              <svg><use href="#i-work"/></svg>
+              <h3>No matching work orders</h3>
+              <p>Change filters or raise a new job from the floor.</p>
             </div>
           </div>
         </section>

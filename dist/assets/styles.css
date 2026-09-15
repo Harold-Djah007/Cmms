@@ -131,12 +131,15 @@ nav { display: grid; gap: 3px; }
 .main-wrap { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
 .topbar {
   min-height: 72px; padding: 12px 28px;
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; gap: 12px;
   border-bottom: 1px solid var(--line);
   background: rgba(255,255,255,.92);
   backdrop-filter: blur(14px);
   position: sticky; top: 0; z-index: 20;
 }
+.app-shell.inspector-open .hide-when-inspector { display: none; }
+.app-shell.inspector-open .command-search { max-width: 200px; }
+.app-shell.inspector-open .page-heading h1 { font-size: 1.12rem; }
 .page-heading { min-width: 0; }
 .page-heading p {
   margin: 0 0 2px; font-size: .7rem; color: var(--muted);
@@ -316,7 +319,7 @@ main { max-width: 1480px; width: 100%; margin: 0 auto; padding: 24px 28px 48px; 
 .crew-list { display: grid; gap: 10px; }
 .crew-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; }
 .crew-row .avatar { width: 32px; height: 32px; font-size: .7rem; background: var(--teal); }
-.crew-row p { margin: 0; font-size: .74rem; color: var(--muted); }
+.crew-row p { margin: 0; font-size: .74rem; color: var(--muted); white-space: nowrap; }
 .crew-row h3 { margin: 0; font-size: .86rem; }
 .load-bar { width: 72px; height: 6px; background: var(--line-2); border-radius: 99px; overflow: hidden; }
 .load-bar b { display: block; height: 100%; background: var(--teal); }
@@ -368,6 +371,14 @@ main { max-width: 1480px; width: 100%; margin: 0 auto; padding: 24px 28px 48px; 
 }
 .toggle { display: flex; align-items: center; gap: 7px; font-size: .82rem; font-weight: 700; color: var(--ink-2); }
 
+.work-cards { display: none; }
+.work-card {
+  width: 100%; text-align: left; color: inherit; background: #fff;
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+  box-shadow: var(--shadow); display: grid; gap: 8px;
+}
+.work-card h3 { margin: 0; font-size: 1rem; }
+.work-card.selected { outline: 2px solid var(--teal); }
 .table-card {
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg);
   overflow: hidden; box-shadow: var(--shadow);
@@ -604,6 +615,8 @@ dialog form { padding: 22px; }
   .timeline-date { padding: 0; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid .full { grid-column: auto; }
+  #workTableCard { display: none; }
+  .work-cards { display: grid; gap: 10px; }
   .responsive-table table { min-width: 760px; }
   .request-card { grid-template-columns: 1fr; }
   .bottom-nav {

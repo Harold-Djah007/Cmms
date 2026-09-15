@@ -319,8 +319,9 @@ function workOrderMatches(w) {
 
 function renderWorkOrders() {
   const rows = state.workOrders.filter(workOrderMatches);
+  const selected = id => inspector.type === 'work' && inspector.id === id ? 'selected' : '';
   document.querySelector('#workOrderRows').innerHTML = rows.map(w => `
-    <tr data-open-wo="${w.id}" class="${inspector.type === 'work' && inspector.id === w.id ? 'selected' : ''}">
+    <tr data-open-wo="${w.id}" class="${selected(w.id)}">
       <td><strong>${escapeHTML(w.title)}</strong><small>${w.id} · ${escapeHTML(w.location)}</small></td>
       <td>${escapeHTML(w.asset)}</td>
       <td><span class="type-badge">${escapeHTML(w.type)}</span></td>
@@ -329,6 +330,21 @@ function renderWorkOrders() {
       <td><strong>${prettyDate(w.due)}</strong>${isOverdue(w) ? '<small class="due-overdue">Overdue</small>' : ''}</td>
       <td><span class="status-badge ${statusClass(w.status)}">${w.status}</span></td>
     </tr>`).join('');
+  document.querySelector('#workOrderCards').innerHTML = rows.map(w => `
+    <button class="work-card ${selected(w.id)}" data-open-wo="${w.id}">
+      <div class="field-card-top">
+        <div>
+          <div class="wo-id">${w.id} · ${escapeHTML(w.type)}</div>
+          <h3>${escapeHTML(w.title)}</h3>
+        </div>
+        <span class="status-badge ${statusClass(w.status)}">${w.status}</span>
+      </div>
+      <div class="field-meta">
+        <span>${escapeHTML(w.asset)}</span>
+        <span>${prettyDate(w.due)}${isOverdue(w) ? ' · Overdue' : ''}</span>
+        <span class="priority-badge ${w.priority}">${w.priority}</span>
+      </div>
+    </button>`).join('');
   document.querySelector('#workEmpty').hidden = rows.length > 0;
   const openCount = openWork().length;
   document.querySelector('#navWorkCount').textContent = openCount;
@@ -503,11 +519,10 @@ function renderWorkInspector() {
   const progress = taskProgress(w);
   const tabs = { details: 'Details', tasks: `Tasks (${progress.done}/${progress.total})`, parts: 'Parts', time: 'Time' };
   const actions = w.status === 'Completed' ? '<span class="status-badge completed">Closed</span>' : `
-    ${w.status === 'In Progress' ? '' : `<button class="action-button primary" data-wo-action="start" data-id="${w.id}">Start</button>`}
+    ${w.status === 'In Progress' ? '' : `<button class="action-button primary" data-wo-action="start" data-id="${w.id}">${w.status === 'On Hold' ? 'Resume' : 'Start'}</button>`}
     ${w.status === 'In Progress' ? `<button class="action-button warn" data-wo-action="hold" data-id="${w.id}">Hold</button>` : ''}
-    ${w.status === 'On Hold' ? `<button class="action-button" data-wo-action="start" data-id="${w.id}">Resume</button>` : ''}
     <button class="action-button" data-wo-action="time" data-id="${w.id}">Log time</button>
-    <button class="action-button primary" data-wo-action="complete" data-id="${w.id}">Complete</button>`;
+    <button class="action-button ${w.status === 'In Progress' ? 'primary' : ''}" data-wo-action="complete" data-id="${w.id}">Complete</button>`;
 
   const panels = {
     details: `<div class="detail-grid">
