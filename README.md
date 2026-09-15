@@ -17,6 +17,12 @@ This redesign is based on CMMS workflow patterns rather than copied screenshots.
 - Manual PM work-order generation
 - Maintenance requests that can be triaged into corrective work orders
 - Parts stock by physical store/bin location
+- Expandable Supplies navigation with Parts & Supplies, Stock Receipts, Cycle Counts, Purchase Orders and Suppliers
+- Working stock receipt flow that increases the selected part at the selected store/bin
+- Working cycle counts with expected quantity, counted quantity and posted variance
+- Simple purchase-order lifecycle: Draft → Approved → Ordered → Received
+- Receiving a purchase order automatically creates a receipt and updates on-hand stock
+- Working part and supplier creation forms
 - Issuing parts to a work order reduces actual stock
 - Meter readings can trigger maintenance plans
 - QR/barcode record lookup where the browser supports camera scanning
@@ -47,12 +53,13 @@ After pulling a new version, hard-refresh the browser once so the PWA cache upda
 5. Record its meter-reading task.
 6. Fail the mechanical-seal inspection and verify that a corrective follow-on work order is created.
 7. Open **Parts** inside the work order and issue a planned spare.
-8. Confirm the stock level drops in **Parts & stores**.
+8. Confirm the stock level drops in **Supplies → Parts & supplies**.
 9. Log technician labor.
 10. Complete the remaining tasks and close the work order.
 11. Open **Preventive maintenance** and test **Generate now**.
 12. Add a meter reading and evaluate PM triggers.
 13. Turn networking off and confirm the app still opens after it has been loaded once online.
+14. Open **Supplies**, create a supplier and draft purchase order, move it through approval and ordering, then receive it and verify stock increases.
 
 ## Production boundary
 
@@ -67,7 +74,6 @@ The next platform milestone should add:
 - Server-side audit history
 - Notifications
 - Production QR label generation
-- Purchasing and procurement
 - Central backup, monitoring and recovery
 
 ## Development branch

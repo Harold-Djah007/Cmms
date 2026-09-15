@@ -31,6 +31,9 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Zm0 6v5m0 3v1"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
     <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6zM14 2v5h5"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 5h11v12H3zM14 9h4l3 4v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM6 6H4v16h16V6h-2M8 12h8m-8 4h5"/></symbol>
+    <symbol id="i-supplier" viewBox="0 0 24 24"><path d="M3 21V8l6-4v17m0-10 6-4v14m0-9h6v9M6 11h1m-1 4h1m5-1h1m5 2h1"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
   </svg>
 
@@ -63,7 +66,14 @@
           <p>Asset care</p>
           <button class="nav-link" data-route="assets"><svg><use href="#i-asset"/></svg><span>Asset register</span></button>
           <button class="nav-link" data-route="meters"><svg><use href="#i-meter"/></svg><span>Meters</span></button>
-          <button class="nav-link" data-route="inventory"><svg><use href="#i-box"/></svg><span>Parts & stores</span><b id="stockBadge"></b></button>
+          <button class="nav-link nav-parent" id="suppliesToggle" type="button" aria-expanded="true" aria-controls="suppliesMenu"><svg><use href="#i-box"/></svg><span>Supplies</span><b id="stockBadge"></b><svg class="nav-caret"><use href="#i-chevron"/></svg></button>
+          <div class="nav-submenu" id="suppliesMenu">
+            <button class="nav-link nav-child" data-route="inventory"><span>Parts & supplies</span></button>
+            <button class="nav-link nav-child" data-route="receipts"><span>Stock receipts</span></button>
+            <button class="nav-link nav-child" data-route="counts"><span>Cycle counts</span></button>
+            <button class="nav-link nav-child" data-route="purchase-orders"><span>Purchase orders</span></button>
+            <button class="nav-link nav-child" data-route="suppliers"><span>Suppliers</span></button>
+          </div>
         </div>
         <div class="nav-group">
           <p>Insights</p>
@@ -151,6 +161,18 @@
         <label>Urgency<select name="urgency"><option>Normal</option><option>Urgent</option><option>Safety critical</option></select></label>
       </div>
       <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="requestDialog">Cancel</button><button class="primary-btn" type="submit">Submit request</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="supplyDialog" class="modal">
+    <form id="supplyForm">
+      <div class="modal-head">
+        <div><p class="eyebrow" id="supplyDialogKicker">Supplies</p><h2 id="supplyDialogTitle">Add supply record</h2></div>
+        <button class="icon-btn" type="button" data-close-dialog="supplyDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <input type="hidden" name="action" id="supplyAction">
+      <div class="form-grid" id="supplyFields"></div>
+      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="supplyDialog">Cancel</button><button class="primary-btn" id="supplySubmit" type="submit">Save</button></div>
     </form>
   </dialog>
 

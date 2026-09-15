@@ -41,6 +41,22 @@ const seed = {
     { id:'PRT-5', code:'SPK-2G-408', name:'CHP spark plug', category:'Engine', unitCost:112, locations:[{name:'CHP Store / Bin 2',onHand:6,min:6,max:18}], transactions:[] },
     { id:'PRT-6', code:'BLT-B72', name:'Drive belt B-72', category:'Drive', unitCost:95, locations:[{name:'Main Store / Rack 3',onHand:1,min:3,max:10}], transactions:[] }
   ],
+  suppliers: [
+    { id:'SUP-1', name:'Ghana Industrial Supplies', contact:'Nana Boateng', phone:'+233 24 555 0184', email:'orders@gis.example', status:'Active' },
+    { id:'SUP-2', name:'PumpTech Ghana', contact:'Esi Amankwah', phone:'+233 30 255 0412', email:'service@pumptech.example', status:'Active' },
+    { id:'SUP-3', name:'PowerCare Engineering', contact:'Yaw Asante', phone:'+233 20 555 0971', email:'parts@powercare.example', status:'Active' }
+  ],
+  receipts: [
+    { id:'REC-103', partId:'PRT-2', supplierId:'SUP-2', quantity:2, location:'Main Store / Bin 12', reference:'DN-4481', receivedAt:new Date(Date.now()-86400000*5).toISOString(), receivedBy:'U-1' },
+    { id:'REC-102', partId:'PRT-4', supplierId:'SUP-3', quantity:4, location:'CHP Store / Shelf 5', reference:'PO-2025', receivedAt:new Date(Date.now()-86400000*12).toISOString(), receivedBy:'U-3' }
+  ],
+  cycleCounts: [
+    { id:'CNT-31', partId:'PRT-6', location:'Main Store / Rack 3', expected:2, counted:1, variance:-1, countedAt:new Date(Date.now()-86400000*2).toISOString(), countedBy:'U-1', note:'One damaged belt removed', status:'Posted' }
+  ],
+  purchaseOrders: [
+    { id:'PO-2026', supplierId:'SUP-3', partId:'PRT-4', quantity:8, unitCost:27, expectedDate:day(6), status:'Ordered', createdAt:new Date(Date.now()-86400000*3).toISOString() },
+    { id:'PO-2025', supplierId:'SUP-3', partId:'PRT-4', quantity:4, unitCost:27, expectedDate:day(-12), status:'Received', createdAt:new Date(Date.now()-86400000*18).toISOString(), receivedAt:new Date(Date.now()-86400000*12).toISOString() }
+  ],
   workOrders: [
     {
       id:'WO-2407', title:'Clean mix pit and inspect feed pump', assetId:'P-201', type:'Preventive', priority:'High', status:'Open', assigneeId:'U-2',
@@ -117,7 +133,7 @@ function loadState(){
   }catch(e){ return migrate(clone(seed)); }
 }
 function migrate(data){
-  ['users','assets','meters','parts','workOrders','pm','requests','syncQueue'].forEach(function(key){
+  ['users','assets','meters','parts','suppliers','receipts','cycleCounts','purchaseOrders','workOrders','pm','requests','syncQueue'].forEach(function(key){
     if(!Array.isArray(data[key])) data[key]=clone(seed[key]);
   });
   return data;
@@ -136,11 +152,14 @@ function asset(id){ return state.assets.find(function(x){return x.id===id;}); }
 function meter(id){ return state.meters.find(function(x){return x.id===id;}); }
 function user(id){ return state.users.find(function(x){return x.id===id;}); }
 function part(id){ return state.parts.find(function(x){return x.id===id;}); }
+function supplier(id){ return state.suppliers.find(function(x){return x.id===id;}); }
 function work(id){ return state.workOrders.find(function(x){return x.id===id;}); }
 function pm(id){ return state.pm.find(function(x){return x.id===id;}); }
 function assetName(id){ const x=asset(id); return x?x.name:'Unassigned'; }
 function userName(id){ const x=user(id); return x?x.name:'Unassigned'; }
 function partName(id){ const x=part(id); return x?x.name:'Part'; }
+function supplierName(id){ const x=supplier(id); return x?x.name:'Not assigned'; }
+function money(value){ return 'GHS '+Number(value||0).toLocaleString('en-GH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function totalStock(p){ return (p.locations||[]).reduce(function(sum,l){return sum+Number(l.onHand||0);},0); }
 function minStock(p){ return (p.locations||[]).reduce(function(sum,l){return sum+Number(l.min||0);},0); }
 function statusClass(v){ return String(v||'').toLowerCase().replace(/\s+/g,'-').replace('in-progress','progress'); }
@@ -177,6 +196,10 @@ function nextRequestId(){
   return 'REQ-'+n;
 }
 function newTaskId(){ return 'T-'+Date.now()+'-'+Math.floor(Math.random()*1000); }
+function nextRecordId(prefix,records,start){
+  const n=Math.max.apply(null,records.map(function(x){return Number(String(x.id).replace(/\D/g,''))||0;}).concat([start||0]))+1;
+  return prefix+'-'+n;
+}
 
 function updateBadges(){
   document.getElementById('workBadge').textContent=state.workOrders.filter(isActive).length||'';
@@ -196,6 +219,11 @@ function navigate(next){
   route=next; location.hash='#/'+next; render();
   document.getElementById('appView').focus({preventScroll:true});
 }
+function setSuppliesOpen(open){
+  const toggle=document.getElementById('suppliesToggle'),menu=document.getElementById('suppliesMenu');
+  if(!toggle||!menu)return;
+  toggle.setAttribute('aria-expanded',String(open));menu.hidden=!open;
+}
 function pageHead(kicker,title,subtitle,actions){
   return '<div class="page-head"><div><p class="eyebrow">'+escapeHTML(kicker)+'</p><h1>'+escapeHTML(title)+'</h1><p>'+escapeHTML(subtitle)+'</p></div><div class="page-actions">'+(actions||'')+'</div></div>';
 }
@@ -206,10 +234,15 @@ function render(){
   document.body.classList.toggle('field-mode',workspaceMode==='field');
   document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.toggle('active',b.dataset.mode===workspaceMode);});
   document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===route);});
+  const suppliesRoutes=['inventory','receipts','counts','purchase-orders','suppliers'];
+  const suppliesActive=suppliesRoutes.includes(route);
+  const suppliesToggle=document.getElementById('suppliesToggle');
+  if(suppliesToggle){suppliesToggle.classList.toggle('active',suppliesActive);if(suppliesActive)setSuppliesOpen(true);}
   const view=document.getElementById('appView');
   const pages={
     'dashboard':renderDashboard,'my-work':renderMyWork,'work-orders':renderWorkOrders,'pm':renderPM,
-    'requests':renderRequests,'assets':renderAssets,'meters':renderMeters,'inventory':renderInventory,'reports':renderReports
+    'requests':renderRequests,'assets':renderAssets,'meters':renderMeters,'inventory':renderInventory,
+    'receipts':renderReceipts,'counts':renderCounts,'purchase-orders':renderPurchaseOrders,'suppliers':renderSuppliers,'reports':renderReports
   };
   view.innerHTML=(pages[route]||renderDashboard)();
   bindPageActions();
@@ -320,7 +353,6 @@ function renderPM(){
   return pageHead('Maintenance','Scheduled maintenance','Time- and meter-driven job plans that generate repeatable work orders.',
     '<button class="secondary-btn" data-run-automation>'+icon('i-sync')+'Evaluate triggers</button>')+
     '<div class="admin-strip planner-only"><button class="tool-btn primary" data-run-automation>'+icon('i-sync')+'Evaluate triggers</button>'+
-      '<button class="tool-btn" data-pm-admin="new">New schedule</button><button class="tool-btn" data-pm-admin="duplicate">Duplicate</button>'+
       '<button class="tool-btn" data-print-work>Print</button><span class="spacer"></span><span class="admin-count">'+state.pm.length+' maintenance plans</span></div>'+
     '<div class="table-wrap"><table class="data-table"><thead><tr><th>Code</th><th>Scheduled maintenance</th><th>Trigger</th><th>Frequency</th><th>Scheduling</th><th>Next</th><th>Tasks</th><th>Parts</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
@@ -368,9 +400,7 @@ function renderAssets(){
   const selected=asset(selectedAssetId)||roots[0];
   return pageHead('Assets','Asset register','Plant hierarchy, equipment records, meters, BOMs and maintenance history.',
     '<button class="secondary-btn" id="assetMeterButton">'+icon('i-meter')+'Add reading</button>')+
-    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-asset-admin="new">'+icon('i-plus')+'New</button>'+
-      '<button class="tool-btn" data-asset-admin="import">Import</button><button class="tool-btn" data-asset-admin="export">Export</button>'+
-      '<button class="tool-btn" data-print-work>Print asset tags</button><span class="spacer"></span><span class="admin-count">'+state.assets.length+' asset records</span></div>'+
+    '<div class="admin-strip planner-only"><button class="tool-btn" data-print-work>Print asset tags</button><span class="spacer"></span><span class="admin-count">'+state.assets.length+' asset records</span></div>'+
     '<div class="asset-layout"><section class="tree-panel"><div class="tree-head"><p class="eyebrow">Plant hierarchy</p><h2>Sites → facilities → equipment → tools</h2></div><div class="asset-tree">'+renderTree(null,0)+'</div></section><section class="detail-panel">'+assetDetail(selected)+'</section></div>';
 }
 
@@ -389,16 +419,52 @@ function renderInventory(){
     const low=qty<=min;
     const locations=p.locations.map(function(l){return l.name;}).join(', ');
     return '<tr><td><strong>'+escapeHTML(p.code)+'</strong></td><td><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(p.category)+'</small></td>'+
-      '<td>'+qty+'</td><td>'+min+'</td><td>'+max+'</td><td>'+escapeHTML(locations)+'</td><td>GHS '+Number(p.unitCost).toFixed(2)+'</td>'+
-      '<td>'+badge(low?'Below min':'In stock',low?'down':'completed')+'</td><td><button class="tool-btn" data-stock-adjust="'+p.id+'">Stock take</button></td></tr>';
+      '<td>'+qty+'</td><td>'+min+'</td><td>'+max+'</td><td>'+escapeHTML(locations)+'</td><td>'+money(p.unitCost)+'</td>'+
+      '<td>'+badge(low?'Below min':'In stock',low?'down':'completed')+'</td><td><button class="tool-btn" data-supply-action="count" data-part-id="'+p.id+'">Count</button></td></tr>';
   }).join('');
   const lowCount=state.parts.filter(function(p){return totalStock(p)<=minStock(p);}).length;
   return pageHead('Supplies','Parts & stores','Inventory administration with location stock, thresholds and work-order consumption.',
-    '<button class="secondary-btn" data-stock-admin="count">'+icon('i-box')+'Stock take</button>')+
-    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-stock-admin="new">'+icon('i-plus')+'New part</button>'+
-      '<button class="tool-btn" data-stock-admin="receive">Receive stock</button><button class="tool-btn" data-stock-admin="count">Batch stock take</button>'+
+    '<button class="secondary-btn" data-supply-action="count">'+icon('i-clipboard')+'Stock count</button><button class="primary-btn" data-supply-action="receive">'+icon('i-truck')+'Receive stock</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-supply-action="part">'+icon('i-plus')+'New part</button>'+
+      '<button class="tool-btn" data-supply-action="receive">Receive stock</button><button class="tool-btn" data-route-jump="counts">Cycle counts</button>'+
       '<button class="tool-btn" data-print-work>Print labels</button><span class="spacer"></span><span class="admin-count">'+lowCount+' below minimum · '+state.parts.length+' parts</span></div>'+
     '<div class="table-wrap"><table class="data-table"><thead><tr><th>Part code</th><th>Part / category</th><th>On hand</th><th>Min</th><th>Max</th><th>Stock location</th><th>Unit cost</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderReceipts(){
+  const rows=state.receipts.slice().sort(function(a,b){return b.receivedAt.localeCompare(a.receivedAt);}).map(function(r){
+    return '<tr><td><strong>'+escapeHTML(r.id)+'</strong><small>'+escapeHTML(r.reference||'No reference')+'</small></td><td><strong>'+escapeHTML(partName(r.partId))+'</strong><small>'+escapeHTML(part(r.partId)?part(r.partId).code:'')+'</small></td><td>'+r.quantity+'</td><td>'+escapeHTML(r.location)+'</td><td>'+escapeHTML(supplierName(r.supplierId))+'</td><td>'+formatTime(r.receivedAt)+'</td><td>'+escapeHTML(userName(r.receivedBy))+'</td></tr>';
+  }).join('')||'<tr><td colspan="7" class="table-empty">No stock receipts yet.</td></tr>';
+  return pageHead('Supplies','Stock receipts','Receive parts into a store and keep a traceable delivery history.','<button class="primary-btn" data-supply-action="receive">'+icon('i-truck')+'Receive stock</button>')+
+    '<div class="supply-summary"><span><strong>'+state.receipts.length+'</strong> receipts</span><span><strong>'+state.receipts.reduce(function(s,r){return s+Number(r.quantity||0);},0)+'</strong> units received</span></div>'+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Receipt</th><th>Part</th><th>Quantity</th><th>Store / bin</th><th>Supplier</th><th>Received</th><th>Received by</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderCounts(){
+  const rows=state.cycleCounts.slice().sort(function(a,b){return b.countedAt.localeCompare(a.countedAt);}).map(function(c){
+    return '<tr><td><strong>'+escapeHTML(c.id)+'</strong></td><td><strong>'+escapeHTML(partName(c.partId))+'</strong><small>'+escapeHTML(part(c.partId)?part(c.partId).code:'')+'</small></td><td>'+escapeHTML(c.location)+'</td><td>'+c.expected+'</td><td>'+c.counted+'</td><td>'+badge((c.variance>0?'+':'')+c.variance,c.variance===0?'completed':'attention')+'</td><td>'+formatTime(c.countedAt)+'</td><td>'+badge(c.status,'completed')+'</td></tr>';
+  }).join('')||'<tr><td colspan="8" class="table-empty">No counts posted yet.</td></tr>';
+  return pageHead('Supplies','Cycle counts','Verify physical stock and post the variance in one guided step.','<button class="primary-btn" data-supply-action="count">'+icon('i-clipboard')+'New count</button>')+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Count</th><th>Part</th><th>Store / bin</th><th>Expected</th><th>Counted</th><th>Variance</th><th>Counted</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderPurchaseOrders(){
+  const rows=state.purchaseOrders.slice().sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);}).map(function(po){
+    const next=po.status==='Draft'?'Approve':po.status==='Approved'?'Mark ordered':po.status==='Ordered'?'Receive':'Received';
+    return '<tr><td><strong>'+escapeHTML(po.id)+'</strong><small>'+formatTime(po.createdAt)+'</small></td><td>'+escapeHTML(supplierName(po.supplierId))+'</td><td><strong>'+escapeHTML(partName(po.partId))+'</strong><small>'+escapeHTML(part(po.partId)?part(po.partId).code:'')+'</small></td><td>'+po.quantity+'</td><td>'+money(po.unitCost)+'</td><td><strong>'+money(po.quantity*po.unitCost)+'</strong></td><td>'+prettyDate(po.expectedDate)+'</td><td>'+badge(po.status,po.status==='Received'?'completed':po.status==='Draft'?'pending':'progress')+'</td><td><button class="tool-btn" data-po-action="'+po.id+'" '+(po.status==='Received'?'disabled':'')+'>'+next+'</button></td></tr>';
+  }).join('')||'<tr><td colspan="9" class="table-empty">No purchase orders yet.</td></tr>';
+  return pageHead('Supplies','Purchase orders','A light approval-to-receipt flow for replenishment.','<button class="primary-btn" data-supply-action="po">'+icon('i-plus')+'New purchase order</button>')+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>PO</th><th>Supplier</th><th>Part</th><th>Qty</th><th>Unit cost</th><th>Total</th><th>Expected</th><th>Status</th><th>Next action</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderSuppliers(){
+  const rows=state.suppliers.map(function(s){
+    const open=state.purchaseOrders.filter(function(po){return po.supplierId===s.id&&po.status!=='Received';}).length;
+    const supplied=state.receipts.filter(function(r){return r.supplierId===s.id;}).length;
+    return '<tr><td><strong>'+escapeHTML(s.name)+'</strong><small>'+escapeHTML(s.id)+'</small></td><td>'+escapeHTML(s.contact||'—')+'</td><td>'+escapeHTML(s.phone||'—')+'</td><td>'+escapeHTML(s.email||'—')+'</td><td>'+open+'</td><td>'+supplied+'</td><td>'+badge(s.status,'completed')+'</td></tr>';
+  }).join('')||'<tr><td colspan="7" class="table-empty">No suppliers yet.</td></tr>';
+  return pageHead('Supplies','Suppliers','Keep the contacts needed to source and receive maintenance parts.','<button class="primary-btn" data-supply-action="supplier">'+icon('i-plus')+'New supplier</button>')+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Supplier</th><th>Contact</th><th>Phone</th><th>Email</th><th>Open POs</th><th>Receipts</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function renderReports(){
@@ -584,12 +650,14 @@ function searchAll(query){
   state.workOrders.forEach(function(w){if([w.id,w.title,assetName(w.assetId)].join(' ').toLowerCase().includes(q))out.push({type:'Work order',title:w.id+' · '+w.title,sub:assetName(w.assetId),action:'wo',id:w.id,icon:'i-work'});});
   state.assets.forEach(function(a){if([a.id,a.code,a.name,a.location].join(' ').toLowerCase().includes(q))out.push({type:'Asset',title:a.name,sub:a.code+' · '+a.type,action:'asset',id:a.id,icon:'i-asset'});});
   state.parts.forEach(function(p){if([p.id,p.code,p.name].join(' ').toLowerCase().includes(q))out.push({type:'Part',title:p.name,sub:p.code+' · '+totalStock(p)+' in stock',action:'part',id:p.id,icon:'i-box'});});
+  state.suppliers.forEach(function(s){if([s.id,s.name,s.contact,s.email].join(' ').toLowerCase().includes(q))out.push({type:'Supplier',title:s.name,sub:s.contact||s.id,action:'supplier',id:s.id,icon:'i-supplier'});});
+  state.purchaseOrders.forEach(function(po){if([po.id,supplierName(po.supplierId),partName(po.partId),po.status].join(' ').toLowerCase().includes(q))out.push({type:'Purchase order',title:po.id,sub:supplierName(po.supplierId)+' · '+po.status,action:'po',id:po.id,icon:'i-file'});});
   state.pm.forEach(function(p){if([p.id,p.name,assetName(p.assetId)].join(' ').toLowerCase().includes(q))out.push({type:'PM',title:p.name,sub:p.id+' · '+assetName(p.assetId),action:'pm',id:p.id,icon:'i-calendar'});});
   return out.slice(0,14);
 }
 function renderSearchResults(){
   const box=document.getElementById('globalSearchInput'); const target=document.getElementById('searchResults'); const results=searchAll(box.value);
-  target.innerHTML=results.length?results.map(function(r){return '<button class="search-result" data-search-action="'+r.action+'|'+r.id+'"><span>'+icon(r.icon)+'</span><span><strong>'+escapeHTML(r.title)+'</strong><small>'+escapeHTML(r.type)+' · '+escapeHTML(r.sub)+'</small></span>'+icon('i-chevron')+'</button>';}).join(''):'<div class="empty"><strong>No matching records</strong>Try a code, asset name, work description or part number.</div>';
+  target.innerHTML=results.length?results.map(function(r){return '<button class="search-result" data-search-action="'+r.action+'|'+r.id+'"><span>'+icon(r.icon)+'</span><span><strong>'+escapeHTML(r.title)+'</strong><small>'+escapeHTML(r.type)+' · '+escapeHTML(r.sub)+'</small></span>'+icon('i-chevron')+'</button>';}).join(''):'<div class="empty"><strong>No matching records</strong>Try a code, asset, work description, part, supplier or PO number.</div>';
 }
 
 function openTag(code){
@@ -633,15 +701,66 @@ function bulkUpdateWork(action){
   selectedWorkIds.clear();render();toast(changed?changed+' work order'+(changed===1?'':'s')+' updated':'No selected records met the action rules');
 }
 
-function adjustStock(partId){
-  const p=part(partId);if(!p)return;
-  const loc=p.locations[0];if(!loc)return;
-  const value=window.prompt('Counted quantity for '+p.name+' at '+loc.name, String(loc.onHand));
-  if(value===null)return;
-  const counted=Number(value);if(!Number.isFinite(counted)||counted<0){toast('Enter a valid stock quantity');return;}
-  const before=loc.onHand;loc.onHand=counted;
-  p.transactions.unshift({at:new Date().toISOString(),type:'Stock take',qty:counted-before,location:loc.name});
-  save('Stock take '+p.code);render();toast(p.code+' updated from '+before+' to '+counted);
+function optionList(records,label,value,selected){
+  return records.map(function(x){const v=value(x),l=label(x);return '<option value="'+escapeHTML(v)+'" '+(v===selected?'selected':'')+'>'+escapeHTML(l)+'</option>';}).join('');
+}
+function openSupplyDialog(action,partId){
+  const dialog=document.getElementById('supplyDialog'),fields=document.getElementById('supplyFields');
+  const title=document.getElementById('supplyDialogTitle'),submit=document.getElementById('supplySubmit');
+  document.getElementById('supplyAction').value=action;
+  const parts=optionList(state.parts,function(p){return p.code+' · '+p.name;},function(p){return p.id;},partId);
+  const suppliers='<option value="">Not specified</option>'+optionList(state.suppliers,function(s){return s.name;},function(s){return s.id;});
+  if(action==='part'){
+    title.textContent='Create part';submit.textContent='Create part';fields.innerHTML='<label>Part code<input name="code" required placeholder="Example: BRG-6205"></label><label>Part name<input name="name" required placeholder="Bearing 6205-2RS"></label><label>Category<input name="category" required placeholder="Bearing, filter, lubricant…"></label><label>Preferred supplier<select name="supplierId">'+suppliers+'</select></label><label>Unit cost (GHS)<input name="unitCost" type="number" min="0" step=".01" required value="0"></label><label>Store / bin<input name="location" required value="Main Store / Unassigned"></label><label>Opening stock<input name="onHand" type="number" min="0" required value="0"></label><label>Minimum stock<input name="min" type="number" min="0" required value="0"></label><label>Maximum stock<input name="max" type="number" min="0" required value="0"></label>';
+  }else if(action==='receive'){
+    title.textContent='Receive stock';submit.textContent='Post receipt';fields.innerHTML='<label class="span-2">Part<select name="partId" required>'+parts+'</select></label><label>Quantity received<input name="quantity" type="number" min="1" step="1" required value="1"></label><label>Store / bin<input name="location" required value="Main Store"></label><label>Supplier<select name="supplierId">'+suppliers+'</select></label><label>Delivery reference<input name="reference" placeholder="Delivery note or invoice"></label>';
+  }else if(action==='count'){
+    title.textContent='Post cycle count';submit.textContent='Post count';fields.innerHTML='<label class="span-2">Part<select name="partId" id="countPart" required>'+parts+'</select></label><label>Store / bin<input name="location" id="countLocation" required></label><label>Counted quantity<input name="counted" type="number" min="0" step="1" required></label><label class="span-2">Count note<input name="note" placeholder="Reason for variance or condition found"></label>';
+    setTimeout(function(){syncCountLocation();},0);
+  }else if(action==='po'){
+    title.textContent='Create purchase order';submit.textContent='Create draft PO';fields.innerHTML='<label>Supplier<select name="supplierId" required>'+suppliers.replace('<option value="">Not specified</option>','')+'</select></label><label>Part<select name="partId" id="poPart" required>'+parts+'</select></label><label>Quantity<input name="quantity" type="number" min="1" step="1" required value="1"></label><label>Unit cost (GHS)<input name="unitCost" id="poUnitCost" type="number" min="0" step=".01" required></label><label>Expected date<input name="expectedDate" type="date" required value="'+day(7)+'"></label><div class="form-note">Draft → Approved → Ordered → Received. Receiving posts stock automatically.</div>';
+    setTimeout(function(){syncPOCost();},0);
+  }else{
+    title.textContent='Create supplier';submit.textContent='Create supplier';fields.innerHTML='<label class="span-2">Supplier name<input name="name" required></label><label>Contact person<input name="contact"></label><label>Phone<input name="phone"></label><label class="span-2">Email<input name="email" type="email"></label>';
+  }
+  dialog.showModal();
+}
+function syncCountLocation(){
+  const select=document.getElementById('countPart'),input=document.getElementById('countLocation');if(!select||!input)return;
+  const p=part(select.value);input.value=p&&p.locations[0]?p.locations[0].name:'';
+}
+function syncPOCost(){
+  const select=document.getElementById('poPart'),input=document.getElementById('poUnitCost');if(!select||!input)return;
+  const p=part(select.value);input.value=p?Number(p.unitCost||0).toFixed(2):'0.00';
+}
+function receivePurchaseOrder(po){
+  const p=part(po.partId);if(!p)return;
+  const loc=p.locations[0]||{name:'Main Store / Unassigned',onHand:0,min:0,max:0};if(!p.locations.length)p.locations.push(loc);
+  loc.onHand=Number(loc.onHand||0)+Number(po.quantity);po.status='Received';po.receivedAt=new Date().toISOString();
+  const id=nextRecordId('REC',state.receipts,100);
+  state.receipts.unshift({id:id,partId:po.partId,supplierId:po.supplierId,quantity:Number(po.quantity),location:loc.name,reference:po.id,receivedAt:po.receivedAt,receivedBy:CURRENT_USER});
+  p.transactions.unshift({at:po.receivedAt,type:'Receipt',qty:Number(po.quantity),location:loc.name,reference:po.id});
+}
+
+function handleSupplySubmit(e){
+  e.preventDefault();const f=new FormData(e.currentTarget),action=f.get('action'),now=new Date().toISOString();let message='Supply record saved';
+  if(action==='part'){
+    const code=String(f.get('code')).trim().toUpperCase();if(state.parts.some(function(p){return p.code.toUpperCase()===code;})){toast('That part code already exists');return;}
+    const id=nextRecordId('PRT',state.parts,0);state.parts.push({id:id,code:code,name:String(f.get('name')).trim(),category:String(f.get('category')).trim(),supplierId:f.get('supplierId')||null,unitCost:Number(f.get('unitCost')),locations:[{name:String(f.get('location')).trim(),onHand:Number(f.get('onHand')),min:Number(f.get('min')),max:Number(f.get('max'))}],transactions:[]});message=id+' created';
+  }else if(action==='receive'){
+    const p=part(f.get('partId')),qty=Number(f.get('quantity')),location=String(f.get('location')).trim();if(!p||qty<=0)return;
+    let loc=p.locations.find(function(x){return x.name===location;});if(!loc){loc={name:location,onHand:0,min:0,max:0};p.locations.push(loc);}loc.onHand=Number(loc.onHand||0)+qty;
+    const id=nextRecordId('REC',state.receipts,100);state.receipts.unshift({id:id,partId:p.id,supplierId:f.get('supplierId')||null,quantity:qty,location:location,reference:String(f.get('reference')||'').trim(),receivedAt:now,receivedBy:CURRENT_USER});p.transactions.unshift({at:now,type:'Receipt',qty:qty,location:location,reference:String(f.get('reference')||'').trim()});message=id+' posted · '+qty+' received';
+  }else if(action==='count'){
+    const p=part(f.get('partId')),location=String(f.get('location')).trim(),counted=Number(f.get('counted'));if(!p||counted<0)return;
+    let loc=p.locations.find(function(x){return x.name===location;});if(!loc){loc={name:location,onHand:0,min:0,max:0};p.locations.push(loc);}const expected=Number(loc.onHand||0),variance=counted-expected;loc.onHand=counted;
+    const id=nextRecordId('CNT',state.cycleCounts,30);state.cycleCounts.unshift({id:id,partId:p.id,location:location,expected:expected,counted:counted,variance:variance,countedAt:now,countedBy:CURRENT_USER,note:String(f.get('note')||'').trim(),status:'Posted'});p.transactions.unshift({at:now,type:'Cycle count',qty:variance,location:location,reference:id});message=id+' posted · variance '+(variance>0?'+':'')+variance;
+  }else if(action==='po'){
+    const id=nextRecordId('PO',state.purchaseOrders,2024);state.purchaseOrders.unshift({id:id,supplierId:f.get('supplierId'),partId:f.get('partId'),quantity:Number(f.get('quantity')),unitCost:Number(f.get('unitCost')),expectedDate:f.get('expectedDate'),status:'Draft',createdAt:now});message=id+' created as draft';
+  }else{
+    const id=nextRecordId('SUP',state.suppliers,0);state.suppliers.push({id:id,name:String(f.get('name')).trim(),contact:String(f.get('contact')||'').trim(),phone:String(f.get('phone')||'').trim(),email:String(f.get('email')||'').trim(),status:'Active'});message=id+' supplier created';
+  }
+  save(message);e.currentTarget.reset();document.getElementById('supplyDialog').close();render();toast(message);
 }
 
 function bindPageActions(){
@@ -658,10 +777,12 @@ function bindPageActions(){
   document.querySelectorAll('[data-sort-work]').forEach(function(b){b.addEventListener('click',function(){const key=b.dataset.sortWork;if(sortKey===key)sortDir=sortDir==='asc'?'desc':'asc';else{sortKey=key;sortDir='asc';}render();});});
   document.querySelectorAll('[data-bulk-action]').forEach(function(b){b.addEventListener('click',function(){bulkUpdateWork(b.dataset.bulkAction);});});
   document.querySelectorAll('[data-print-work]').forEach(function(b){b.addEventListener('click',function(){window.print();});});
-  document.querySelectorAll('[data-stock-adjust]').forEach(function(b){b.addEventListener('click',function(){adjustStock(b.dataset.stockAdjust);});});
-  document.querySelectorAll('[data-stock-admin]').forEach(function(b){b.addEventListener('click',function(){toast(b.dataset.stockAdmin==='count'?'Use Stock take on a part row to record the count':'This planner action is prepared for the shared backend milestone');});});
-  document.querySelectorAll('[data-asset-admin]').forEach(function(b){b.addEventListener('click',function(){toast('Asset '+b.dataset.assetAdmin+' is prepared for the shared backend milestone');});});
-  document.querySelectorAll('[data-pm-admin]').forEach(function(b){b.addEventListener('click',function(){toast('Scheduled maintenance '+b.dataset.pmAdmin+' is prepared for the shared backend milestone');});});
+  document.querySelectorAll('[data-supply-action]').forEach(function(b){b.addEventListener('click',function(){openSupplyDialog(b.dataset.supplyAction,b.dataset.partId||null);});});
+  document.querySelectorAll('[data-po-action]').forEach(function(b){b.addEventListener('click',function(){
+    const po=state.purchaseOrders.find(function(x){return x.id===b.dataset.poAction;});if(!po)return;
+    if(po.status==='Draft')po.status='Approved';else if(po.status==='Approved')po.status='Ordered';else if(po.status==='Ordered')receivePurchaseOrder(po);
+    save('Updated '+po.id+' to '+po.status);render();toast(po.id+' is now '+po.status.toLowerCase());
+  });});
   document.querySelectorAll('[data-route-jump]').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.routeJump);});});
   document.querySelectorAll('[data-new-work]').forEach(function(b){b.addEventListener('click',function(){openWorkDialog();});});
   document.querySelectorAll('[data-new-request]').forEach(function(b){b.addEventListener('click',openRequestDialog);});
@@ -679,7 +800,8 @@ function bindPageActions(){
 
 function setupGlobalEvents(){
   document.querySelectorAll('.mode-btn').forEach(function(b){b.addEventListener('click',function(){workspaceMode=b.dataset.mode;localStorage.setItem('safimaint-workspace-mode',workspaceMode);render();toast(workspaceMode==='planner'?'Planner console enabled':'Field view enabled');});});
-  document.querySelectorAll('.nav-link').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.route);closeMobileMenu();});});
+  document.querySelectorAll('.nav-link[data-route]').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.route);closeMobileMenu();});});
+  document.getElementById('suppliesToggle').addEventListener('click',function(){setSuppliesOpen(this.getAttribute('aria-expanded')!=='true');});
   document.getElementById('newWorkButton').addEventListener('click',function(){openWorkDialog();});
   document.getElementById('searchButton').addEventListener('click',function(){document.getElementById('searchDialog').showModal();setTimeout(function(){document.getElementById('globalSearchInput').focus();},0);});
   document.getElementById('globalSearchInput').addEventListener('input',renderSearchResults);
@@ -691,6 +813,8 @@ function setupGlobalEvents(){
   document.getElementById('mobileScrim').addEventListener('click',closeMobileMenu);
   document.querySelectorAll('[data-close-dialog]').forEach(function(b){b.addEventListener('click',function(){const d=document.getElementById(b.dataset.closeDialog);if(d.id==='scanDialog')stopScanner();d.close();});});
   document.getElementById('scanDialog').addEventListener('close',stopScanner);
+  document.getElementById('supplyForm').addEventListener('submit',handleSupplySubmit);
+  document.getElementById('supplyFields').addEventListener('change',function(e){if(e.target.id==='countPart')syncCountLocation();if(e.target.id==='poPart')syncPOCost();});
 
   document.getElementById('workForm').addEventListener('submit',function(e){
     e.preventDefault();const f=new FormData(e.currentTarget),id=nextWorkId();
@@ -731,6 +855,8 @@ function setupGlobalEvents(){
     if(ref[0]==='asset'){selectedAssetId=ref[1];assetTab='overview';navigate('assets');}
     if(ref[0]==='part')navigate('inventory');
     if(ref[0]==='pm')navigate('pm');
+    if(ref[0]==='supplier')navigate('suppliers');
+    if(ref[0]==='po')navigate('purchase-orders');
   });
 
   window.addEventListener('hashchange',function(){route=location.hash.replace('#/','')||'dashboard';render();});
