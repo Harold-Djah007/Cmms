@@ -1,12 +1,38 @@
 {
   "name": "SafiMaintain CMMS",
   "short_name": "SafiMaintain",
-  "description": "Simple maintenance management for equipment, work orders, schedules, and spare parts.",
+  "description": "Offline-first maintenance management for field work, inspections, assets, preventive maintenance and spare parts.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f4f7f6",
   "theme_color": "#0b5d57",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
-    { "src": "assets/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "assets/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Work Orders",
+      "short_name": "Work Orders",
+      "description": "Open maintenance work orders",
+      "url": "./?view=work-orders"
+    },
+    {
+      "name": "Inspections",
+      "short_name": "Inspections",
+      "description": "Run field inspections",
+      "url": "./?view=inspections"
+    }
   ]
 }
