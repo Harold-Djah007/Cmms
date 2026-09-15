@@ -104,6 +104,10 @@ let drawerWorkId = null;
 let drawerTab = 'overview';
 let pendingMeterTask = null;
 let scannerStream = null;
+let workspaceMode = localStorage.getItem('safimaint-workspace-mode') || 'planner';
+let selectedWorkIds = new Set();
+let sortKey = 'due';
+let sortDir = 'asc';
 
 function clone(value){ return JSON.parse(JSON.stringify(value)); }
 function loadState(){
@@ -198,6 +202,9 @@ function pageHead(kicker,title,subtitle,actions){
 
 function render(){
   updateBadges();
+  document.body.classList.toggle('planner-mode',workspaceMode==='planner');
+  document.body.classList.toggle('field-mode',workspaceMode==='field');
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.toggle('active',b.dataset.mode===workspaceMode);});
   document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===route);});
   const view=document.getElementById('appView');
   const pages={
@@ -218,47 +225,77 @@ function renderDashboard(){
   const attention=equipment.filter(function(a){return a.status==='Attention';});
   const duePM=state.pm.filter(function(p){return p.status==='Running'&&p.trigger.type==='time'&&p.trigger.nextDue<=day(7);});
   const pmGenerated=state.workOrders.filter(function(w){return w.type==='Preventive'&&new Date(w.createdAt)>=new Date(new Date().getFullYear(),new Date().getMonth(),1);}).length;
-  const pmCompleted=state.workOrders.filter(function(w){return w.type==='Preventive'&&w.status==='Completed'&&new Date(w.completedAt)>=new Date(new Date().getFullYear(),new Date().getMonth(),1);}).length;
+  const pmCompleted=state.workOrders.filter(function(w){return w.type==='Preventive'&&w.status==='Completed'&&w.completedAt&&new Date(w.completedAt)>=new Date(new Date().getFullYear(),new Date().getMonth(),1);}).length;
   const pmCompliance=pmGenerated?Math.round(pmCompleted/pmGenerated*100):100;
   const healthTotal=Math.max(1,equipment.length);
-  const decisionHTML=urgent.slice(0,6).map(function(w){
-    return '<button class="decision-row" data-open-wo="'+w.id+'"><span class="stripe '+w.priority+'"></span><span><strong>'+escapeHTML(w.title)+'</strong><p>'+escapeHTML(assetName(w.assetId))+' · '+prettyDate(w.due)+' · '+escapeHTML(userName(w.assigneeId))+'</p></span><span class="badges">'+badge(w.priority,w.priority)+' '+badge(w.status)+'</span></button>';
+  const decisionHTML=urgent.slice(0,7).map(function(w){
+    return '<button class="decision-row" data-open-wo="'+w.id+'"><span class="stripe '+w.priority+'"></span><span><strong>'+escapeHTML(w.title)+'</strong><p>'+escapeHTML(w.id)+' · '+escapeHTML(assetName(w.assetId))+' · '+prettyDate(w.due)+' · '+escapeHTML(userName(w.assigneeId))+'</p></span><span class="badges">'+badge(w.priority,w.priority)+' '+badge(w.status)+'</span></button>';
   }).join('') || '<div class="empty"><strong>No urgent work</strong>Nothing is currently overdue or high priority.</div>';
   const pmHTML=state.pm.filter(function(x){return x.status==='Running';}).sort(function(a,b){
     const av=a.trigger.type==='time'?a.trigger.nextDue:'9999-12-31'; const bv=b.trigger.type==='time'?b.trigger.nextDue:'9999-12-31'; return av.localeCompare(bv);
-  }).slice(0,4).map(function(p){
+  }).slice(0,5).map(function(p){
     const trig=p.trigger.type==='time'?prettyDate(p.trigger.nextDue):'At '+p.trigger.nextThreshold+' '+escapeHTML(meter(p.trigger.meterId).unit);
-    return '<div class="pm-row"><span class="date-tile">'+(p.trigger.type==='time'?prettyDate(p.trigger.nextDue).replace('Today','NOW').replace('Tomorrow','NEXT'):'MTR')+'</span><span><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(assetName(p.assetId))+'</small></span>'+badge(trig,'healthy')+'</div>';
+    return '<div class="pm-row"><span class="date-tile">'+(p.trigger.type==='time'?prettyDate(p.trigger.nextDue).replace('Today','NOW').replace('Tomorrow','NEXT'):'MTR')+'</span><span><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(p.id)+' · '+escapeHTML(assetName(p.assetId))+'</small></span>'+badge(trig,'healthy')+'</div>';
   }).join('');
-  return pageHead('Live maintenance command','Operations overview','Decisions, reliability and planned work for the plant.',
-    '<button class="secondary-btn" data-route-jump="requests">'+icon('i-request')+'New request</button><button class="primary-btn" data-new-work>'+icon('i-plus')+'New work order</button>')+
+  return pageHead('Maintenance control center','Operations overview','Planner view of work, assets, preventive maintenance and stores.',
+    '<button class="secondary-btn" data-route-jump="requests">'+icon('i-request')+'Request</button><button class="primary-btn" data-new-work>'+icon('i-plus')+'New work order</button>')+
     '<section class="kpi-strip">'+
       '<article class="kpi"><label>Active work</label><strong>'+active.length+'</strong><small>'+active.filter(function(w){return w.priority==='High'||w.priority==='Critical';}).length+' high / critical</small></article>'+
-      '<article class="kpi red"><label>Overdue</label><strong>'+active.filter(overdue).length+'</strong><small>Escalate before next round</small></article>'+
-      '<article class="kpi blue"><label>PM compliance</label><strong>'+pmCompliance+'%</strong><small>'+duePM.length+' planned items due soon</small></article>'+
+      '<article class="kpi red"><label>Overdue</label><strong>'+active.filter(overdue).length+'</strong><small>Requires planner attention</small></article>'+
+      '<article class="kpi blue"><label>PM compliance</label><strong>'+pmCompliance+'%</strong><small>'+duePM.length+' plans due soon</small></article>'+
       '<article class="kpi amber"><label>Assets down</label><strong>'+down.length+'</strong><small>'+healthy.length+' equipment healthy</small></article>'+
-      '<article class="kpi blue"><label>Below minimum</label><strong>'+low.length+'</strong><small>Parts requiring attention</small></article>'+
+      '<article class="kpi blue"><label>Below minimum</label><strong>'+low.length+'</strong><small>Stock items to replenish</small></article>'+
+    '</section>'+
+    '<section class="live-ops-strip">'+
+      '<article class="live-tile"><div class="live-icon-stage gear-orbit">'+icon('i-work')+'</div><div><strong>Maintenance engine</strong><small>'+active.length+' jobs tracked · '+state.pm.length+' PM plans evaluating</small><span class="live-pulse">Live maintenance state</span></div></article>'+
+      '<article class="live-tile"><div class="live-icon-stage scan-stage-mini">'+icon('i-scan')+'</div><div><strong>Tag & equipment scanning</strong><small>Asset, work-order and part tags ready for field lookup</small><span class="live-pulse">Scanner service ready</span></div></article>'+
+      '<article class="live-tile"><div class="live-icon-stage stock-stage-mini"><i></i><i></i><i></i><i></i></div><div><strong>Store movement</strong><small>'+low.length+' below minimum · stock issues linked to work orders</small><span class="live-pulse">Inventory counters active</span></div></article>'+
     '</section>'+
     '<section class="grid-main"><div class="stack">'+
-      '<article class="card"><div class="card-head"><div><p class="eyebrow">Decision queue</p><h2>Work needing attention</h2></div><button class="link-btn" data-route-jump="work-orders">Open work board →</button></div><div class="decision-list">'+decisionHTML+'</div></article>'+
-      '<article class="card"><div class="card-head"><div><p class="eyebrow">Maintenance plan</p><h2>What the system will generate next</h2></div><button class="link-btn" data-route-jump="pm">Manage PM →</button></div><div class="pm-mini">'+pmHTML+'</div></article>'+
+      '<article class="card"><div class="card-head"><div><p class="eyebrow">Action queue</p><h2>Work needing a decision</h2></div><button class="link-btn" data-route-jump="work-orders">Open work order list →</button></div><div class="decision-list">'+decisionHTML+'</div></article>'+
+      '<article class="card"><div class="card-head"><div><p class="eyebrow">Scheduled maintenance</p><h2>Next PM triggers</h2></div><button class="link-btn" data-route-jump="pm">Scheduled maintenance →</button></div><div class="pm-mini">'+pmHTML+'</div></article>'+
     '</div><div class="stack">'+
-      '<article class="card"><div class="card-head"><div><p class="eyebrow">Equipment state</p><h2>Plant availability</h2></div></div><div class="health-summary"><div class="health-bar"><span class="health-good" style="width:'+(healthy.length/healthTotal*100)+'%"></span><span class="health-attn" style="width:'+(attention.length/healthTotal*100)+'%"></span><span class="health-down" style="width:'+(down.length/healthTotal*100)+'%"></span></div><div class="legend"><div class="legend-row"><span><i class="dot"></i>Healthy</span><strong>'+healthy.length+'</strong></div><div class="legend-row"><span><i class="dot attention"></i>Attention</span><strong>'+attention.length+'</strong></div><div class="legend-row"><span><i class="dot down"></i>Down</span><strong>'+down.length+'</strong></div></div><button class="secondary-btn" style="width:100%;margin-top:16px" data-route-jump="assets">Open asset register</button></div></article>'+
-      '<article class="card card-pad"><p class="eyebrow">Store readiness</p><h2 style="margin:3px 0 6px;font-size:1.1rem">Parts at risk</h2><p style="color:var(--muted);margin:0 0 14px">'+low.length+' item'+(low.length===1?'':'s')+' at or below minimum stock.</p><button class="secondary-btn" data-route-jump="inventory">Review stores</button></article>'+
+      '<article class="card"><div class="card-head"><div><p class="eyebrow">Asset availability</p><h2>Plant health</h2></div></div><div class="health-summary"><div class="health-bar"><span class="health-good" style="width:'+(healthy.length/healthTotal*100)+'%"></span><span class="health-attn" style="width:'+(attention.length/healthTotal*100)+'%"></span><span class="health-down" style="width:'+(down.length/healthTotal*100)+'%"></span></div><div class="legend"><div class="legend-row"><span><i class="dot"></i>Healthy</span><strong>'+healthy.length+'</strong></div><div class="legend-row"><span><i class="dot attention"></i>Attention</span><strong>'+attention.length+'</strong></div><div class="legend-row"><span><i class="dot down"></i>Down</span><strong>'+down.length+'</strong></div></div><button class="secondary-btn" style="width:100%;margin-top:13px" data-route-jump="assets">Asset register</button></div></article>'+
+      '<article class="card card-pad"><p class="eyebrow">Stores</p><h2 style="margin:3px 0 6px;font-size:1rem">Inventory attention</h2><p style="color:var(--muted);font-size:.76rem;margin:0 0 12px">'+low.length+' part'+(low.length===1?'':'s')+' at or below minimum stock.</p><button class="secondary-btn" data-route-jump="inventory">Parts & stores</button></article>'+
     '</div></section>';
 }
 
 function renderWorkOrders(){
-  const activeFilters=['Active','Open','In Progress','Completed','All'];
-  let rows=state.workOrders.slice().sort(function(a,b){return (isActive(b)-isActive(a))||a.due.localeCompare(b.due);});
+  const filters=['Active','Open','In Progress','Completed','All'];
+  let rows=state.workOrders.slice();
   if(woFilter==='Active') rows=rows.filter(isActive);
   else if(woFilter!=='All') rows=rows.filter(function(w){return w.status===woFilter;});
+  const priorityRank={Critical:0,High:1,Medium:2,Low:3};
+  rows.sort(function(a,b){
+    let av=a[sortKey],bv=b[sortKey];
+    if(sortKey==='asset') {av=assetName(a.assetId);bv=assetName(b.assetId);}
+    if(sortKey==='assignee') {av=userName(a.assigneeId);bv=userName(b.assigneeId);}
+    if(sortKey==='priority') {av=priorityRank[a.priority]??9;bv=priorityRank[b.priority]??9;}
+    if(typeof av==='string') return (sortDir==='asc'?1:-1)*String(av).localeCompare(String(bv));
+    return (sortDir==='asc'?1:-1)*((av||0)-(bv||0));
+  });
+  const selectedCount=selectedWorkIds.size;
+  const sortHead=function(label,key){return '<button class="sort-button '+(sortKey===key?'active':'')+'" data-sort-work="'+key+'">'+label+(sortKey===key?(sortDir==='asc'?' ↑':' ↓'):'')+'</button>';};
   const table=rows.map(function(w){
-    return '<tr data-open-wo="'+w.id+'"><td><strong>'+escapeHTML(w.id)+'</strong><small>'+escapeHTML(w.type)+'</small></td><td><strong>'+escapeHTML(w.title)+'</strong><small>'+escapeHTML(assetName(w.assetId))+'</small></td><td>'+badge(w.priority,w.priority)+'</td><td>'+escapeHTML(userName(w.assigneeId))+'</td><td><strong>'+prettyDate(w.due)+'</strong>'+(overdue(w)?'<small style="color:var(--red)">Overdue</small>':'')+'</td><td>'+badge(w.status)+'</td><td>'+escapeHTML(w.source||'Manual')+'</td></tr>';
+    return '<tr><td class="bulk-check"><input type="checkbox" data-select-wo="'+w.id+'" '+(selectedWorkIds.has(w.id)?'checked':'')+' aria-label="Select '+w.id+'"></td>'+
+      '<td><strong>'+escapeHTML(w.id)+'</strong><small>'+escapeHTML(w.type)+'</small></td>'+
+      '<td><button class="link-btn" data-open-wo="'+w.id+'"><strong>'+escapeHTML(w.title)+'</strong></button><small>'+escapeHTML(assetName(w.assetId))+'</small></td>'+
+      '<td>'+badge(w.priority,w.priority)+'</td><td>'+escapeHTML(userName(w.assigneeId))+'</td>'+
+      '<td><strong>'+prettyDate(w.due)+'</strong>'+(overdue(w)?'<small style="color:var(--red)">Overdue</small>':'')+'</td>'+
+      '<td>'+badge(w.status)+'</td><td>'+escapeHTML(w.source||'Manual')+'</td></tr>';
   }).join('');
-  return pageHead('Work management','Work orders','Plan, execute and close maintenance with tasks, parts, labor and history.','<button class="primary-btn" data-new-work>'+icon('i-plus')+'New work order</button>')+
-    '<div class="toolbar"><div class="filter-set">'+activeFilters.map(function(f){return '<button class="filter-chip '+(woFilter===f?'active':'')+'" data-wo-filter="'+f+'">'+f+'</button>';}).join('')+'</div><span style="color:var(--muted);font-size:.8rem">'+rows.length+' records</span></div>'+
-    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Code</th><th>Work</th><th>Priority</th><th>Assigned</th><th>Due</th><th>Status</th><th>Source</th></tr></thead><tbody>'+table+'</tbody></table></div>';
+  return pageHead('Maintenance','Work orders','Plan, assign and execute maintenance from one operational register.',
+    '<button class="primary-btn" data-new-work>'+icon('i-plus')+'New</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-new-work>'+icon('i-plus')+'New</button>'+
+      '<button class="tool-btn" data-bulk-action="start" '+(!selectedCount?'disabled':'')+'>Start selected</button>'+
+      '<button class="tool-btn" data-bulk-action="complete" '+(!selectedCount?'disabled':'')+'>Complete selected</button>'+
+      '<button class="tool-btn" data-print-work>'+icon('i-file')+'Print</button>'+
+      '<span class="spacer"></span><span class="admin-count">'+selectedCount+' selected · '+rows.length+' records</span></div>'+
+    '<div class="toolbar"><div class="filter-set">'+filters.map(function(x){return '<button class="filter-chip '+(woFilter===x?'active':'')+'" data-wo-filter="'+x+'">'+x+'</button>';}).join('')+'</div></div>'+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th class="bulk-check"><input type="checkbox" data-select-all-wo aria-label="Select all"></th>'+
+      '<th>'+sortHead('Code','id')+'</th><th>'+sortHead('Description / Asset','title')+'</th><th>'+sortHead('Priority','priority')+'</th>'+
+      '<th>'+sortHead('Assigned user','assignee')+'</th><th>'+sortHead('Due','due')+'</th><th>'+sortHead('Status','status')+'</th><th>Type / Source</th></tr></thead>'+
+      '<tbody>'+table+'</tbody></table></div>';
 }
 
 function renderMyWork(){
@@ -269,14 +306,23 @@ function renderMyWork(){
 }
 
 function renderPM(){
-  const cards=state.pm.map(function(p){
-    const a=asset(p.assetId); let triggerText='';
-    if(p.trigger.type==='time') triggerText='Every '+p.trigger.intervalDays+' days · next '+prettyDate(p.trigger.nextDue);
-    else { const m=meter(p.trigger.meterId); triggerText='Every '+p.trigger.intervalValue+' '+m.unit+' · next '+p.trigger.nextThreshold+' '+m.unit; }
-    return '<article class="pm-card"><div class="badges">'+badge(p.status,'healthy')+' '+badge(p.mode==='fixed'?'Fixed':'Floating','pending')+'</div><h3>'+escapeHTML(p.name)+'</h3><p>'+escapeHTML(a.name)+' · '+p.tasks.length+' tasks · '+p.parts.length+' planned parts</p><div class="trigger"><span class="trigger-icon">'+icon(p.trigger.type==='time'?'i-calendar':'i-meter')+'</span><span><strong style="display:block;font-size:.78rem">'+(p.trigger.type==='time'?'Time trigger':'Meter trigger')+'</strong><small style="color:var(--muted)">'+escapeHTML(triggerText)+'</small></span></div><footer><button class="secondary-btn" data-generate-pm="'+p.id+'">Generate now</button><button class="quiet-btn" data-open-asset="'+p.assetId+'">Asset</button></footer></article>';
+  const rows=state.pm.map(function(p){
+    const a=asset(p.assetId);
+    const isTime=p.trigger.type==='time';
+    const m=!isTime?meter(p.trigger.meterId):null;
+    const trigger=isTime?'Every '+p.trigger.intervalDays+' days':'Every '+p.trigger.intervalValue+' '+(m?m.unit:'');
+    const next=isTime?prettyDate(p.trigger.nextDue):(p.trigger.nextThreshold+' '+(m?m.unit:''));
+    return '<tr><td><strong>'+escapeHTML(p.id)+'</strong></td><td><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(a?a.name:'')+'</small></td>'+
+      '<td>'+badge(isTime?'Time':'Meter',isTime?'healthy':'pending')+'</td><td>'+escapeHTML(trigger)+'</td><td>'+badge(p.mode==='fixed'?'Fixed':'Floating','pending')+'</td>'+
+      '<td><strong>'+escapeHTML(next)+'</strong></td><td>'+p.tasks.length+' tasks</td><td>'+p.parts.length+' parts</td><td>'+badge(p.status,'healthy')+'</td>'+
+      '<td><button class="tool-btn" data-generate-pm="'+p.id+'">Generate</button></td></tr>';
   }).join('');
-  return pageHead('Preventive maintenance','Maintenance plans','Reusable job plans that generate work from time or equipment usage.','<button class="secondary-btn" data-run-automation>'+icon('i-sync')+'Evaluate triggers</button>')+
-    '<div class="pm-grid">'+cards+'</div>';
+  return pageHead('Maintenance','Scheduled maintenance','Time- and meter-driven job plans that generate repeatable work orders.',
+    '<button class="secondary-btn" data-run-automation>'+icon('i-sync')+'Evaluate triggers</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-run-automation>'+icon('i-sync')+'Evaluate triggers</button>'+
+      '<button class="tool-btn" data-pm-admin="new">New schedule</button><button class="tool-btn" data-pm-admin="duplicate">Duplicate</button>'+
+      '<button class="tool-btn" data-print-work>Print</button><span class="spacer"></span><span class="admin-count">'+state.pm.length+' maintenance plans</span></div>'+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Code</th><th>Scheduled maintenance</th><th>Trigger</th><th>Frequency</th><th>Scheduling</th><th>Next</th><th>Tasks</th><th>Parts</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function renderRequests(){
@@ -320,7 +366,11 @@ function assetDetail(a){
 function renderAssets(){
   const roots=state.assets.filter(function(a){return a.parentId===null;});
   const selected=asset(selectedAssetId)||roots[0];
-  return pageHead('Asset care','Asset register','A hierarchy that mirrors the real plant so work, meters and parts stay tied to equipment.','<button class="secondary-btn" id="assetMeterButton">'+icon('i-meter')+'Add reading</button>')+
+  return pageHead('Assets','Asset register','Plant hierarchy, equipment records, meters, BOMs and maintenance history.',
+    '<button class="secondary-btn" id="assetMeterButton">'+icon('i-meter')+'Add reading</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-asset-admin="new">'+icon('i-plus')+'New</button>'+
+      '<button class="tool-btn" data-asset-admin="import">Import</button><button class="tool-btn" data-asset-admin="export">Export</button>'+
+      '<button class="tool-btn" data-print-work>Print asset tags</button><span class="spacer"></span><span class="admin-count">'+state.assets.length+' asset records</span></div>'+
     '<div class="asset-layout"><section class="tree-panel"><div class="tree-head"><p class="eyebrow">Plant hierarchy</p><h2>Sites → facilities → equipment → tools</h2></div><div class="asset-tree">'+renderTree(null,0)+'</div></section><section class="detail-panel">'+assetDetail(selected)+'</section></div>';
 }
 
@@ -334,12 +384,21 @@ function renderMeters(){
 }
 
 function renderInventory(){
-  const cards=state.parts.map(function(p){
-    const qty=totalStock(p),min=minStock(p),max=(p.locations||[]).reduce(function(sum,l){return sum+Number(l.max||0);},0)||Math.max(qty,1);
-    const pct=Math.min(100,qty/max*100), low=qty<=min;
-    return '<article class="part-card"><div class="badges">'+badge(p.category,'healthy')+' '+(low?badge('Reorder','down'):badge('Available','completed'))+'</div><h3>'+escapeHTML(p.name)+'</h3><p>'+escapeHTML(p.code)+' · GHS '+Number(p.unitCost).toFixed(2)+' / unit</p><div class="stock-level"><div class="stock-top"><span>On hand <strong>'+qty+'</strong></span><span>Min '+min+'</span></div><div class="stock-track"><div class="stock-fill '+(low?'low':'')+'" style="width:'+pct+'%"></div></div></div><div class="record-list">'+p.locations.map(function(l){return '<div class="record-item"><span><strong>'+escapeHTML(l.name)+'</strong><small>Min '+l.min+' · Max '+l.max+'</small></span><strong>'+l.onHand+'</strong></div>';}).join('')+'</div></article>';
+  const rows=state.parts.map(function(p){
+    const qty=totalStock(p),min=minStock(p),max=(p.locations||[]).reduce(function(sum,l){return sum+Number(l.max||0);},0);
+    const low=qty<=min;
+    const locations=p.locations.map(function(l){return l.name;}).join(', ');
+    return '<tr><td><strong>'+escapeHTML(p.code)+'</strong></td><td><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(p.category)+'</small></td>'+
+      '<td>'+qty+'</td><td>'+min+'</td><td>'+max+'</td><td>'+escapeHTML(locations)+'</td><td>GHS '+Number(p.unitCost).toFixed(2)+'</td>'+
+      '<td>'+badge(low?'Below min':'In stock',low?'down':'completed')+'</td><td><button class="tool-btn" data-stock-adjust="'+p.id+'">Stock take</button></td></tr>';
   }).join('');
-  return pageHead('Inventory','Parts & stores','Stock by location, reorder thresholds and consumption tied to maintenance.','')+'<div class="parts-grid">'+cards+'</div>';
+  const lowCount=state.parts.filter(function(p){return totalStock(p)<=minStock(p);}).length;
+  return pageHead('Supplies','Parts & stores','Inventory administration with location stock, thresholds and work-order consumption.',
+    '<button class="secondary-btn" data-stock-admin="count">'+icon('i-box')+'Stock take</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-stock-admin="new">'+icon('i-plus')+'New part</button>'+
+      '<button class="tool-btn" data-stock-admin="receive">Receive stock</button><button class="tool-btn" data-stock-admin="count">Batch stock take</button>'+
+      '<button class="tool-btn" data-print-work>Print labels</button><span class="spacer"></span><span class="admin-count">'+lowCount+' below minimum · '+state.parts.length+' parts</span></div>'+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Part code</th><th>Part / category</th><th>On hand</th><th>Min</th><th>Max</th><th>Stock location</th><th>Unit cost</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function renderReports(){
@@ -517,7 +576,47 @@ async function startCameraScanner(){
 }
 function stopScanner(){ if(scannerStream){scannerStream.getTracks().forEach(function(t){t.stop();});scannerStream=null;}const v=document.getElementById('scanVideo');if(v){v.srcObject=null;v.hidden=true;}}
 
+function bulkUpdateWork(action){
+  if(!selectedWorkIds.size){toast('Select one or more work orders first');return;}
+  let changed=0;
+  selectedWorkIds.forEach(function(id){
+    const w=work(id); if(!w) return;
+    if(action==='start'&&w.status==='Open'){w.status='In Progress';logWork(w,'Work started from planner bulk action');changed++;}
+    if(action==='complete'&&isActive(w)&&w.tasks.every(function(t){return t.status==='Done';})){w.status='Completed';w.completedAt=new Date().toISOString();logWork(w,'Work order completed from planner bulk action');changed++;}
+  });
+  if(changed) save('Bulk work-order update');
+  selectedWorkIds.clear();render();toast(changed?changed+' work order'+(changed===1?'':'s')+' updated':'No selected records met the action rules');
+}
+
+function adjustStock(partId){
+  const p=part(partId);if(!p)return;
+  const loc=p.locations[0];if(!loc)return;
+  const value=window.prompt('Counted quantity for '+p.name+' at '+loc.name, String(loc.onHand));
+  if(value===null)return;
+  const counted=Number(value);if(!Number.isFinite(counted)||counted<0){toast('Enter a valid stock quantity');return;}
+  const before=loc.onHand;loc.onHand=counted;
+  p.transactions.unshift({at:new Date().toISOString(),type:'Stock take',qty:counted-before,location:loc.name});
+  save('Stock take '+p.code);render();toast(p.code+' updated from '+before+' to '+counted);
+}
+
 function bindPageActions(){
+  document.querySelectorAll('[data-select-wo]').forEach(function(box){
+    box.addEventListener('click',function(e){e.stopPropagation();});
+    box.addEventListener('change',function(){if(box.checked)selectedWorkIds.add(box.dataset.selectWo);else selectedWorkIds.delete(box.dataset.selectWo);render();});
+  });
+  const selectAll=document.querySelector('[data-select-all-wo]');
+  if(selectAll)selectAll.addEventListener('change',function(){
+    const visible=Array.from(document.querySelectorAll('[data-select-wo]')).map(function(x){return x.dataset.selectWo;});
+    if(selectAll.checked)visible.forEach(function(id){selectedWorkIds.add(id);});else visible.forEach(function(id){selectedWorkIds.delete(id);});
+    render();
+  });
+  document.querySelectorAll('[data-sort-work]').forEach(function(b){b.addEventListener('click',function(){const key=b.dataset.sortWork;if(sortKey===key)sortDir=sortDir==='asc'?'desc':'asc';else{sortKey=key;sortDir='asc';}render();});});
+  document.querySelectorAll('[data-bulk-action]').forEach(function(b){b.addEventListener('click',function(){bulkUpdateWork(b.dataset.bulkAction);});});
+  document.querySelectorAll('[data-print-work]').forEach(function(b){b.addEventListener('click',function(){window.print();});});
+  document.querySelectorAll('[data-stock-adjust]').forEach(function(b){b.addEventListener('click',function(){adjustStock(b.dataset.stockAdjust);});});
+  document.querySelectorAll('[data-stock-admin]').forEach(function(b){b.addEventListener('click',function(){toast(b.dataset.stockAdmin==='count'?'Use Stock take on a part row to record the count':'This planner action is prepared for the shared backend milestone');});});
+  document.querySelectorAll('[data-asset-admin]').forEach(function(b){b.addEventListener('click',function(){toast('Asset '+b.dataset.assetAdmin+' is prepared for the shared backend milestone');});});
+  document.querySelectorAll('[data-pm-admin]').forEach(function(b){b.addEventListener('click',function(){toast('Scheduled maintenance '+b.dataset.pmAdmin+' is prepared for the shared backend milestone');});});
   document.querySelectorAll('[data-route-jump]').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.routeJump);});});
   document.querySelectorAll('[data-new-work]').forEach(function(b){b.addEventListener('click',function(){openWorkDialog();});});
   document.querySelectorAll('[data-new-request]').forEach(function(b){b.addEventListener('click',openRequestDialog);});
@@ -534,6 +633,7 @@ function bindPageActions(){
 }
 
 function setupGlobalEvents(){
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.addEventListener('click',function(){workspaceMode=b.dataset.mode;localStorage.setItem('safimaint-workspace-mode',workspaceMode);render();toast(workspaceMode==='planner'?'Planner console enabled':'Field view enabled');});});
   document.querySelectorAll('.nav-link').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.route);closeMobileMenu();});});
   document.getElementById('newWorkButton').addEventListener('click',function(){openWorkDialog();});
   document.getElementById('searchButton').addEventListener('click',function(){document.getElementById('searchDialog').showModal();setTimeout(function(){document.getElementById('globalSearchInput').focus();},0);});
