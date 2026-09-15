@@ -1,13 +1,13 @@
 {
   "name": "SafiMaintain CMMS",
   "short_name": "SafiMaintain",
-  "description": "Offline-first maintenance management for field work, inspections, assets, preventive maintenance and spare parts.",
-  "start_url": "./",
+  "description": "Field-first maintenance operations for work orders, assets, PM, meters, requests and spare parts.",
+  "start_url": "./#/dashboard",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f4f7f6",
-  "theme_color": "#0b5d57",
+  "background_color": "#eef4f3",
+  "theme_color": "#0d5d53",
   "categories": [
     "business",
     "productivity",
@@ -23,16 +23,22 @@
   ],
   "shortcuts": [
     {
-      "name": "Work Orders",
-      "short_name": "Work Orders",
-      "description": "Open maintenance work orders",
-      "url": "./?view=work-orders"
+      "name": "Work orders",
+      "short_name": "Work",
+      "description": "Open the maintenance work board",
+      "url": "./#/work-orders"
     },
     {
-      "name": "Inspections",
-      "short_name": "Inspections",
-      "description": "Run field inspections",
-      "url": "./?view=inspections"
+      "name": "Asset register",
+      "short_name": "Assets",
+      "description": "Open the plant asset hierarchy",
+      "url": "./#/assets"
+    },
+    {
+      "name": "Maintenance requests",
+      "short_name": "Requests",
+      "description": "Review maintenance requests",
+      "url": "./#/requests"
     }
   ]
 }
