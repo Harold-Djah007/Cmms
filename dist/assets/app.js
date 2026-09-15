@@ -415,13 +415,43 @@ function renderReports(){
 
 function openWorkDrawer(id,tab){
   const w=work(id); if(!w) return;
-  drawerWorkId=id; drawerTab=tab||drawerTab||'overview';
+  drawerWorkId=id;
+  drawerTab=!tab||tab==='overview'?'general':tab;
   const drawer=document.getElementById('recordDrawer');
   const tasksDone=w.tasks.filter(function(t){return t.status==='Done';}).length;
   const progress=Math.round(tasksDone/Math.max(1,w.tasks.length)*100);
+  const usedParts=(w.parts||[]).reduce(function(sum,x){return sum+Number(x.actual||0);},0);
+  const assetMeters=state.meters.filter(function(m){return m.assetId===w.assetId;});
   let body='';
-  if(drawerTab==='overview'){
-    body='<div class="work-summary"><div class="info-cell"><small>Asset</small><strong>'+escapeHTML(assetName(w.assetId))+'</strong></div><div class="info-cell"><small>Assigned</small><strong>'+escapeHTML(userName(w.assigneeId))+'</strong></div><div class="info-cell"><small>Due</small><strong>'+prettyDate(w.due)+'</strong></div><div class="info-cell"><small>Estimated labor</small><strong>'+w.estimateHours+' h</strong></div><div class="info-cell"><small>Actual labor</small><strong>'+Math.round((w.actualMinutes||0)/6)/10+' h</strong></div><div class="info-cell"><small>Task progress</small><strong>'+progress+'%</strong></div></div><h3 style="font-size:.9rem;margin:18px 0 7px">Work instructions</h3><p style="color:var(--muted);margin:0">'+escapeHTML(w.instructions||'No instructions entered.')+'</p>';
+
+  if(drawerTab==='general'){
+    body='<div class="record-admin-grid">'+
+      '<div class="info-cell"><small>Work order status</small><strong>'+escapeHTML(w.status)+'</strong></div>'+
+      '<div class="info-cell"><small>Asset</small><strong>'+escapeHTML(assetName(w.assetId))+'</strong></div>'+
+      '<div class="info-cell"><small>Maintenance type</small><strong>'+escapeHTML(w.type)+'</strong></div>'+
+      '<div class="info-cell"><small>Priority</small><strong>'+escapeHTML(w.priority)+'</strong></div>'+
+      '<div class="info-cell"><small>Assigned to</small><strong>'+escapeHTML(userName(w.assigneeId))+'</strong></div>'+
+      '<div class="info-cell"><small>Suggested completion</small><strong>'+prettyDate(w.due)+'</strong></div>'+
+      '<div class="info-cell"><small>Estimated labor</small><strong>'+w.estimateHours+' h</strong></div>'+
+      '<div class="info-cell"><small>Actual labor</small><strong>'+Math.round((w.actualMinutes||0)/6)/10+' h</strong></div>'+
+    '</div>'+
+    '<div class="record-section"><h3>Summary of issue / work</h3><p>'+escapeHTML(w.title)+'</p></div>'+
+    '<div class="record-section"><h3>Work instructions</h3><p>'+escapeHTML(w.instructions||'No work instructions entered.')+'</p></div>'+
+    '<div class="record-section"><h3>Source</h3><p>'+escapeHTML(w.source||'Manual')+(w.sourcePmId?' · generated from '+escapeHTML(w.sourcePmId):'')+'</p></div>';
+  } else if(drawerTab==='completion'){
+    body='<div class="record-admin-grid">'+
+      '<div class="info-cell"><small>Status</small><strong>'+escapeHTML(w.status)+'</strong></div>'+
+      '<div class="info-cell"><small>Task completion</small><strong>'+tasksDone+' / '+w.tasks.length+'</strong></div>'+
+      '<div class="info-cell"><small>Labor logged</small><strong>'+Math.round((w.actualMinutes||0)/6)/10+' h</strong></div>'+
+      '<div class="info-cell"><small>Parts issued</small><strong>'+usedParts+'</strong></div>'+
+      '<div class="info-cell"><small>Date completed</small><strong>'+(w.completedAt?formatTime(w.completedAt):'Not completed')+'</strong></div>'+
+      '<div class="info-cell"><small>Progress</small><strong>'+progress+'%</strong></div>'+
+    '</div>'+
+    '<div class="record-section"><h3>Close-out readiness</h3><p>'+(tasksDone===w.tasks.length?'All required tasks are complete. The work order can be closed when verification is finished.':'Complete the remaining '+(w.tasks.length-tasksDone)+' task'+((w.tasks.length-tasksDone)===1?'':'s')+' before close-out.')+'</p></div>'+
+    (isActive(w)?'<button class="primary-btn" data-complete-work="'+w.id+'">Complete work order</button>':'');
+  } else if(drawerTab==='labor'){
+    body='<div class="record-admin-grid"><div class="info-cell"><small>Estimated labor</small><strong>'+w.estimateHours+' h</strong></div><div class="info-cell"><small>Actual labor</small><strong>'+Math.round((w.actualMinutes||0)/6)/10+' h</strong></div><div class="info-cell"><small>Variance</small><strong>'+Math.round((((w.actualMinutes||0)/60)-w.estimateHours)*10)/10+' h</strong></div></div>'+
+      '<div class="record-section"><h3>Log technician time</h3><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="secondary-btn" data-log-labor="'+w.id+'|15">+15 min</button><button class="secondary-btn" data-log-labor="'+w.id+'|30">+30 min</button><button class="secondary-btn" data-log-labor="'+w.id+'|60">+1 hour</button></div></div>';
   } else if(drawerTab==='tasks'){
     body='<div class="task-list">'+w.tasks.map(function(t){
       let control='';
@@ -433,17 +463,32 @@ function openWorkDrawer(id,tab){
   } else if(drawerTab==='parts'){
     body='<div class="record-list">'+(w.parts.length?w.parts.map(function(x){
       const p=part(x.partId); const stock=p?totalStock(p):0;
-      return '<div class="record-item"><span><strong>'+escapeHTML(p?p.name:x.partId)+'</strong><small>Planned '+x.planned+' · Used '+x.actual+' · Stock '+stock+'</small></span><button class="secondary-btn" data-use-part="'+w.id+'|'+x.partId+'">Use 1</button></div>';
+      return '<div class="record-item"><span><strong>'+escapeHTML(p?p.name:x.partId)+'</strong><small>'+escapeHTML(p?p.code:'')+' · Planned '+x.planned+' · Used '+x.actual+' · Stock '+stock+'</small></span><button class="secondary-btn" data-use-part="'+w.id+'|'+x.partId+'">Issue 1</button></div>';
     }).join(''):'<div class="empty">No parts planned for this work order.</div>')+'</div>';
-  } else if(drawerTab==='labor'){
-    body='<div class="info-grid"><div class="info-cell"><small>Estimated</small><strong>'+w.estimateHours+' h</strong></div><div class="info-cell"><small>Logged</small><strong>'+Math.round((w.actualMinutes||0)/6)/10+' h</strong></div><div class="info-cell"><small>Variance</small><strong>'+Math.round((((w.actualMinutes||0)/60)-w.estimateHours)*10)/10+' h</strong></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="secondary-btn" data-log-labor="'+w.id+'|15">+15 min</button><button class="secondary-btn" data-log-labor="'+w.id+'|30">+30 min</button><button class="secondary-btn" data-log-labor="'+w.id+'|60">+1 hour</button></div>';
+  } else if(drawerTab==='meters'){
+    body='<div class="record-list">'+(assetMeters.length?assetMeters.map(function(m){
+      const latest=m.readings.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0];
+      return '<div class="record-item"><span><strong>'+escapeHTML(m.name)+'</strong><small>'+escapeHTML(assetName(m.assetId))+' · Latest '+prettyDate(latest.date)+'</small></span><strong>'+m.current+' '+escapeHTML(m.unit)+'</strong></div>';
+    }).join(''):'<div class="empty">No meters are linked to this asset.</div>')+'</div>';
+  } else if(drawerTab==='files'){
+    body='<div class="empty"><strong>No local attachments yet</strong>Files and photos will be shared across users when the server storage milestone is connected.</div>';
   } else {
     body='<div class="worklog">'+((w.log||[]).slice().sort(function(a,b){return b.at.localeCompare(a.at);}).map(function(l){return '<div class="log-row"><time>'+formatTime(l.at)+'</time><span>'+escapeHTML(l.text)+'</span></div>';}).join('')||'<div class="empty">No activity recorded.</div>')+'</div>';
   }
-  const action=isActive(w)?(w.status==='Open'?'<button class="primary-btn" data-start-work="'+w.id+'">Start work</button>':'<button class="primary-btn" data-complete-work="'+w.id+'">Complete work order</button>'):'';
-  drawer.innerHTML='<div class="drawer-head"><div><p class="eyebrow">'+escapeHTML(w.id)+' · '+escapeHTML(w.type)+'</p><h2>'+escapeHTML(w.title)+'</h2><p>'+escapeHTML(assetName(w.assetId))+'</p></div><div style="display:flex;gap:8px;align-items:flex-start">'+action+'<button class="icon-btn" data-close-drawer aria-label="Close">'+icon('i-close')+'</button></div></div><div class="detail-tabs">'+['overview','tasks','parts','labor','log'].map(function(t){return '<button class="detail-tab '+(drawerTab===t?'active':'')+'" data-drawer-tab="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>';}).join('')+'</div><div class="drawer-body"><div class="badges" style="justify-content:flex-start;margin-bottom:14px">'+badge(w.priority,w.priority)+' '+badge(w.status)+' '+badge(w.source||'Manual','healthy')+'</div>'+body+'</div>';
+
+  const action=isActive(w)?(w.status==='Open'?'<button class="primary-btn" data-start-work="'+w.id+'">Start work</button>':'<button class="primary-btn" data-complete-work="'+w.id+'">Complete</button>'):'';
+  const tabs=[
+    ['general','General'],['completion','Completion'],['labor','Labor'],['tasks','Tasks'],['parts','Parts'],
+    ['meters','Meter readings'],['files','Files'],['log','Work log']
+  ];
+  drawer.innerHTML=
+    '<div class="drawer-head"><div><p class="eyebrow">Work Order Administration</p><h2>'+escapeHTML(w.id)+' · '+escapeHTML(w.title)+'</h2><p>'+escapeHTML(assetName(w.assetId))+' · '+escapeHTML(w.type)+'</p></div><div style="display:flex;gap:7px;align-items:flex-start">'+action+'<button class="icon-btn" data-close-drawer aria-label="Close">'+icon('i-close')+'</button></div></div>'+
+    '<div class="record-toolbar planner-only"><span class="record-code">'+escapeHTML(w.id)+'</span><span>'+badge(w.status)+'</span><span>'+badge(w.priority,w.priority)+'</span><span class="record-toolbar-sep"></span><span>Assigned: <strong>'+escapeHTML(userName(w.assigneeId))+'</strong></span><span>Due: <strong>'+prettyDate(w.due)+'</strong></span><span class="record-tag">'+icon('i-scan')+' '+escapeHTML(w.id)+'</span></div>'+
+    '<div class="detail-tabs">'+tabs.map(function(t){return '<button class="detail-tab '+(drawerTab===t[0]?'active':'')+'" data-drawer-tab="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'+
+    '<div class="drawer-body">'+body+'</div>';
   drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false');
 }
+
 function closeDrawer(){ const d=document.getElementById('recordDrawer');d.classList.remove('open');d.setAttribute('aria-hidden','true');drawerWorkId=null; }
 
 function populateSelects(){
