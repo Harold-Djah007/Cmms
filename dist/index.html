@@ -40,6 +40,11 @@
     <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.2-5.5M20 5v6h-6"/></symbol>
     <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 5 3.2 8.2 7 9.5 3.8-1.3 7-4.5 7-9.5V6z"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12 12 3h8v8l-9 9-8-8z"/><circle cx="16" cy="8" r="1.4"/></symbol>
+    <symbol id="i-meter" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 13 16 8M8 13h8"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 6 8 12l6 6"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m4 12 16-7-7 16-2-7z"/></symbol>
   </svg>
 
   <div class="app-shell" id="appShell">
@@ -58,23 +63,24 @@
       <div class="site-chip" title="Active site">
         <svg><use href="#i-pin"/></svg>
         <div>
-          <b>Tema Biogas Plant</b>
-          <span id="shiftLabel">Shift A · Live</span>
+          <b>Safi Sana Ghana Ltd</b>
+          <span id="shiftLabel">Operations · Live</span>
         </div>
       </div>
 
       <nav aria-label="Main navigation">
         <p class="nav-label">Operations</p>
-        <button class="nav-item active" data-view="dashboard"><svg><use href="#i-grid"/></svg><span>Command Center</span></button>
+        <button class="nav-item active" data-view="dashboard"><svg><use href="#i-grid"/></svg><span>Dashboard</span></button>
         <button class="nav-item" data-view="my-work"><svg><use href="#i-board"/></svg><span>My Work</span><b id="navMineCount" hidden>0</b></button>
         <button class="nav-item" data-view="work-orders"><svg><use href="#i-work"/></svg><span>Work Orders</span><b id="navWorkCount">0</b></button>
-        <button class="nav-item" data-view="requests"><svg><use href="#i-inbox"/></svg><span>Requests</span><b id="navRequestCount" hidden>0</b></button>
+        <button class="nav-item" data-view="maintenance"><svg><use href="#i-calendar"/></svg><span>Scheduled</span></button>
+        <button class="nav-item" data-view="messages"><svg><use href="#i-msg"/></svg><span>Messages</span><b id="navMsgCount" hidden>0</b></button>
         <p class="nav-label">Plant</p>
         <button class="nav-item" data-view="assets"><svg><use href="#i-asset"/></svg><span>Assets</span></button>
-        <button class="nav-item" data-view="maintenance"><svg><use href="#i-calendar"/></svg><span>Preventive</span></button>
-        <button class="nav-item" data-view="inventory"><svg><use href="#i-box"/></svg><span>Parts</span></button>
+        <button class="nav-item" data-view="inventory"><svg><use href="#i-box"/></svg><span>Parts &amp; supplies</span></button>
+        <button class="nav-item" data-view="stock-take"><svg><use href="#i-tag"/></svg><span>Stock take</span></button>
         <p class="nav-label">Insights</p>
-        <button class="nav-item" data-view="reports"><svg><use href="#i-chart"/></svg><span>Insights</span></button>
+        <button class="nav-item" data-view="reports"><svg><use href="#i-chart"/></svg><span>Reports</span></button>
       </nav>
 
       <div class="sidebar-foot">
@@ -92,7 +98,7 @@
       <header class="topbar">
         <button class="icon-button mobile-only" id="menuButton" aria-label="Open menu"><svg><use href="#i-menu"/></svg></button>
         <div class="page-heading">
-          <p id="contextLabel">Operations · Tema</p>
+          <p id="contextLabel">Safi Sana · Operations</p>
           <h1 id="pageTitle">Command Center</h1>
         </div>
         <div class="command-search" id="commandSearch">
@@ -104,6 +110,7 @@
         </div>
         <div class="top-actions">
           <button class="ghost-button" id="scanButton"><svg><use href="#i-scan"/></svg><span class="hide-sm hide-when-inspector">Scan tag</span></button>
+          <button class="ghost-button hide-when-inspector" id="meterButton"><svg><use href="#i-meter"/></svg><span class="hide-sm">Meters</span></button>
           <button class="ghost-button hide-when-inspector" id="installButton" hidden>Install</button>
           <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg><span class="hide-sm hide-when-inspector">New work order</span></button>
           <div class="role-switch" role="group" aria-label="Workspace mode">
@@ -242,7 +249,7 @@
                 <option value="all">All types</option>
                 <option>Corrective</option>
                 <option>Preventive</option>
-                <option>Inspection</option>
+                <option>Project</option>
               </select>
               <label class="toggle">
                 <input type="checkbox" id="overdueOnly">
@@ -256,7 +263,8 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>Work order</th>
+                      <th>Code</th>
+                      <th>Description</th>
                       <th>Asset</th>
                       <th>Type</th>
                       <th>Priority</th>
@@ -278,38 +286,58 @@
           </div>
         </section>
 
-        <section class="view" id="view-requests">
+        <section class="view" id="view-record">
+          <div id="recordCanvas"></div>
+        </section>
+
+        <section class="view" id="view-messages">
           <div class="section-toolbar">
             <div>
-              <h2>Work requests</h2>
-              <p>Anyone on site can raise an observation. Convert it to a work order when it is real work.</p>
+              <h2>Messages</h2>
+              <p>Talk about a job, an asset, or the storeroom — without leaving the plant record.</p>
             </div>
-            <button class="secondary-button" id="newRequestButton"><svg><use href="#i-plus"/></svg>New request</button>
+            <button class="primary-button" id="newMessageButton"><svg><use href="#i-plus"/></svg>New message</button>
           </div>
-          <div class="request-grid" id="requestGrid"></div>
+          <div class="msg-layout">
+            <aside class="msg-list" id="threadList"></aside>
+            <article class="msg-thread panel" id="threadPane"></article>
+          </div>
         </section>
 
         <section class="view" id="view-assets">
           <div class="section-toolbar">
             <div>
               <h2>Asset register</h2>
-              <p>Condition, location, open work, and the next service date — one record per machine.</p>
+              <p>Sites, equipment, and tools in one tree — the same hierarchy you use in Fiix, without the extra tabs.</p>
             </div>
-            <button class="ghost-button" id="scanFromAssets"><svg><use href="#i-scan"/></svg>Scan tag</button>
+            <div class="toolbar-actions">
+              <button class="ghost-button" id="printTagsButton"><svg><use href="#i-tag"/></svg>Print tags</button>
+              <button class="ghost-button" id="scanFromAssets"><svg><use href="#i-scan"/></svg>Scan tag</button>
+            </div>
           </div>
-          <label class="search-box standalone">
-            <svg><use href="#i-search"/></svg>
-            <span class="sr-only">Search equipment</span>
-            <input id="assetSearch" type="search" placeholder="Search asset, ID, or location">
-          </label>
-          <div class="asset-grid" id="assetGrid"></div>
+          <div class="filter-bar">
+            <label class="search-box">
+              <svg><use href="#i-search"/></svg>
+              <span class="sr-only">Search assets</span>
+              <input id="assetSearch" type="search" placeholder="Search name, code, or location">
+            </label>
+            <div class="filter-buttons" id="assetKindFilters" aria-label="Asset type">
+              <button class="filter active" data-asset-kind="all">All</button>
+              <button class="filter" data-asset-kind="Facility">Facilities</button>
+              <button class="filter" data-asset-kind="Equipment">Equipment</button>
+              <button class="filter" data-asset-kind="Tool">Tools</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <div class="tree" id="assetTree"></div>
+          </div>
         </section>
 
         <section class="view" id="view-maintenance">
           <div class="section-toolbar">
             <div>
-              <h2>Preventive maintenance</h2>
-              <p>Time-based plans that generate work orders before the asset fails.</p>
+              <h2>Scheduled maintenance</h2>
+              <p>Time-based plans that generate a work order when they come due.</p>
             </div>
           </div>
           <div class="timeline" id="maintenanceTimeline"></div>
@@ -318,9 +346,10 @@
         <section class="view" id="view-inventory">
           <div class="section-toolbar">
             <div>
-              <h2>Storeroom</h2>
-              <p>Know the bin, the minimum, and what is already committed to a job.</p>
+              <h2>Parts &amp; supplies</h2>
+              <p>Bin location, min/max, and on-hand — open a part to receive stock or start a count.</p>
             </div>
+            <button class="primary-button" data-view-link="stock-take"><svg><use href="#i-tag"/></svg>Start stock take</button>
           </div>
           <div class="inventory-summary" id="inventorySummary"></div>
           <div class="table-card">
@@ -328,15 +357,53 @@
               <table>
                 <thead>
                   <tr>
+                    <th>Code</th>
                     <th>Part</th>
-                    <th>SKU</th>
+                    <th>Location / bin</th>
                     <th>On hand</th>
                     <th>Min</th>
-                    <th>Bin</th>
+                    <th>Max</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="inventoryRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-stock-take">
+          <div class="section-toolbar">
+            <div>
+              <h2>Stock take</h2>
+              <p>Walk one store. Scan or tap a part, enter what you see, then post the variance.</p>
+            </div>
+            <button class="primary-button" id="submitCountButton">Post count</button>
+          </div>
+          <div class="count-toolbar">
+            <label>Location
+              <select id="countLocation"></select>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="blindCount">
+              <span>Blind count (hide system qty)</span>
+            </label>
+            <button class="ghost-button" id="scanFromCount"><svg><use href="#i-scan"/></svg>Scan part</button>
+            <div class="count-progress" id="countProgress"></div>
+          </div>
+          <div class="table-card">
+            <div class="responsive-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Part</th>
+                    <th>Bin</th>
+                    <th>System</th>
+                    <th>Counted</th>
+                    <th>Variance</th>
+                  </tr>
+                </thead>
+                <tbody id="countRows"></tbody>
               </table>
             </div>
           </div>
@@ -384,9 +451,9 @@
   <nav class="bottom-nav" aria-label="Field navigation">
     <button data-view="my-work"><svg><use href="#i-board"/></svg><span>My Work</span></button>
     <button data-view="work-orders"><svg><use href="#i-work"/></svg><span>Orders</span></button>
-    <button class="scan-fab" id="scanFab" aria-label="Scan asset tag"><svg><use href="#i-scan"/></svg></button>
-    <button data-view="assets"><svg><use href="#i-asset"/></svg><span>Assets</span></button>
-    <button data-view="dashboard"><svg><use href="#i-grid"/></svg><span>More</span></button>
+    <button class="scan-fab" id="scanFab" aria-label="Scan tag"><svg><use href="#i-scan"/></svg></button>
+    <button data-view="stock-take"><svg><use href="#i-tag"/></svg><span>Stock</span></button>
+    <button data-view="messages"><svg><use href="#i-msg"/></svg><span>Inbox</span></button>
   </nav>
 
   <div class="scrim" id="scrim"></div>
@@ -413,7 +480,7 @@
       <div class="form-grid">
         <label class="full">What needs attention?<input name="title" required minlength="3" placeholder="Example: Pump making unusual noise"></label>
         <label>Asset<select name="asset" required id="assetSelect"></select></label>
-        <label>Type<select name="type" required><option>Corrective</option><option>Preventive</option><option>Inspection</option></select></label>
+        <label>Type<select name="type" required><option>Corrective</option><option>Preventive</option><option>Project</option></select></label>
         <label>Priority<select name="priority" required><option>Medium</option><option>High</option><option>Critical</option><option>Low</option></select></label>
         <label>Assign to<select name="assignee" required id="assigneeSelect"></select></label>
         <label>Due date<input name="due" type="date" required></label>
@@ -427,28 +494,70 @@
     </form>
   </dialog>
 
-  <dialog id="requestDialog" aria-labelledby="requestDialogTitle">
-    <form method="dialog" id="requestForm">
+  <dialog id="messageDialog" aria-labelledby="messageDialogTitle">
+    <form method="dialog" id="messageForm">
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">Floor observation</p>
-          <h2 id="requestDialogTitle">New work request</h2>
+          <p class="eyebrow">Team message</p>
+          <h2 id="messageDialogTitle">New message</h2>
         </div>
-        <button type="button" class="icon-button" id="closeRequestDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+        <button type="button" class="icon-button" id="closeMessageDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
       </div>
       <div class="form-grid">
-        <label class="full">What did you see?<input name="title" required minlength="3" placeholder="Example: Oil on the floor at mixer 03"></label>
-        <label>Asset<select name="asset" required id="requestAssetSelect"></select></label>
-        <label>Priority<select name="priority" required><option>Medium</option><option>High</option><option>Critical</option><option>Low</option></select></label>
-        <label class="full">Your name<input name="requester" required placeholder="Operator or technician"></label>
-        <label class="full">Details<textarea name="notes" rows="3" placeholder="When it started, safety risk, and who is affected"></textarea></label>
+        <label>To<select name="to" required id="messageToSelect"></select></label>
+        <label>About
+          <select name="about" id="messageAboutSelect">
+            <option value="">General</option>
+          </select>
+        </label>
+        <label class="full">Message<textarea name="text" rows="4" required placeholder="What does the floor need to know?"></textarea></label>
       </div>
       <div class="dialog-actions">
-        <button type="button" class="secondary-button" id="cancelRequestDialog">Cancel</button>
-        <button type="submit" class="primary-button">Submit request</button>
+        <button type="button" class="secondary-button" id="cancelMessageDialog">Cancel</button>
+        <button type="submit" class="primary-button">Send</button>
       </div>
     </form>
   </dialog>
+
+  <dialog id="receiveDialog" aria-labelledby="receiveDialogTitle">
+    <form method="dialog" id="receiveForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Goods in</p>
+          <h2 id="receiveDialogTitle">Receive stock</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeReceiveDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label>Quantity<input name="qty" type="number" min="1" step="1" value="1" required></label>
+        <label>Receipt #<input name="receipt" placeholder="GRN-014"></label>
+        <label class="full">Supplier<input name="supplier" placeholder="Supplier or stores transfer"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelReceiveDialog">Cancel</button>
+        <button type="submit" class="primary-button">Add to on hand</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="meterDialog" aria-labelledby="meterDialogTitle">
+    <form method="dialog" id="meterForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Batch meter reading</p>
+          <h2 id="meterDialogTitle">Update meters</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeMeterDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div id="meterFields" class="form-grid"></div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelMeterDialog">Cancel</button>
+        <button type="submit" class="primary-button">Save readings</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="print-sheet" id="printSheet" hidden></div>
 
   <dialog id="timeDialog" aria-labelledby="timeDialogTitle">
     <form method="dialog" id="timeForm">
