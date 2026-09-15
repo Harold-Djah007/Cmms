@@ -23,6 +23,12 @@ const seedData = {
     { id: 'PM-204', title: 'Oil level and leak check', asset: 'Effluent Transfer Pump', date: daysFromNow(5), owner: 'Yaw Boateng', interval: 'Every two weeks' },
     { id: 'PM-205', title: 'Full blower service', asset: 'Biogas Blower 01', date: daysFromNow(14), owner: 'Kwame Mensah', interval: 'Every quarter' }
   ],
+  inspections: [
+    { id: 'INSP-101', title: 'Daily digester round', asset: 'Digester Mixer 03', frequency: 'Daily', due: daysFromNow(0), owner: 'Kwame Mensah', items: ['Check oil leaks and unusual noise','Verify guard and coupling condition','Record visible vibration condition','Confirm area is clean and safe'] },
+    { id: 'INSP-102', title: 'CHP pre-start safety check', asset: 'CHP Unit 01', frequency: 'Before start', due: daysFromNow(0), owner: 'Ama Owusu', items: ['Check oil and coolant levels','Inspect for leaks','Confirm ventilation path is clear','Verify emergency stop is accessible'] },
+    { id: 'INSP-103', title: 'Weekly dewatering inspection', asset: 'Sludge Dewatering Press', frequency: 'Weekly', due: daysFromNow(1), owner: 'Esi Agyeman', items: ['Inspect belt tracking','Check wash-water nozzles','Inspect rollers and scraper','Check safety guards'] }
+  ],
+  inspectionHistory: [],
   inventory: [
     { id: 'PRT-001', name: 'Pump mechanical seal', number: 'MS-40-SS', quantity: 2, minimum: 2, location: 'Store A · Bin 12' },
     { id: 'PRT-002', name: 'Drive belt B-72', number: 'BLT-B72', quantity: 1, minimum: 3, location: 'Store A · Rack 3' },
@@ -46,8 +52,17 @@ function daysFromNow(offset) {
 function loadState() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : structuredClone(seedData);
-  } catch (_) { return structuredClone(seedData); }
+    return migrateState(stored ? JSON.parse(stored) : structuredClone(seedData));
+  } catch (_) { return migrateState(structuredClone(seedData)); }
+}
+
+function migrateState(data) {
+  const next = data && typeof data === 'object' ? data : {};
+  ['workOrders','assets','schedules','inventory','inspections','inspectionHistory'].forEach(key => {
+    if (!Array.isArray(next[key])) next[key] = structuredClone(seedData[key] || []);
+  });
+  if (!next.inspections.length) next.inspections = structuredClone(seedData.inspections);
+  return next;
 }
 
 function saveState() {
@@ -100,7 +115,7 @@ function renderDashboard() {
 function renderWorkOrders() {
   const search = (document.querySelector('#workSearch')?.value || '').toLowerCase();
   const rows = state.workOrders.filter(w => (activeFilter === 'all' || w.status === activeFilter) && [w.id,w.title,w.asset,w.assignee].join(' ').toLowerCase().includes(search));
-  document.querySelector('#workOrderRows').innerHTML = rows.map(w => `<tr><td><strong>${escapeHTML(w.title)}</strong><small>${w.id}</small></td><td>${escapeHTML(w.asset)}</td><td><span class="priority-badge ${w.priority}">${w.priority}</span></td><td>${escapeHTML(w.assignee)}</td><td><strong>${prettyDate(w.due)}</strong>${isOverdue(w)?'<small style="color:var(--danger)">Overdue</small>':''}</td><td><span class="status-badge ${statusClass(w.status)}">${w.status}</span></td><td>${w.status === 'Completed' ? '<span aria-label="Completed">✓</span>' : `<button class="row-action" data-complete="${w.id}">Complete</button>`}</td></tr>`).join('');
+  document.querySelector('#workOrderRows').innerHTML = rows.map(w => `<tr><td><strong>${escapeHTML(w.title)}</strong><small>${w.id}</small></td><td>${escapeHTML(w.asset)}</td><td><span class="priority-badge ${w.priority}">${w.priority}</span></td><td>${escapeHTML(w.assignee)}</td><td><strong>${prettyDate(w.due)}</strong>${isOverdue(w)?'<small style="color:var(--danger)">Overdue</small>':''}</td><td><span class="status-badge ${statusClass(w.status)}">${w.status}</span></td><td>${w.status === 'Completed' ? '<span aria-label="Completed">✓</span>' : `<button class="row-action" data-progress="${w.id}">${w.status === 'Open' ? 'Start job' : 'Complete'}</button>`}</td></tr>`).join('');
   document.querySelector('#workEmpty').hidden = rows.length > 0;
   document.querySelector('#navWorkCount').textContent = state.workOrders.filter(w=>w.status!=='Completed').length;
 }
@@ -112,6 +127,28 @@ function renderAssets() {
 
 function renderSchedule(target, schedules, full = true) {
   document.querySelector(target).innerHTML = schedules.map(s => full ? `<div class="timeline-group"><div class="timeline-date">${prettyDate(s.date)}</div><article class="timeline-card"><div><h3>${escapeHTML(s.title)}</h3><p>${escapeHTML(s.asset)} · ${escapeHTML(s.owner)}</p></div><span class="status-badge healthy">${escapeHTML(s.interval)}</span></article></div>` : `<article class="schedule-item"><div class="date-block"><small>${new Date(`${s.date}T12:00:00`).toLocaleDateString('en-GB',{month:'short'})}</small>${new Date(`${s.date}T12:00:00`).getDate()}</div><div><h3>${escapeHTML(s.title)}</h3><p>${escapeHTML(s.asset)}</p></div></article>`).join('');
+}
+
+function renderInspections() {
+  const today = daysFromNow(0);
+  const due = state.inspections.filter(i => i.due <= today);
+  document.querySelector('#navInspectionCount').textContent = due.length;
+  document.querySelector('#inspectionGrid').innerHTML = state.inspections.map(i => {
+    const isDue = i.due <= today;
+    return `<article class="inspection-card"><div class="inspection-card-head"><span class="inspection-icon"><svg><use href="#i-clipboard"/></svg></span><span class="status-badge ${isDue?'attention':'healthy'}">${isDue?'Due '+prettyDate(i.due):'Due '+prettyDate(i.due)}</span></div><h3>${escapeHTML(i.title)}</h3><p>${escapeHTML(i.asset)} · ${escapeHTML(i.frequency)}</p><div class="inspection-meta"><span>Owner</span><strong>${escapeHTML(i.owner)}</strong><span>Checks</span><strong>${i.items.length}</strong></div><button class="wide-button" data-run-inspection="${i.id}">Run inspection</button></article>`;
+  }).join('');
+  const history = [...state.inspectionHistory].sort((a,b)=>b.completedAt.localeCompare(a.completedAt)).slice(0,8);
+  document.querySelector('#inspectionHistory').innerHTML = history.length ? history.map(h => `<div class="activity-item"><span class="activity-icon"><svg><use href="#i-check"/></svg></span><div><strong>${escapeHTML(h.title)}</strong><p>${escapeHTML(h.asset)} · ${new Date(h.completedAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p></div><span class="status-badge completed">${h.passed}/${h.total} passed</span></div>`).join('') : '<div class="empty-state compact"><h3>No inspections recorded yet</h3><p>Completed field checks will appear here.</p></div>';
+}
+
+function openInspection(id) {
+  const inspection = state.inspections.find(i=>i.id===id);
+  if (!inspection) return;
+  document.querySelector('[name="inspectionId"]').value = id;
+  document.querySelector('#inspectionDialogTitle').textContent = inspection.title;
+  document.querySelector('#inspectionChecklist').innerHTML = inspection.items.map((item,index)=>`<label class="check-item"><input type="checkbox" name="check-${index}" required><span><strong>${escapeHTML(item)}</strong><small>Tap when checked and acceptable</small></span></label>`).join('');
+  document.querySelector('#inspectionForm [name="notes"]').value = '';
+  document.querySelector('#inspectionDialog').showModal();
 }
 
 function renderInventory() {
@@ -131,13 +168,13 @@ function renderReports() {
 function renderAll() {
   renderDashboard(); renderWorkOrders(); renderAssets();
   renderSchedule('#maintenanceTimeline', state.schedules.slice().sort((a,b)=>a.date.localeCompare(b.date)));
-  renderInventory(); renderReports(); populateAssetSelect();
+  renderInventory(); renderInspections(); renderReports(); populateAssetSelect();
 }
 
 function showView(name) {
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===name));
-  const titles = { dashboard: greeting(), 'work-orders':'Work Orders', assets:'Equipment', maintenance:'Maintenance Plan', inventory:'Spare Parts', reports:'Reports' };
+  const titles = { dashboard: greeting(), 'work-orders':'Work Orders', assets:'Equipment', maintenance:'Maintenance Plan', inventory:'Spare Parts', inspections:'Inspections', reports:'Reports' };
   document.querySelector('#pageTitle').textContent = titles[name] || 'SafiMaintain';
   closeMenu(); window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -161,13 +198,41 @@ function setupEvents() {
   document.querySelector('#closeDialog').addEventListener('click',closeDialog); document.querySelector('#cancelDialog').addEventListener('click',closeDialog);
   document.querySelector('#workSearch').addEventListener('input',renderWorkOrders); document.querySelector('#assetSearch').addEventListener('input',renderAssets);
   document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{activeFilter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));renderWorkOrders();}));
-  document.querySelector('#workOrderRows').addEventListener('click',e=>{const id=e.target.dataset.complete;if(!id)return;const item=state.workOrders.find(w=>w.id===id);if(item){item.status='Completed';saveState();showToast(`${id} marked complete`);}});
+  document.querySelector('#workOrderRows').addEventListener('click',e=>{const id=e.target.dataset.progress;if(!id)return;const item=state.workOrders.find(w=>w.id===id);if(!item)return;if(item.status==='Open'){item.status='In Progress';saveState();showToast(`${id} started`);}else{item.status='Completed';item.completedAt=new Date().toISOString();saveState();showToast(`${id} completed`);}});
   document.querySelector('#workOrderForm').addEventListener('submit',e=>{e.preventDefault();const form=new FormData(e.currentTarget);const next=Math.max(...state.workOrders.map(w=>Number(w.id.split('-')[1])),1000)+1;state.workOrders.unshift({id:`WO-${next}`,title:form.get('title').trim(),asset:form.get('asset'),priority:form.get('priority'),assignee:form.get('assignee').trim(),due:form.get('due'),status:'Open',description:form.get('description').trim()});saveState();e.currentTarget.reset();closeDialog();showToast(`WO-${next} created`);showView('work-orders');});
   document.querySelector('#menuButton').addEventListener('click',()=>{document.querySelector('#sidebar').classList.add('open');document.querySelector('#scrim').classList.add('show');}); document.querySelector('#scrim').addEventListener('click',closeMenu);
   document.querySelectorAll('#exportButton,#exportButton2').forEach(b=>b.addEventListener('click',exportData));
+  document.querySelector('#inspectionGrid').addEventListener('click',e=>{const button=e.target.closest('[data-run-inspection]');if(button)openInspection(button.dataset.runInspection);});
+  document.querySelector('#closeInspectionDialog').addEventListener('click',()=>document.querySelector('#inspectionDialog').close());
+  document.querySelector('#cancelInspectionDialog').addEventListener('click',()=>document.querySelector('#inspectionDialog').close());
+  document.querySelector('#inspectionForm').addEventListener('submit',e=>{e.preventDefault();const form=new FormData(e.currentTarget);const inspection=state.inspections.find(i=>i.id===form.get('inspectionId'));if(!inspection)return;const passed=inspection.items.filter((_,index)=>form.get(`check-${index}`)==='on').length;state.inspectionHistory.unshift({id:`LOG-${Date.now()}`,inspectionId:inspection.id,title:inspection.title,asset:inspection.asset,completedAt:new Date().toISOString(),passed,total:inspection.items.length,notes:String(form.get('notes')||'').trim()});inspection.due=nextInspectionDate(inspection.frequency);saveState();document.querySelector('#inspectionDialog').close();showToast('Inspection saved offline');});
+  document.querySelector('#importButton').addEventListener('click',()=>document.querySelector('#importFile').click());
+  document.querySelector('#importFile').addEventListener('change',importBackup);
   window.addEventListener('online',updateConnection); window.addEventListener('offline',updateConnection);
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.querySelector('#installButton').hidden=false;});
   document.querySelector('#installButton').addEventListener('click',async()=>{if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;document.querySelector('#installButton').hidden=true;});
+}
+
+function nextInspectionDate(frequency) {
+  const offsets = { 'Daily':1, 'Before start':1, 'Weekly':7, 'Monthly':30 };
+  return daysFromNow(offsets[frequency] || 7);
+}
+
+async function importBackup(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const payload = JSON.parse(await file.text());
+    const restored = payload.data || payload;
+    if (!restored || !Array.isArray(restored.workOrders) || !Array.isArray(restored.assets)) throw new Error('Invalid backup');
+    state = migrateState(restored);
+    saveState();
+    showToast('Backup restored successfully');
+  } catch (_) {
+    showToast('Backup could not be restored');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 function updateConnection() { const online=navigator.onLine; document.querySelector('#connectionDot').classList.toggle('offline',!online); document.querySelector('#connectionText').textContent=online?'Online · changes saved':'Offline · changes saved'; }
