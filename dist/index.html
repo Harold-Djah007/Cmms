@@ -25,6 +25,9 @@
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Zm0 6v5m0 3v1"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M9 4h6l1 2h3v15H5V6h3l1-2Zm0 8 2 2 4-4m-6 8h6"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 21V9m0 0-5 5m5-5 5 5M4 4h16"/></symbol>
   </svg>
 
   <div class="app-shell">
@@ -39,6 +42,7 @@
         <button class="nav-item" data-view="assets"><svg><use href="#i-asset"/></svg><span>Equipment</span></button>
         <button class="nav-item" data-view="maintenance"><svg><use href="#i-calendar"/></svg><span>Maintenance Plan</span></button>
         <button class="nav-item" data-view="inventory"><svg><use href="#i-box"/></svg><span>Spare Parts</span></button>
+        <button class="nav-item" data-view="inspections"><svg><use href="#i-clipboard"/></svg><span>Inspections</span><b id="navInspectionCount">0</b></button>
         <button class="nav-item" data-view="reports"><svg><use href="#i-chart"/></svg><span>Reports</span></button>
       </nav>
       <div class="sidebar-foot">
@@ -117,8 +121,17 @@
           <div class="table-card"><div class="responsive-table"><table><thead><tr><th>Part</th><th>Part number</th><th>In stock</th><th>Minimum</th><th>Location</th><th>Status</th></tr></thead><tbody id="inventoryRows"></tbody></table></div></div>
         </section>
 
+        <section class="view" id="view-inspections">
+          <div class="section-toolbar"><div><h2>Inspections</h2><p>Run repeatable field checks and keep a traceable record on this device.</p></div></div>
+          <div class="inspection-grid" id="inspectionGrid"></div>
+          <article class="panel inspection-log-panel">
+            <div class="panel-head"><div><p class="eyebrow">Recent activity</p><h2>Inspection history</h2></div></div>
+            <div class="activity-list" id="inspectionHistory"></div>
+          </article>
+        </section>
+
         <section class="view" id="view-reports">
-          <div class="section-toolbar"><div><h2>Reports</h2><p>A short operational summary for decisions and meetings.</p></div><button class="secondary-button" id="exportButton"><svg><use href="#i-download"/></svg>Export backup</button></div>
+          <div class="section-toolbar"><div><h2>Reports</h2><p>A short operational summary for decisions and meetings.</p></div><div class="toolbar-actions"><button class="secondary-button" id="importButton"><svg><use href="#i-upload"/></svg>Restore backup</button><button class="secondary-button" id="exportButton"><svg><use href="#i-download"/></svg>Export backup</button><input id="importFile" type="file" accept="application/json" hidden></div></div>
           <div class="report-grid">
             <article class="panel"><p class="eyebrow">This month</p><h2>Jobs completed</h2><div class="big-number" id="completedReport">0</div><p class="positive-copy">Good progress. Keep urgent work under control.</p></article>
             <article class="panel"><p class="eyebrow">Current backlog</p><h2>Open by priority</h2><div class="bar-chart" id="priorityChart"></div></article>
@@ -142,6 +155,16 @@
         <label class="full">Notes<textarea name="description" rows="3" placeholder="Add symptoms, safety concerns, or instructions"></textarea></label>
       </div>
       <div class="dialog-actions"><button type="button" class="secondary-button" id="cancelDialog">Cancel</button><button type="submit" class="primary-button">Create work order</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="inspectionDialog" aria-labelledby="inspectionDialogTitle">
+    <form method="dialog" id="inspectionForm">
+      <div class="dialog-head"><div><p class="eyebrow">Field inspection</p><h2 id="inspectionDialogTitle">Complete inspection</h2></div><button type="button" class="icon-button" id="closeInspectionDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+      <input type="hidden" name="inspectionId">
+      <div id="inspectionChecklist" class="checklist"></div>
+      <label class="inspection-notes">Field notes<textarea name="notes" rows="3" placeholder="Add readings, observations, or follow-up needed"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" id="cancelInspectionDialog">Cancel</button><button type="submit" class="primary-button">Save inspection</button></div>
     </form>
   </dialog>
 
