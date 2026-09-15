@@ -1,11 +1,11 @@
 {
-  "name": "SafiMaintain CMMS",
+  "name": "SafiMaintain Field CMMS",
   "short_name": "SafiMaintain",
-  "description": "Simple maintenance management for equipment, work orders, schedules, and spare parts.",
+  "description": "Field-ready maintenance management for work orders, assets, preventive schedules, and spare parts.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4f7f6",
-  "theme_color": "#0b5d57",
+  "background_color": "#e8eef3",
+  "theme_color": "#0b1a24",
   "icons": [
     { "src": "assets/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
