@@ -243,3 +243,23 @@ body.field-mode .planner-only{display:none}
 @media(prefers-reduced-motion:reduce){
   .gear-orbit::before,.scan-stage-mini::after,.stock-stage-mini i,.live-pulse::before,.scan-frame::after{animation:none!important}
 }
+
+
+/* Dense work-order administration record */
+.record-toolbar{display:flex;align-items:center;gap:10px;padding:7px 14px;background:#eef3f4;border-bottom:1px solid var(--line);font-size:.69rem;color:#526970;overflow-x:auto}
+.record-toolbar strong{color:var(--ink)}
+.record-toolbar-sep{width:1px;height:18px;background:#cbd7d9;flex:0 0 auto}
+.record-code{font-weight:900;color:#17383f}
+.record-tag{margin-left:auto;display:inline-flex;align-items:center;gap:5px;border:1px solid #c9d6d8;background:#fff;border-radius:4px;padding:3px 7px;font-weight:800;color:#446269;white-space:nowrap}
+.record-tag svg{width:14px;height:14px}
+.record-admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.record-section{margin-top:13px;border:1px solid var(--line);border-radius:5px;background:#fbfcfc}
+.record-section h3{margin:0;padding:7px 9px;background:#eef3f4;border-bottom:1px solid var(--line);font-size:.72rem;text-transform:uppercase;letter-spacing:.045em;color:#536b71}
+.record-section p{margin:0;padding:10px;font-size:.78rem;color:#425b61}
+.record-drawer .detail-tabs{position:sticky;top:63px;z-index:2;background:#f4f7f7}
+.record-drawer .detail-tab{font-size:.69rem;padding:9px 8px}
+.record-drawer .task-list{gap:5px}
+.record-drawer .record-item{font-size:.75rem}
+.link-btn strong{font-weight:800}
+@media(max-width:980px){.record-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.record-admin-grid{grid-template-columns:1fr}.record-toolbar{display:none}.record-drawer .detail-tabs{top:66px}}
