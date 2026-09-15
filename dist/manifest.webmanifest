@@ -1,15 +1,10 @@
 {
-  "id": "./",
   "name": "SafiMaintain CMMS",
   "short_name": "SafiMaintain",
   "description": "Field-first maintenance operations for work orders, assets, PM, meters, requests and spare parts.",
   "start_url": "./#/dashboard",
   "scope": "./",
   "display": "standalone",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone"
-  ],
   "orientation": "any",
   "background_color": "#eef4f3",
   "theme_color": "#0d5d53",
