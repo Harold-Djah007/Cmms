@@ -37,8 +37,8 @@
   <div class="shell">
     <aside class="rail" id="rail">
       <div class="brand">
-        <div class="brand-mark">S</div>
-        <div><strong>SafiMaintain</strong><span>Maintenance operations</span></div>
+        <img class="brand-logo" src="assets/safimaint-logo.svg" alt="SafiMaintain">
+        <div><strong>SafiMaintain</strong><span>FIELD CMMS</span></div>
       </div>
 
       <button class="site-switcher" type="button">
@@ -86,6 +86,10 @@
           <kbd>Ctrl K</kbd>
         </button>
         <div class="command-actions">
+          <div class="mode-switch" role="group" aria-label="Workspace mode">
+            <button type="button" class="mode-btn active" data-mode="planner">Planner</button>
+            <button type="button" class="mode-btn" data-mode="field">Field</button>
+          </div>
           <button class="quiet-btn" id="scanButton"><svg><use href="#i-scan"/></svg><span>Scan</span></button>
           <button class="quiet-btn" id="syncButton"><svg><use href="#i-sync"/></svg><span>Sync</span></button>
           <button class="primary-btn" id="newWorkButton"><svg><use href="#i-plus"/></svg><span>New work order</span></button>
