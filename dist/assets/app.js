@@ -796,7 +796,7 @@ function postCount() {
   notify('Stock take posted', `${changes} lines updated at ${locName}.`, { type: 'stock' });
   countDraft = {};
   saveState();
-  showToast(`${changes} lines posted`);
+  showToast(`${changes} line${changes === 1 ? '' : 's'} posted`);
 }
 
 function receiveStock(partId, qty, receipt, supplier) {
