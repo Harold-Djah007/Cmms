@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#17222d">
-  <meta name="description" content="SafiMaintain CMMS — connected maintenance, assets, inventory, purchasing and administration for Safisana operations.">
+  <meta name="description" content="SafiMaintain CMMS — simple, connected maintenance, assets, stock and team workflows for Safisana operations.">
   <title>SafiMaintain CMMS</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/safimaint-fiix-base.css">
   <link rel="stylesheet" href="assets/safimaint-fiix-components.css">
+  <link rel="stylesheet" href="assets/safimaint-simple.css">
 </head>
 <body>
   <div class="app-shell">
@@ -21,52 +22,11 @@
 
       <button class="site-card" id="siteButton" type="button">
         <span class="site-mark"></span>
-        <span><strong>Safisana Ghana</strong><small>Main operations site</small></span>
+        <span><strong>Your site</strong><small>Set up your workspace</small></span>
         <span class="chev">⌄</span>
       </button>
 
-      <nav id="navigation">
-        <section>
-          <p>Command center</p>
-          <button class="nav-item active" data-route="dashboard"><span class="nav-icon">⌂</span><span>Overview</span></button>
-          <button class="nav-item" data-route="calendar"><span class="nav-icon">▦</span><span>Maintenance calendar</span></button>
-        </section>
-        <section>
-          <p>Work management</p>
-          <button class="nav-item" data-route="work-orders"><span class="nav-icon">⚒</span><span>Work orders</span><b id="workBadge"></b></button>
-          <button class="nav-item" data-route="pm"><span class="nav-icon">↻</span><span>Scheduled maintenance</span></button>
-          <button class="nav-item" data-route="requests"><span class="nav-icon">✉</span><span>Requests</span><b id="requestBadge"></b></button>
-        </section>
-        <section>
-          <p>Asset management</p>
-          <button class="nav-item" data-route="assets"><span class="nav-icon">▣</span><span>Assets</span><b id="offlineBadge"></b></button>
-          <button class="nav-item" data-route="meters"><span class="nav-icon">◴</span><span>Meters</span></button>
-          <button class="nav-item" data-route="downtime"><span class="nav-icon">◉</span><span>Downtime</span></button>
-        </section>
-        <section>
-          <p>Parts & purchasing</p>
-          <button class="nav-item" data-route="inventory"><span class="nav-icon">◇</span><span>Parts & supplies</span><b id="stockBadge"></b></button>
-          <button class="nav-item" data-route="transactions"><span class="nav-icon">⇄</span><span>Stock transactions</span></button>
-          <button class="nav-item" data-route="counts"><span class="nav-icon">✓</span><span>Cycle counts</span></button>
-          <button class="nav-item" data-route="planning"><span class="nav-icon">☷</span><span>Purchase planning</span><b id="purchaseBadge"></b></button>
-          <button class="nav-item" data-route="purchase-orders"><span class="nav-icon">▤</span><span>Purchase orders</span></button>
-          <button class="nav-item" data-route="vendors"><span class="nav-icon">⌂</span><span>Vendors</span></button>
-          <button class="nav-item" data-route="tool-crib"><span class="nav-icon">⚙</span><span>Tool crib</span></button>
-        </section>
-        <section>
-          <p>Insights</p>
-          <button class="nav-item" data-route="reliability"><span class="nav-icon">⌁</span><span>Reliability</span></button>
-        </section>
-        <section>
-          <p>Administration</p>
-          <button class="nav-item" data-route="people"><span class="nav-icon">♙</span><span>People & groups</span></button>
-          <button class="nav-item" data-route="roles"><span class="nav-icon">◫</span><span>Roles & permissions</span></button>
-          <button class="nav-item" data-route="sites"><span class="nav-icon">⌖</span><span>Sites & stores</span></button>
-          <button class="nav-item" data-route="notifications"><span class="nav-icon">●</span><span>Mail & alerts</span><b id="alertBadge"></b></button>
-          <button class="nav-item" data-route="audit"><span class="nav-icon">↺</span><span>Audit trail</span></button>
-          <button class="nav-item" data-route="security"><span class="nav-icon">⬡</span><span>Security</span></button>
-        </section>
-      </nav>
+      <nav id="navigation"></nav>
 
       <div class="sidebar-foot">
         <span class="connection-dot" id="connectionDot"></span>
@@ -83,8 +43,8 @@
         <div class="top-actions">
           <button class="button ghost" id="scanButton" type="button">▦ Scan</button>
           <button class="icon-button notice-button" id="noticeButton" type="button" aria-label="Notifications">●<b id="topNoticeBadge"></b></button>
-          <button class="button primary" id="newWorkButton" type="button">＋ New work order</button>
-          <div class="user-chip"><span>AS</span><div><strong>Abena Sarpong</strong><small>Operations manager</small></div></div>
+          <button class="button primary" id="newWorkButton" type="button">＋ New work</button>
+          <div class="user-chip"><span>YU</span><div><strong>New user</strong><small>Set up account</small></div></div>
         </div>
       </header>
 
@@ -108,5 +68,6 @@
   <script src="assets/safimaint-08-dialogs-search.js" defer></script>
   <script src="assets/safimaint-09-events.js" defer></script>
   <script src="assets/safimaint-10-fiix-workflows.js" defer></script>
+  <script src="assets/safimaint-11-simple-onboarding.js" defer></script>
 </body>
 </html>
