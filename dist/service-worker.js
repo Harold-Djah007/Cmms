@@ -1,11 +1,12 @@
-const CACHE='safimaint-fiix-v7';
+const CACHE='safimaint-simple-v8';
 const APP_SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/safimaint-fiix-base.css',
   './assets/safimaint-fiix-components.css',
-  './assets/safimaint-00-config.js','./assets/safimaint-01-seed.js','./assets/safimaint-02-core.js','./assets/safimaint-03-operations.js','./assets/safimaint-04-assets.js','./assets/safimaint-05-inventory-a.js','./assets/safimaint-06-inventory-b.js','./assets/safimaint-07-admin.js','./assets/safimaint-08-dialogs-search.js','./assets/safimaint-09-events.js','./assets/safimaint-10-fiix-workflows.js',
+  './assets/safimaint-simple.css',
+  './assets/safimaint-00-config.js','./assets/safimaint-01-seed.js','./assets/safimaint-02-core.js','./assets/safimaint-03-operations.js','./assets/safimaint-04-assets.js','./assets/safimaint-05-inventory-a.js','./assets/safimaint-06-inventory-b.js','./assets/safimaint-07-admin.js','./assets/safimaint-08-dialogs-search.js','./assets/safimaint-09-events.js','./assets/safimaint-10-fiix-workflows.js','./assets/safimaint-11-simple-onboarding.js',
   './assets/safimaint-logo.svg',
   './assets/favicon.svg',
   './assets/app-icon.svg'
