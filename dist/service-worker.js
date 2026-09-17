@@ -1,4 +1,4 @@
-const CACHE='safimaint-fiix-workflow-v24';
+const CACHE='safimaint-fiix-connected-v25';
 const APP_SHELL=[
   './',
   './index.html',
@@ -19,7 +19,8 @@ const APP_SHELL=[
   './assets/safimaint-fiix-hierarchy-v22.css',
   './assets/safimaint-fiix-operating-model-v23.css',
   './assets/safimaint-fiix-workflow-v24.css',
-  './assets/safimaint-00-config.js','./assets/safimaint-01-seed.js','./assets/safimaint-02-core.js','./assets/safimaint-03-operations.js','./assets/safimaint-04-assets.js','./assets/safimaint-05-inventory-a.js','./assets/safimaint-06-inventory-b.js','./assets/safimaint-07-admin.js','./assets/safimaint-08-dialogs-search.js','./assets/safimaint-09-events.js','./assets/safimaint-10-fiix-workflows.js','./assets/safimaint-11-simple-onboarding.js','./assets/safimaint-live-ui.js','./assets/safimaint-premium-v12.js','./assets/safimaint-live-motion-v13.js','./assets/safimaint-semantic-motion-v14.js','./assets/safimaint-semantic-motion-v15.js','./assets/safimaint-asset-hierarchy-v17.js','./assets/safimaint-asset-tree-v18.js','./assets/safimaint-asset-explorer-v19.js','./assets/safimaint-asset-hierarchy-v20.js','./assets/safimaint-asset-workspace-v21.js','./assets/safimaint-fiix-operating-model-v23.js','./assets/safimaint-fiix-workflow-v24.js',
+  './assets/safimaint-fiix-connected-v25.css',
+  './assets/safimaint-00-config.js','./assets/safimaint-01-seed.js','./assets/safimaint-02-core.js','./assets/safimaint-03-operations.js','./assets/safimaint-04-assets.js','./assets/safimaint-05-inventory-a.js','./assets/safimaint-06-inventory-b.js','./assets/safimaint-07-admin.js','./assets/safimaint-08-dialogs-search.js','./assets/safimaint-09-events.js','./assets/safimaint-10-fiix-workflows.js','./assets/safimaint-11-simple-onboarding.js','./assets/safimaint-live-ui.js','./assets/safimaint-premium-v12.js','./assets/safimaint-live-motion-v13.js','./assets/safimaint-semantic-motion-v14.js','./assets/safimaint-semantic-motion-v15.js','./assets/safimaint-asset-hierarchy-v17.js','./assets/safimaint-asset-tree-v18.js','./assets/safimaint-asset-explorer-v19.js','./assets/safimaint-asset-hierarchy-v20.js','./assets/safimaint-asset-workspace-v21.js','./assets/safimaint-fiix-operating-model-v23.js','./assets/safimaint-fiix-workflow-v24.js','./assets/safimaint-fiix-connected-v25.js',
   './assets/safimaint-logo.svg',
   './assets/favicon.svg',
   './assets/app-icon.svg'

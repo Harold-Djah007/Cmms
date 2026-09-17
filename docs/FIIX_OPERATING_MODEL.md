@@ -208,6 +208,9 @@ Implemented in the current SafiMaintain prototype:
 - purchase requests / POs / receiving
 - vendors and tool crib
 - notification rules / in-app alerts / queued mail
+- per-person alert channels and relevant-asset scope
+- configurable asset event types with automatic work-order creation
+- batch meter readings with meter-threshold PM generation
 - audit history
 - reports/reliability views
 - local-first service-worker caching
