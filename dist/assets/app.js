@@ -10,10 +10,10 @@ function day(offset) {
 
 const seed = {
   users: [
-    { id:'U-1', name:'Abena Sarpong', role:'Operations manager' },
-    { id:'U-2', name:'Kwame Mensah', role:'Mechanical technician' },
-    { id:'U-3', name:'Simeon Sakyi', role:'Maintenance planner' },
-    { id:'U-4', name:'Ama Owusu', role:'Electrical technician' }
+    { id:'U-1', name:'Abena Sarpong', role:'Operations manager', email:'abena.sarpong@safisana.org', active:true, emailAlerts:true, mfa:true, lastActive:new Date().toISOString() },
+    { id:'U-2', name:'Kwame Mensah', role:'Mechanical technician', email:'kwame.mensah@safisana.org', active:true, emailAlerts:true, mfa:false, lastActive:new Date(Date.now()-3600000).toISOString() },
+    { id:'U-3', name:'Simeon Sakyi', role:'Maintenance planner', email:'simeon.sakyi@safisana.org', active:true, emailAlerts:true, mfa:true, lastActive:new Date(Date.now()-7200000).toISOString() },
+    { id:'U-4', name:'Ama Owusu', role:'Electrical technician', email:'ama.owusu@safisana.org', active:true, emailAlerts:true, mfa:false, lastActive:new Date(Date.now()-86400000).toISOString() }
   ],
   assets: [
     { id:'SITE-1', code:'SSGL', name:'Safisana Ghana Ltd', type:'Site', parentId:null, status:'Healthy', criticality:'A', location:'Ashaiman' },
@@ -108,6 +108,19 @@ const seed = {
     { id:'REQ-81', assetId:'DEW-01', summary:'Belt is tracking toward the left side during operation', urgency:'Urgent', requester:'Kojo Arthur', createdAt:new Date(Date.now()-3600000*5).toISOString(), status:'Requested' },
     { id:'REQ-80', assetId:'FAC-LAB', summary:'Air conditioner making intermittent rattling noise', urgency:'Normal', requester:'Laboratory', createdAt:new Date(Date.now()-86400000).toISOString(), status:'Requested' }
   ],
+  assetEvents: [
+    { id:'AE-1', assetId:'P-201', fromState:'Online', toState:'Offline', reason:'Seal inspection and mix pit cleaning in progress', expectedReturn:day(1)+'T16:00', at:new Date(Date.now()-86400000).toISOString(), userId:'U-1' }
+  ],
+  notifications: [
+    { id:'NTF-1', userId:'U-1', title:'Digester Feed Pump 02 is offline', message:'P-201 was taken offline for seal inspection and mix pit cleaning.', severity:'Critical', entityType:'Asset', entityId:'P-201', createdAt:new Date(Date.now()-86400000).toISOString(), read:false }
+  ],
+  mailOutbox: [
+    { id:'MAIL-1', userId:'U-1', to:'abena.sarpong@safisana.org', subject:'[SafiMaintain] P-201 is offline', body:'Digester Feed Pump 02 was taken offline for seal inspection and mix pit cleaning.', status:'Queued locally', createdAt:new Date(Date.now()-86400000).toISOString(), entityId:'P-201' }
+  ],
+  auditLog: [
+    { id:'AUD-1', at:new Date(Date.now()-86400000).toISOString(), userId:'U-1', action:'Asset taken offline', entityType:'Asset', entityId:'P-201', detail:'Seal inspection and mix pit cleaning in progress' }
+  ],
+  securitySettings:{sessionTimeout:30,requireMfaForManagers:true,lockAfterAttempts:5,auditRetentionDays:365},
   syncQueue:[]
 };
 
@@ -133,9 +146,12 @@ function loadState(){
   }catch(e){ return migrate(clone(seed)); }
 }
 function migrate(data){
-  ['users','assets','meters','parts','suppliers','receipts','cycleCounts','purchaseOrders','workOrders','pm','requests','syncQueue'].forEach(function(key){
+  ['users','assets','meters','parts','suppliers','receipts','cycleCounts','purchaseOrders','workOrders','pm','requests','assetEvents','notifications','mailOutbox','auditLog','syncQueue'].forEach(function(key){
     if(!Array.isArray(data[key])) data[key]=clone(seed[key]);
   });
+  data.users.forEach(function(u){if(u.active==null)u.active=true;if(u.emailAlerts==null)u.emailAlerts=true;if(u.mfa==null)u.mfa=false;if(!u.email)u.email=u.name.toLowerCase().replace(/\s+/g,'.')+'@safisana.org';if(!u.lastActive)u.lastActive=new Date().toISOString();});
+  data.assets.forEach(function(a){if(!a.operatingState)a.operatingState=a.status==='Down'?'Offline':'Online';if(!Array.isArray(a.responsibleUserIds))a.responsibleUserIds=[];if(!a.bom)a.bom=[];});
+  if(!data.securitySettings)data.securitySettings=clone(seed.securitySettings);
   return data;
 }
 function save(reason){
@@ -155,6 +171,7 @@ function part(id){ return state.parts.find(function(x){return x.id===id;}); }
 function supplier(id){ return state.suppliers.find(function(x){return x.id===id;}); }
 function work(id){ return state.workOrders.find(function(x){return x.id===id;}); }
 function pm(id){ return state.pm.find(function(x){return x.id===id;}); }
+function currentUser(){ return user(CURRENT_USER); }
 function assetName(id){ const x=asset(id); return x?x.name:'Unassigned'; }
 function userName(id){ const x=user(id); return x?x.name:'Unassigned'; }
 function partName(id){ const x=part(id); return x?x.name:'Part'; }
@@ -200,12 +217,32 @@ function nextRecordId(prefix,records,start){
   const n=Math.max.apply(null,records.map(function(x){return Number(String(x.id).replace(/\D/g,''))||0;}).concat([start||0]))+1;
   return prefix+'-'+n;
 }
+function addAudit(action,entityType,entityId,detail){
+  state.auditLog.unshift({id:'AUD-'+Date.now()+'-'+Math.floor(Math.random()*1000),at:new Date().toISOString(),userId:CURRENT_USER,action:action,entityType:entityType,entityId:entityId,detail:detail||''});
+}
+function assetStakeholders(a){
+  const ids=new Set();
+  state.users.forEach(function(u){if(u.active&&(u.role==='Operations manager'||u.role==='Maintenance planner'))ids.add(u.id);});
+  (a.responsibleUserIds||[]).forEach(function(id){if(user(id)&&user(id).active)ids.add(id);});
+  state.workOrders.filter(function(w){return w.assetId===a.id&&isActive(w);}).forEach(function(w){if(user(w.assigneeId)&&user(w.assigneeId).active)ids.add(w.assigneeId);});
+  ids.add(CURRENT_USER);return Array.from(ids);
+}
+function notifyUsers(userIds,title,message,severity,entityType,entityId,emailCopy){
+  const now=new Date().toISOString();
+  userIds.forEach(function(userId){
+    const u=user(userId);if(!u||!u.active)return;
+    state.notifications.unshift({id:'NTF-'+Date.now()+'-'+userId+'-'+Math.floor(Math.random()*1000),userId:userId,title:title,message:message,severity:severity||'Information',entityType:entityType||'',entityId:entityId||'',createdAt:now,read:false});
+    if(emailCopy!==false&&u.emailAlerts&&u.email)state.mailOutbox.unshift({id:'MAIL-'+Date.now()+'-'+userId+'-'+Math.floor(Math.random()*1000),userId:userId,to:u.email,subject:'[SafiMaintain] '+title,body:message,status:'Queued locally',createdAt:now,entityId:entityId||''});
+  });
+}
+function unreadCount(){return state.notifications.filter(function(n){return n.userId===CURRENT_USER&&!n.read;}).length;}
 
 function updateBadges(){
   document.getElementById('workBadge').textContent=state.workOrders.filter(isActive).length||'';
   document.getElementById('myWorkBadge').textContent=state.workOrders.filter(function(w){return isActive(w)&&w.assigneeId===CURRENT_USER;}).length||'';
   document.getElementById('requestBadge').textContent=state.requests.filter(function(r){return r.status==='Requested';}).length||'';
   document.getElementById('stockBadge').textContent=state.parts.filter(function(p){return totalStock(p)<=minStock(p);}).length||'';
+  const unread=unreadCount();document.getElementById('alertBadge').textContent=unread||'';document.getElementById('notificationBadge').textContent=unread||'';
 }
 function updateConnection(){
   const online=navigator.onLine;
@@ -242,7 +279,8 @@ function render(){
   const pages={
     'dashboard':renderDashboard,'my-work':renderMyWork,'work-orders':renderWorkOrders,'pm':renderPM,
     'requests':renderRequests,'assets':renderAssets,'meters':renderMeters,'inventory':renderInventory,
-    'receipts':renderReceipts,'counts':renderCounts,'purchase-orders':renderPurchaseOrders,'suppliers':renderSuppliers,'reports':renderReports
+    'receipts':renderReceipts,'counts':renderCounts,'purchase-orders':renderPurchaseOrders,'suppliers':renderSuppliers,'reports':renderReports,
+    'people':renderPeople,'notifications':renderNotifications,'audit':renderAudit,'security':renderSecurity
   };
   view.innerHTML=(pages[route]||renderDashboard)();
   bindPageActions();
@@ -253,7 +291,7 @@ function renderDashboard(){
   const urgent=active.filter(function(w){return w.priority==='Critical'||w.priority==='High'||overdue(w);}).sort(function(a,b){return a.due.localeCompare(b.due);});
   const low=state.parts.filter(function(p){return totalStock(p)<=minStock(p);});
   const equipment=state.assets.filter(function(a){return a.type==='Equipment';});
-  const down=equipment.filter(function(a){return a.status==='Down';});
+  const down=equipment.filter(function(a){return a.operatingState==='Offline';});
   const healthy=equipment.filter(function(a){return a.status==='Healthy';});
   const attention=equipment.filter(function(a){return a.status==='Attention';});
   const duePM=state.pm.filter(function(p){return p.status==='Running'&&p.trigger.type==='time'&&p.trigger.nextDue<=day(7);});
@@ -276,7 +314,7 @@ function renderDashboard(){
       '<article class="kpi"><label>Active work</label><strong>'+active.length+'</strong><small>'+active.filter(function(w){return w.priority==='High'||w.priority==='Critical';}).length+' high / critical</small></article>'+
       '<article class="kpi red"><label>Overdue</label><strong>'+active.filter(overdue).length+'</strong><small>Requires planner attention</small></article>'+
       '<article class="kpi blue"><label>PM compliance</label><strong>'+pmCompliance+'%</strong><small>'+duePM.length+' plans due soon</small></article>'+
-      '<article class="kpi amber"><label>Assets down</label><strong>'+down.length+'</strong><small>'+healthy.length+' equipment healthy</small></article>'+
+      '<article class="kpi amber"><label>Assets offline</label><strong>'+down.length+'</strong><small>'+healthy.length+' equipment healthy</small></article>'+
       '<article class="kpi blue"><label>Below minimum</label><strong>'+low.length+'</strong><small>Stock items to replenish</small></article>'+
     '</section>'+
     '<section class="live-ops-strip">'+
@@ -370,7 +408,7 @@ function childrenOf(parentId){ return state.assets.filter(function(a){return a.p
 function renderTree(parentId,depth){
   return childrenOf(parentId).map(function(a){
     const kids=childrenOf(a.id);
-    return '<div class="tree-node"><div class="tree-line '+(selectedAssetId===a.id?'active':'')+'" data-select-asset="'+a.id+'"><span class="node-icon">'+icon('i-asset')+'</span><span><strong style="display:block;font-size:.8rem">'+escapeHTML(a.name)+'</strong><small>'+escapeHTML(a.code)+' · '+escapeHTML(a.type)+'</small></span>'+badge(a.status)+'</div>'+(kids.length?'<div class="tree-children">'+renderTree(a.id,(depth||0)+1)+'</div>':'')+'</div>';
+    return '<div class="tree-node"><div class="tree-line '+(selectedAssetId===a.id?'active':'')+'" data-select-asset="'+a.id+'"><span class="node-icon">'+icon('i-asset')+'</span><span><strong style="display:block;font-size:.8rem">'+escapeHTML(a.name)+'</strong><small>'+escapeHTML(a.code)+' · '+escapeHTML(a.type)+'</small></span>'+badge(a.operatingState,a.operatingState==='Online'?'completed':'down')+'</div>'+(kids.length?'<div class="tree-children">'+renderTree(a.id,(depth||0)+1)+'</div>':'')+'</div>';
   }).join('');
 }
 function assetDetail(a){
@@ -379,9 +417,12 @@ function assetDetail(a){
   const wos=state.workOrders.filter(function(w){return w.assetId===a.id;}).slice(0,6);
   const plans=state.pm.filter(function(p){return p.assetId===a.id;});
   const bom=(a.bom||[]).map(part).filter(Boolean);
+  const events=state.assetEvents.filter(function(e){return e.assetId===a.id;}).sort(function(x,y){return y.at.localeCompare(x.at);});
+  const responsible=(a.responsibleUserIds||[]).map(userName).join(', ')||'Not assigned';
   let body='';
   if(assetTab==='overview'){
-    body='<div class="info-grid"><div class="info-cell"><small>Status</small><strong>'+a.status+'</strong></div><div class="info-cell"><small>Criticality</small><strong>'+a.criticality+'</strong></div><div class="info-cell"><small>Location</small><strong>'+escapeHTML(a.location||'—')+'</strong></div><div class="info-cell"><small>Manufacturer</small><strong>'+escapeHTML(a.manufacturer||'—')+'</strong></div><div class="info-cell"><small>Model</small><strong>'+escapeHTML(a.model||'—')+'</strong></div><div class="info-cell"><small>Serial</small><strong>'+escapeHTML(a.serial||'—')+'</strong></div></div>'+
+    body='<div class="asset-state-banner '+statusClass(a.operatingState)+'"><span class="state-light"></span><div><small>Operational state</small><strong>'+escapeHTML(a.operatingState)+'</strong></div><button class="'+(a.operatingState==='Online'?'danger-btn':'primary-btn')+'" data-toggle-asset-state="'+a.id+'">'+icon('i-power')+(a.operatingState==='Online'?'Take offline':'Return online')+'</button></div>'+
+      '<div class="info-grid"><div class="info-cell"><small>Condition</small><strong>'+a.status+'</strong></div><div class="info-cell"><small>Criticality</small><strong>'+a.criticality+'</strong></div><div class="info-cell"><small>Responsible</small><strong>'+escapeHTML(responsible)+'</strong></div><div class="info-cell"><small>Location</small><strong>'+escapeHTML(a.location||'—')+'</strong></div><div class="info-cell"><small>Manufacturer / model</small><strong>'+escapeHTML([a.manufacturer,a.model].filter(Boolean).join(' · ')||'—')+'</strong></div><div class="info-cell"><small>Serial</small><strong>'+escapeHTML(a.serial||'—')+'</strong></div></div>'+
       '<h3 style="margin:20px 0 9px;font-size:.92rem">Recent work</h3><div class="record-list">'+(wos.map(function(w){return '<button class="record-item" data-open-wo="'+w.id+'"><span><strong>'+escapeHTML(w.title)+'</strong><small>'+escapeHTML(w.id)+' · '+prettyDate(w.due)+'</small></span>'+badge(w.status)+'</button>';}).join('')||'<div class="empty">No work history yet.</div>')+'</div>';
   } else if(assetTab==='meters'){
     body='<div class="record-list">'+(meters.map(function(m){return '<div class="record-item"><span><strong>'+escapeHTML(m.name)+'</strong><small>Latest '+prettyDate(m.readings[m.readings.length-1].date)+'</small></span><strong>'+m.current+' '+escapeHTML(m.unit)+'</strong></div>';}).join('')||'<div class="empty">No meters on this asset.</div>')+'</div>';
@@ -389,18 +430,20 @@ function assetDetail(a){
     body='<div class="record-list">'+(plans.map(function(p){return '<div class="record-item"><span><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(p.trigger.type==='time'?'Next '+prettyDate(p.trigger.nextDue):'Meter trigger at '+p.trigger.nextThreshold)+'</small></span>'+badge(p.status,'healthy')+'</div>';}).join('')||'<div class="empty">No PM plans on this asset.</div>')+'</div>';
   } else if(assetTab==='parts'){
     body='<div class="record-list">'+(bom.map(function(p){return '<div class="record-item"><span><strong>'+escapeHTML(p.name)+'</strong><small>'+escapeHTML(p.code)+'</small></span><strong>'+totalStock(p)+' in stock</strong></div>';}).join('')||'<div class="empty">No BOM parts linked.</div>')+'</div>';
+  } else if(assetTab==='work'){
+    body='<div class="record-list">'+(wos.map(function(w){return '<button class="record-item" data-open-wo="'+w.id+'"><span><strong>'+escapeHTML(w.id)+' · '+escapeHTML(w.title)+'</strong><small>'+escapeHTML(w.type)+' · '+escapeHTML(userName(w.assigneeId))+'</small></span>'+badge(w.status)+'</button>';}).join('')||'<div class="empty">No work history.</div>')+'</div>';
   } else {
-    body='<div class="record-list">'+(wos.map(function(w){return '<div class="record-item"><span><strong>'+escapeHTML(w.id)+' · '+escapeHTML(w.title)+'</strong><small>'+escapeHTML(w.type)+' · '+escapeHTML(userName(w.assigneeId))+'</small></span>'+badge(w.status)+'</div>';}).join('')||'<div class="empty">No history.</div>')+'</div>';
+    body='<div class="record-list">'+(events.map(function(e){return '<div class="record-item"><span><strong>'+escapeHTML(e.fromState)+' → '+escapeHTML(e.toState)+'</strong><small>'+escapeHTML(e.reason)+' · '+formatTime(e.at)+' · '+escapeHTML(userName(e.userId))+'</small></span>'+badge(e.toState,e.toState==='Online'?'completed':'down')+'</div>';}).join('')||'<div class="empty">No operational-state changes recorded.</div>')+'</div>';
   }
-  return '<div class="detail-hero"><div><p class="eyebrow">'+escapeHTML(a.type)+' · '+escapeHTML(a.code)+'</p><h2>'+escapeHTML(a.name)+'</h2><p>'+escapeHTML(a.location||'')+'</p></div><div class="badges">'+badge(a.status)+' '+badge('Criticality '+a.criticality,'pending')+'</div></div>'+
-    '<div class="detail-tabs">'+['overview','meters','pm','parts','history'].map(function(t){return '<button class="detail-tab '+(assetTab===t?'active':'')+'" data-asset-tab="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>';}).join('')+'</div><div class="detail-body">'+body+'</div>';
+  return '<div class="detail-hero"><div><p class="eyebrow">'+escapeHTML(a.type)+' · '+escapeHTML(a.code)+'</p><h2>'+escapeHTML(a.name)+'</h2><p>'+escapeHTML(a.location||'')+'</p></div><div class="detail-hero-actions"><button class="secondary-btn" data-edit-asset="'+a.id+'">Edit / move</button><div class="badges">'+badge(a.operatingState,a.operatingState==='Online'?'completed':'down')+' '+badge(a.status)+' '+badge('Criticality '+a.criticality,'pending')+'</div></div></div>'+
+    '<div class="detail-tabs">'+['overview','meters','pm','parts','work','activity'].map(function(t){return '<button class="detail-tab '+(assetTab===t?'active':'')+'" data-asset-tab="'+t+'">'+(t==='pm'?'PM':t[0].toUpperCase()+t.slice(1))+'</button>';}).join('')+'</div><div class="detail-body">'+body+'</div>';
 }
 function renderAssets(){
   const roots=state.assets.filter(function(a){return a.parentId===null;});
   const selected=asset(selectedAssetId)||roots[0];
   return pageHead('Assets','Asset register','Plant hierarchy, equipment records, meters, BOMs and maintenance history.',
-    '<button class="secondary-btn" id="assetMeterButton">'+icon('i-meter')+'Add reading</button>')+
-    '<div class="admin-strip planner-only"><button class="tool-btn" data-print-work>Print asset tags</button><span class="spacer"></span><span class="admin-count">'+state.assets.length+' asset records</span></div>'+
+    '<button class="secondary-btn" id="assetMeterButton">'+icon('i-meter')+'Add reading</button><button class="primary-btn" data-new-asset>'+icon('i-plus')+'New asset</button>')+
+    '<div class="admin-strip planner-only"><button class="tool-btn primary" data-new-asset>'+icon('i-plus')+'New asset</button><button class="tool-btn" data-print-work>Print asset tags</button><span class="spacer"></span><span class="admin-count">'+state.assets.filter(function(a){return a.operatingState==='Offline';}).length+' offline · '+state.assets.length+' records</span></div>'+
     '<div class="asset-layout"><section class="tree-panel"><div class="tree-head"><p class="eyebrow">Plant hierarchy</p><h2>Sites → facilities → equipment → tools</h2></div><div class="asset-tree">'+renderTree(null,0)+'</div></section><section class="detail-panel">'+assetDetail(selected)+'</section></div>';
 }
 
@@ -477,6 +520,88 @@ function renderReports(){
   return pageHead('Insights','Reliability','A concise view of maintenance performance from the records in this field build.','')+
     '<div class="report-grid"><article class="report-card"><p class="eyebrow">Backlog</p><h3>'+backlog+' active work orders</h3><p>'+overdueCount+' overdue. Use this to drive weekly planning.</p></article><article class="report-card"><p class="eyebrow">Planned work</p><h3>'+ratio+'% preventive</h3><p>'+planned+' of '+state.workOrders.length+' recorded jobs are preventive.</p></article><article class="report-card"><p class="eyebrow">Labor</p><h3>'+avgLabor+' min average</h3><p>Average logged labor on completed work in the local dataset.</p></article></div>'+
     '<article class="card card-pad" style="margin-top:14px"><p class="eyebrow">Deployment note</p><h2 style="margin:2px 0 8px;font-size:1.1rem">This build is deliberately honest about sync</h2><p style="margin:0;color:var(--muted)">Field actions are fully saved on this device and queued for future synchronization. A shared server is not connected yet, so the Sync control will not pretend data has reached other users.</p></article>';
+}
+
+const ROLE_PERMISSIONS={
+  'Operations manager':'All assets, stock, work, people, alerts and settings',
+  'Maintenance planner':'Assets, stock, work planning, alerts and reports',
+  'Mechanical technician':'Assigned work, asset readings and parts issue',
+  'Electrical technician':'Assigned work, asset readings and parts issue',
+  'Viewer':'Read-only operational records'
+};
+
+function renderPeople(){
+  const roles=Object.keys(ROLE_PERMISSIONS);
+  const rows=state.users.map(function(u){
+    const options=roles.map(function(role){return '<option '+(u.role===role?'selected':'')+'>'+escapeHTML(role)+'</option>';}).join('');
+    return '<tr><td><strong>'+escapeHTML(u.name)+'</strong><small>'+escapeHTML(u.email)+'</small></td><td><select class="table-select" data-user-role="'+u.id+'">'+options+'</select></td><td>'+badge(u.active?'Active':'Inactive',u.active?'completed':'pending')+'</td><td>'+badge(u.mfa?'MFA enrolled':'Not enrolled',u.mfa?'completed':'attention')+'</td><td><label class="table-toggle"><input type="checkbox" data-email-alert="'+u.id+'" '+(u.emailAlerts?'checked':'')+'> Email alerts</label></td><td>'+formatTime(u.lastActive)+'</td><td><button class="tool-btn" data-user-active="'+u.id+'">'+(u.active?'Deactivate':'Activate')+'</button></td></tr>';
+  }).join('');
+  return pageHead('Administration','People & access','Manage operational roles, access status and notification preferences.','')+
+    '<div class="boundary-banner">'+icon('i-shield')+'<div><strong>Role controls are active in this interface</strong><span>Central sign-in, password policy and server-side permission enforcement require the shared backend milestone.</span></div></div>'+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Person</th><th>Role</th><th>Access</th><th>MFA</th><th>Alerts</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderNotifications(){
+  const mine=state.notifications.filter(function(n){return n.userId===CURRENT_USER;}).sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);});
+  const items=mine.map(function(n){return '<article class="notification-item '+(!n.read?'unread':'')+'"><span class="notification-severity '+statusClass(n.severity)+'">'+icon(n.severity==='Critical'?'i-alert':'i-bell')+'</span><div><div class="notification-title"><strong>'+escapeHTML(n.title)+'</strong>'+badge(n.severity,n.severity)+'</div><p>'+escapeHTML(n.message)+'</p><small>'+formatTime(n.createdAt)+' · '+escapeHTML(n.entityType||'Operations')+(n.entityId?' '+escapeHTML(n.entityId):'')+'</small></div><button class="tool-btn" data-mark-notification="'+n.id+'">'+(n.read?'Mark unread':'Mark read')+'</button></article>';}).join('')||'<div class="empty"><strong>No alerts yet</strong>Asset state, stock and operations alerts will appear here.</div>';
+  const outbox=state.mailOutbox.slice().sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);}).map(function(m){return '<tr><td><strong>'+escapeHTML(m.to)+'</strong></td><td>'+escapeHTML(m.subject)+'</td><td>'+formatTime(m.createdAt)+'</td><td>'+badge(m.status,'pending')+'</td></tr>';}).join('')||'<tr><td colspan="4" class="table-empty">No email copies queued.</td></tr>';
+  return pageHead('Administration','Mail & alerts','In-app notifications with traceable email-copy preparation.','<button class="primary-btn" data-compose-message>'+icon('i-mail')+'New announcement</button>')+
+    '<div class="boundary-banner warning">'+icon('i-mail')+'<div><strong>Email provider not connected</strong><span>Messages are saved to a local outbox for review. External delivery starts when a mail service and shared backend are connected.</span></div></div>'+
+    '<div class="admin-strip"><button class="tool-btn" data-mark-all-read>Mark all read</button><span class="spacer"></span><span class="admin-count">'+unreadCount()+' unread · '+state.mailOutbox.length+' email copies queued</span></div>'+
+    '<section class="admin-grid"><article class="card"><div class="card-head"><div><p class="eyebrow">In-app center</p><h2>My alerts</h2></div></div><div class="notification-list">'+items+'</div></article><article><div class="table-title-row"><div><h2>Email outbox</h2><p>Prepared delivery records</p></div></div><div class="table-wrap"><table class="data-table compact-table"><thead><tr><th>Recipient</th><th>Subject</th><th>Created</th><th>Status</th></tr></thead><tbody>'+outbox+'</tbody></table></div></article></section>';
+}
+
+function renderAudit(){
+  const rows=state.auditLog.slice().sort(function(a,b){return b.at.localeCompare(a.at);}).map(function(x){return '<tr><td>'+formatTime(x.at)+'</td><td><strong>'+escapeHTML(userName(x.userId))+'</strong></td><td>'+escapeHTML(x.action)+'</td><td>'+escapeHTML(x.entityType)+' <strong>'+escapeHTML(x.entityId)+'</strong></td><td>'+escapeHTML(x.detail||'—')+'</td></tr>';}).join('')||'<tr><td colspan="5" class="table-empty">No audited changes yet.</td></tr>';
+  return pageHead('Administration','Audit trail','A chronological record of important asset, stock, communication and security changes.','<button class="secondary-btn" data-print-work>'+icon('i-file')+'Print</button>')+
+    '<div class="table-wrap"><table class="data-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Record</th><th>Detail</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function renderSecurity(){
+  const s=state.securitySettings;
+  const rows=Object.keys(ROLE_PERMISSIONS).map(function(role){return '<tr><td><strong>'+escapeHTML(role)+'</strong></td><td>'+escapeHTML(ROLE_PERMISSIONS[role])+'</td></tr>';}).join('');
+  return pageHead('Administration','Security','Keep access understandable with simple roles, MFA policy and accountable changes.','')+
+    '<div class="boundary-banner">'+icon('i-shield')+'<div><strong>Security configuration is saved on this device</strong><span>Production enforcement needs identity management, encrypted server storage and server-side authorization.</span></div></div>'+
+    '<section class="security-layout"><form class="card card-pad security-form" id="securityForm"><p class="eyebrow">Policy</p><h2>Access policy</h2><label>Idle session timeout<select name="sessionTimeout"><option value="15">15 minutes</option><option value="30" '+(s.sessionTimeout===30?'selected':'')+'>30 minutes</option><option value="60" '+(s.sessionTimeout===60?'selected':'')+'>60 minutes</option></select></label><label>Lock after failed attempts<select name="lockAfterAttempts"><option value="3" '+(s.lockAfterAttempts===3?'selected':'')+'>3 attempts</option><option value="5" '+(s.lockAfterAttempts===5?'selected':'')+'>5 attempts</option><option value="10" '+(s.lockAfterAttempts===10?'selected':'')+'>10 attempts</option></select></label><label>Audit retention<select name="auditRetentionDays"><option value="90" '+(s.auditRetentionDays===90?'selected':'')+'>90 days</option><option value="365" '+(s.auditRetentionDays===365?'selected':'')+'>365 days</option><option value="730" '+(s.auditRetentionDays===730?'selected':'')+'>2 years</option></select></label><label class="check-row"><input type="checkbox" name="requireMfaForManagers" '+(s.requireMfaForManagers?'checked':'')+'> Require MFA for managers</label><button class="primary-btn" type="submit">Save policy</button></form><article><div class="table-title-row"><div><h2>Role permissions</h2><p>Simple least-privilege model</p></div></div><div class="table-wrap"><table class="data-table compact-table"><thead><tr><th>Role</th><th>Allowed work</th></tr></thead><tbody>'+rows+'</tbody></table></div></article></section>';
+}
+
+function openAssetDialog(id){
+  const form=document.getElementById('assetForm'),a=id?asset(id):null;form.reset();
+  const descendants=new Set();
+  (function collect(parent){childrenOf(parent).forEach(function(x){descendants.add(x.id);collect(x.id);});})(id||'__none__');
+  document.getElementById('assetParentSelect').innerHTML='<option value="">No parent (top-level site)</option>'+state.assets.filter(function(x){return !a||x.id!==a.id&&!descendants.has(x.id);}).map(function(x){return '<option value="'+x.id+'">'+escapeHTML(x.code+' · '+x.name)+'</option>';}).join('');
+  document.getElementById('assetResponsibleSelect').innerHTML='<option value="">Not assigned</option>'+state.users.filter(function(u){return u.active;}).map(function(u){return '<option value="'+u.id+'">'+escapeHTML(u.name+' · '+u.role)+'</option>';}).join('');
+  document.getElementById('assetDialogTitle').textContent=a?'Edit asset':'Create asset';form.elements.assetId.value=a?a.id:'';
+  if(a){['code','name','type','status','criticality','location','manufacturer','model','serial','commissioned'].forEach(function(k){form.elements[k].value=a[k]||'';});form.elements.parentId.value=a.parentId||'';form.elements.responsibleUserId.value=(a.responsibleUserIds||[])[0]||'';}
+  else {form.elements.status.value='Healthy';form.elements.criticality.value='B';form.elements.type.value='Equipment';}
+  document.getElementById('assetDialog').showModal();setTimeout(function(){form.elements.code.focus();},0);
+}
+
+function openAssetStateDialog(id){
+  const a=asset(id);if(!a)return;const next=a.operatingState==='Online'?'Offline':'Online',form=document.getElementById('assetStateForm');form.reset();
+  form.elements.assetId.value=a.id;form.elements.nextState.value=next;form.elements.createWork.checked=next==='Offline';
+  document.getElementById('assetStateTitle').textContent=(next==='Offline'?'Take offline: ':'Return online: ')+a.name;
+  document.getElementById('assetStateSubmit').textContent=next==='Offline'?'Confirm offline':'Confirm online';
+  document.getElementById('expectedReturnLabel').hidden=next==='Online';document.getElementById('correctiveWorkLabel').hidden=next==='Online';
+  const recipients=assetStakeholders(a).map(user).filter(Boolean);document.getElementById('assetAlertRecipients').innerHTML='<strong>'+recipients.length+' people will be alerted</strong><span>'+escapeHTML(recipients.map(function(u){return u.name+' ('+u.email+')';}).join(', '))+'</span>';
+  document.getElementById('assetStateDialog').showModal();setTimeout(function(){form.elements.reason.focus();},0);
+}
+
+function handleAssetSubmit(e){
+  e.preventDefault();const f=new FormData(e.currentTarget),existing=f.get('assetId')?asset(f.get('assetId')):null,code=String(f.get('code')).trim().toUpperCase();
+  if(state.assets.some(function(a){return a.code.toUpperCase()===code&&(!existing||a.id!==existing.id);})){toast('That asset code already exists');return;}
+  const a=existing||{id:nextRecordId('AST',state.assets,0),operatingState:'Online',bom:[]};
+  Object.assign(a,{code:code,name:String(f.get('name')).trim(),type:f.get('type'),parentId:f.get('parentId')||null,status:f.get('status'),criticality:f.get('criticality'),location:String(f.get('location')).trim(),manufacturer:String(f.get('manufacturer')||'').trim(),model:String(f.get('model')||'').trim(),serial:String(f.get('serial')||'').trim(),commissioned:f.get('commissioned')||'',responsibleUserIds:f.get('responsibleUserId')?[f.get('responsibleUserId')]:[]});
+  if(!existing)state.assets.push(a);selectedAssetId=a.id;assetTab='overview';addAudit(existing?'Asset updated':'Asset created','Asset',a.id,a.code+' · '+a.name);save(existing?'Updated '+a.id:'Created '+a.id);document.getElementById('assetDialog').close();populateSelects();render();toast(a.id+(existing?' updated':' created'));
+}
+
+function handleAssetStateSubmit(e){
+  e.preventDefault();const f=new FormData(e.currentTarget),a=asset(f.get('assetId'));if(!a)return;const from=a.operatingState,next=f.get('nextState'),reason=String(f.get('reason')).trim(),now=new Date().toISOString();
+  a.operatingState=next;if(next==='Offline')a.status='Down';else if(a.status==='Down')a.status='Attention';
+  state.assetEvents.unshift({id:'AE-'+Date.now(),assetId:a.id,fromState:from,toState:next,reason:reason,expectedReturn:f.get('expectedReturn')||'',at:now,userId:CURRENT_USER});
+  let workId='';if(next==='Offline'&&f.get('createWork')){workId=nextWorkId();const assignee=(a.responsibleUserIds||[])[0]||'U-2';state.workOrders.unshift({id:workId,title:'Restore '+a.name+' to service',assetId:a.id,type:'Corrective',priority:a.criticality==='A'?'Critical':'High',status:'Open',assigneeId:assignee,due:day(1),estimateHours:1,actualMinutes:0,source:'Asset state change',instructions:'Asset was taken offline: '+reason+'. Diagnose, correct safely and verify readiness before returning it online.',tasks:[{id:newTaskId(),type:'Inspection',text:'Diagnose reason for outage',status:'Todo',result:null},{id:newTaskId(),type:'General',text:'Complete corrective action',status:'Todo'},{id:newTaskId(),type:'Inspection',text:'Verify safe return to service',status:'Todo',result:null}],parts:[],createdAt:now,completedAt:null,log:[{at:now,text:'Created when '+a.code+' was taken offline'}]});}
+  const detail=a.code+' · '+a.name+' was set '+next.toLowerCase()+' by '+userName(CURRENT_USER)+'. Reason: '+reason+(f.get('expectedReturn')?' Expected return: '+formatTime(f.get('expectedReturn'))+'.':'')+(workId?' Corrective work: '+workId+'.':'');
+  notifyUsers(assetStakeholders(a),a.name+' is '+next.toLowerCase(),detail,next==='Offline'?'Critical':'Information','Asset',a.id,true);addAudit('Asset set '+next.toLowerCase(),'Asset',a.id,reason+(workId?' · '+workId:''));save('Changed '+a.id+' to '+next);document.getElementById('assetStateDialog').close();render();toast(a.code+' is now '+next.toLowerCase()+(workId?' · '+workId+' created':''));
 }
 
 function openWorkDrawer(id,tab){
@@ -740,25 +865,30 @@ function receivePurchaseOrder(po){
   const id=nextRecordId('REC',state.receipts,100);
   state.receipts.unshift({id:id,partId:po.partId,supplierId:po.supplierId,quantity:Number(po.quantity),location:loc.name,reference:po.id,receivedAt:po.receivedAt,receivedBy:CURRENT_USER});
   p.transactions.unshift({at:po.receivedAt,type:'Receipt',qty:Number(po.quantity),location:loc.name,reference:po.id});
+  addAudit('Purchase order received','Purchase order',po.id,po.quantity+' × '+p.code+' received into '+loc.name);
 }
 
 function handleSupplySubmit(e){
   e.preventDefault();const f=new FormData(e.currentTarget),action=f.get('action'),now=new Date().toISOString();let message='Supply record saved';
   if(action==='part'){
     const code=String(f.get('code')).trim().toUpperCase();if(state.parts.some(function(p){return p.code.toUpperCase()===code;})){toast('That part code already exists');return;}
-    const id=nextRecordId('PRT',state.parts,0);state.parts.push({id:id,code:code,name:String(f.get('name')).trim(),category:String(f.get('category')).trim(),supplierId:f.get('supplierId')||null,unitCost:Number(f.get('unitCost')),locations:[{name:String(f.get('location')).trim(),onHand:Number(f.get('onHand')),min:Number(f.get('min')),max:Number(f.get('max'))}],transactions:[]});message=id+' created';
+    const id=nextRecordId('PRT',state.parts,0);state.parts.push({id:id,code:code,name:String(f.get('name')).trim(),category:String(f.get('category')).trim(),supplierId:f.get('supplierId')||null,unitCost:Number(f.get('unitCost')),locations:[{name:String(f.get('location')).trim(),onHand:Number(f.get('onHand')),min:Number(f.get('min')),max:Number(f.get('max'))}],transactions:[]});addAudit('Part created','Part',id,code+' · '+String(f.get('name')).trim());message=id+' created';
   }else if(action==='receive'){
     const p=part(f.get('partId')),qty=Number(f.get('quantity')),location=String(f.get('location')).trim();if(!p||qty<=0)return;
     let loc=p.locations.find(function(x){return x.name===location;});if(!loc){loc={name:location,onHand:0,min:0,max:0};p.locations.push(loc);}loc.onHand=Number(loc.onHand||0)+qty;
-    const id=nextRecordId('REC',state.receipts,100);state.receipts.unshift({id:id,partId:p.id,supplierId:f.get('supplierId')||null,quantity:qty,location:location,reference:String(f.get('reference')||'').trim(),receivedAt:now,receivedBy:CURRENT_USER});p.transactions.unshift({at:now,type:'Receipt',qty:qty,location:location,reference:String(f.get('reference')||'').trim()});message=id+' posted · '+qty+' received';
+    const id=nextRecordId('REC',state.receipts,100);state.receipts.unshift({id:id,partId:p.id,supplierId:f.get('supplierId')||null,quantity:qty,location:location,reference:String(f.get('reference')||'').trim(),receivedAt:now,receivedBy:CURRENT_USER});p.transactions.unshift({at:now,type:'Receipt',qty:qty,location:location,reference:String(f.get('reference')||'').trim()});addAudit('Stock received','Receipt',id,qty+' × '+p.code+' into '+location);message=id+' posted · '+qty+' received';
   }else if(action==='count'){
     const p=part(f.get('partId')),location=String(f.get('location')).trim(),counted=Number(f.get('counted'));if(!p||counted<0)return;
     let loc=p.locations.find(function(x){return x.name===location;});if(!loc){loc={name:location,onHand:0,min:0,max:0};p.locations.push(loc);}const expected=Number(loc.onHand||0),variance=counted-expected;loc.onHand=counted;
-    const id=nextRecordId('CNT',state.cycleCounts,30);state.cycleCounts.unshift({id:id,partId:p.id,location:location,expected:expected,counted:counted,variance:variance,countedAt:now,countedBy:CURRENT_USER,note:String(f.get('note')||'').trim(),status:'Posted'});p.transactions.unshift({at:now,type:'Cycle count',qty:variance,location:location,reference:id});message=id+' posted · variance '+(variance>0?'+':'')+variance;
+    const id=nextRecordId('CNT',state.cycleCounts,30);state.cycleCounts.unshift({id:id,partId:p.id,location:location,expected:expected,counted:counted,variance:variance,countedAt:now,countedBy:CURRENT_USER,note:String(f.get('note')||'').trim(),status:'Posted'});p.transactions.unshift({at:now,type:'Cycle count',qty:variance,location:location,reference:id});addAudit('Cycle count posted','Cycle count',id,p.code+' expected '+expected+', counted '+counted+', variance '+variance);
+    const stockRecipients=state.users.filter(function(u){return u.active&&(u.role==='Operations manager'||u.role==='Maintenance planner');}).map(function(u){return u.id;});
+    if(variance!==0)notifyUsers(stockRecipients,'Stock variance: '+p.code,p.name+' at '+location+' counted '+counted+' versus '+expected+' expected (variance '+(variance>0?'+':'')+variance+').','Warning','Cycle count',id,true);
+    if(totalStock(p)<=minStock(p))notifyUsers(stockRecipients,'Low stock: '+p.code,p.name+' now has '+totalStock(p)+' on hand against a minimum of '+minStock(p)+'.','Critical','Part',p.id,true);
+    message=id+' posted · variance '+(variance>0?'+':'')+variance;
   }else if(action==='po'){
-    const id=nextRecordId('PO',state.purchaseOrders,2024);state.purchaseOrders.unshift({id:id,supplierId:f.get('supplierId'),partId:f.get('partId'),quantity:Number(f.get('quantity')),unitCost:Number(f.get('unitCost')),expectedDate:f.get('expectedDate'),status:'Draft',createdAt:now});message=id+' created as draft';
+    const id=nextRecordId('PO',state.purchaseOrders,2024);state.purchaseOrders.unshift({id:id,supplierId:f.get('supplierId'),partId:f.get('partId'),quantity:Number(f.get('quantity')),unitCost:Number(f.get('unitCost')),expectedDate:f.get('expectedDate'),status:'Draft',createdAt:now});addAudit('Purchase order created','Purchase order',id,Number(f.get('quantity'))+' × '+partName(f.get('partId')));message=id+' created as draft';
   }else{
-    const id=nextRecordId('SUP',state.suppliers,0);state.suppliers.push({id:id,name:String(f.get('name')).trim(),contact:String(f.get('contact')||'').trim(),phone:String(f.get('phone')||'').trim(),email:String(f.get('email')||'').trim(),status:'Active'});message=id+' supplier created';
+    const id=nextRecordId('SUP',state.suppliers,0);state.suppliers.push({id:id,name:String(f.get('name')).trim(),contact:String(f.get('contact')||'').trim(),phone:String(f.get('phone')||'').trim(),email:String(f.get('email')||'').trim(),status:'Active'});addAudit('Supplier created','Supplier',id,String(f.get('name')).trim());message=id+' supplier created';
   }
   save(message);e.currentTarget.reset();document.getElementById('supplyDialog').close();render();toast(message);
 }
@@ -781,7 +911,7 @@ function bindPageActions(){
   document.querySelectorAll('[data-po-action]').forEach(function(b){b.addEventListener('click',function(){
     const po=state.purchaseOrders.find(function(x){return x.id===b.dataset.poAction;});if(!po)return;
     if(po.status==='Draft')po.status='Approved';else if(po.status==='Approved')po.status='Ordered';else if(po.status==='Ordered')receivePurchaseOrder(po);
-    save('Updated '+po.id+' to '+po.status);render();toast(po.id+' is now '+po.status.toLowerCase());
+    addAudit('Purchase order '+po.status.toLowerCase(),'Purchase order',po.id,partName(po.partId));save('Updated '+po.id+' to '+po.status);render();toast(po.id+' is now '+po.status.toLowerCase());
   });});
   document.querySelectorAll('[data-route-jump]').forEach(function(b){b.addEventListener('click',function(){navigate(b.dataset.routeJump);});});
   document.querySelectorAll('[data-new-work]').forEach(function(b){b.addEventListener('click',function(){openWorkDialog();});});
@@ -794,8 +924,18 @@ function bindPageActions(){
   document.querySelectorAll('[data-select-asset]').forEach(function(el){el.addEventListener('click',function(){selectedAssetId=el.dataset.selectAsset;assetTab='overview';render();});});
   document.querySelectorAll('[data-asset-tab]').forEach(function(b){b.addEventListener('click',function(){assetTab=b.dataset.assetTab;render();});});
   document.querySelectorAll('[data-open-asset]').forEach(function(b){b.addEventListener('click',function(){selectedAssetId=b.dataset.openAsset;assetTab='overview';navigate('assets');});});
+  document.querySelectorAll('[data-new-asset]').forEach(function(b){b.addEventListener('click',function(){openAssetDialog();});});
+  document.querySelectorAll('[data-edit-asset]').forEach(function(b){b.addEventListener('click',function(){openAssetDialog(b.dataset.editAsset);});});
+  document.querySelectorAll('[data-toggle-asset-state]').forEach(function(b){b.addEventListener('click',function(){openAssetStateDialog(b.dataset.toggleAssetState);});});
+  document.querySelectorAll('[data-compose-message]').forEach(function(b){b.addEventListener('click',function(){document.getElementById('messageForm').reset();document.getElementById('messageDialog').showModal();});});
+  document.querySelectorAll('[data-mark-notification]').forEach(function(b){b.addEventListener('click',function(){const n=state.notifications.find(function(x){return x.id===b.dataset.markNotification;});if(n){n.read=!n.read;save('Updated notification');render();}});});
+  document.querySelectorAll('[data-mark-all-read]').forEach(function(b){b.addEventListener('click',function(){state.notifications.filter(function(n){return n.userId===CURRENT_USER;}).forEach(function(n){n.read=true;});save('Marked notifications read');render();});});
+  document.querySelectorAll('[data-user-role]').forEach(function(el){el.addEventListener('change',function(){const u=user(el.dataset.userRole);if(!u)return;const old=u.role;u.role=el.value;addAudit('User role changed','User',u.id,old+' → '+u.role);save('Changed '+u.name+' role');render();toast(u.name+' is now '+u.role);});});
+  document.querySelectorAll('[data-user-active]').forEach(function(b){b.addEventListener('click',function(){const u=user(b.dataset.userActive);if(!u)return;u.active=!u.active;addAudit(u.active?'User activated':'User deactivated','User',u.id,u.email);save('Changed '+u.name+' access');render();toast(u.name+' is '+(u.active?'active':'inactive'));});});
+  document.querySelectorAll('[data-email-alert]').forEach(function(el){el.addEventListener('change',function(){const u=user(el.dataset.emailAlert);if(!u)return;u.emailAlerts=el.checked;addAudit('Email preference changed','User',u.id,u.emailAlerts?'Enabled':'Disabled');save('Changed email preference');render();});});
   document.querySelectorAll('[data-add-meter]').forEach(function(b){b.addEventListener('click',function(){openMeterDialog(b.dataset.addMeter||null,null);});});
   const am=document.getElementById('assetMeterButton');if(am)am.addEventListener('click',function(){const m=state.meters.find(function(x){return x.assetId===selectedAssetId;});openMeterDialog(m?m.id:null,null);});
+  const securityForm=document.getElementById('securityForm');if(securityForm)securityForm.addEventListener('submit',function(e){e.preventDefault();const f=new FormData(e.currentTarget);state.securitySettings={sessionTimeout:Number(f.get('sessionTimeout')),lockAfterAttempts:Number(f.get('lockAfterAttempts')),auditRetentionDays:Number(f.get('auditRetentionDays')),requireMfaForManagers:!!f.get('requireMfaForManagers')};addAudit('Security policy updated','Security','POLICY','Session '+state.securitySettings.sessionTimeout+' min · lock '+state.securitySettings.lockAfterAttempts+' attempts');save('Updated security policy');render();toast('Security policy saved');});
 }
 
 function setupGlobalEvents(){
@@ -804,6 +944,7 @@ function setupGlobalEvents(){
   document.getElementById('suppliesToggle').addEventListener('click',function(){setSuppliesOpen(this.getAttribute('aria-expanded')!=='true');});
   document.getElementById('newWorkButton').addEventListener('click',function(){openWorkDialog();});
   document.getElementById('searchButton').addEventListener('click',function(){document.getElementById('searchDialog').showModal();setTimeout(function(){document.getElementById('globalSearchInput').focus();},0);});
+  document.getElementById('notificationButton').addEventListener('click',function(){navigate('notifications');});
   document.getElementById('globalSearchInput').addEventListener('input',renderSearchResults);
   document.getElementById('scanButton').addEventListener('click',function(){document.getElementById('scanCode').value='';document.getElementById('scanDialog').showModal();});
   document.getElementById('openTagButton').addEventListener('click',function(){openTag(document.getElementById('scanCode').value);});
@@ -814,6 +955,9 @@ function setupGlobalEvents(){
   document.querySelectorAll('[data-close-dialog]').forEach(function(b){b.addEventListener('click',function(){const d=document.getElementById(b.dataset.closeDialog);if(d.id==='scanDialog')stopScanner();d.close();});});
   document.getElementById('scanDialog').addEventListener('close',stopScanner);
   document.getElementById('supplyForm').addEventListener('submit',handleSupplySubmit);
+  document.getElementById('assetForm').addEventListener('submit',handleAssetSubmit);
+  document.getElementById('assetStateForm').addEventListener('submit',handleAssetStateSubmit);
+  document.getElementById('messageForm').addEventListener('submit',function(e){e.preventDefault();const f=new FormData(e.currentTarget),audience=f.get('audience');let recipients=state.users.filter(function(u){if(!u.active)return false;if(audience==='All users')return true;if(audience==='Technician')return u.role.includes('technician');return u.role===audience;});notifyUsers(recipients.map(function(u){return u.id;}),String(f.get('subject')).trim(),String(f.get('message')).trim(),f.get('severity'),'Announcement','',!!f.get('emailCopy'));addAudit('Announcement sent','Communication','ANN-'+Date.now(),String(f.get('subject')).trim()+' · '+recipients.length+' recipients');save('Sent announcement');e.currentTarget.reset();document.getElementById('messageDialog').close();render();toast('Announcement sent to '+recipients.length+' people');});
   document.getElementById('supplyFields').addEventListener('change',function(e){if(e.target.id==='countPart')syncCountLocation();if(e.target.id==='poPart')syncPOCost();});
 
   document.getElementById('workForm').addEventListener('submit',function(e){

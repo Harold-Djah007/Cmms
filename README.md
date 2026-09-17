@@ -7,6 +7,10 @@ This redesign is based on CMMS workflow patterns rather than copied screenshots.
 ## What this build now does
 
 - Asset hierarchy: site → facility → equipment → tools
+- Working asset creation, editing, hierarchy moves, responsibility and equipment metadata
+- Independent Online / Offline operational state with a required reason and state history
+- Offline transitions can create a corrective work order automatically
+- Asset-state stakeholder alerts for operations managers, planners, responsible people and active work assignees
 - Asset details with status, criticality, location, meters, PM, work history and BOM parts
 - Work-order lifecycle: Open → In Progress → Completed
 - Work-order tasks, labor, parts and activity history
@@ -20,6 +24,7 @@ This redesign is based on CMMS workflow patterns rather than copied screenshots.
 - Expandable Supplies navigation with Parts & Supplies, Stock Receipts, Cycle Counts, Purchase Orders and Suppliers
 - Working stock receipt flow that increases the selected part at the selected store/bin
 - Working cycle counts with expected quantity, counted quantity and posted variance
+- Stock variance and below-minimum alerts with in-app notifications and email-copy records
 - Simple purchase-order lifecycle: Draft → Approved → Ordered → Received
 - Receiving a purchase order automatically creates a receipt and updates on-hand stock
 - Working part and supplier creation forms
@@ -29,6 +34,9 @@ This redesign is based on CMMS workflow patterns rather than copied screenshots.
 - Manual tag lookup fallback
 - Offline-capable PWA shell and device-local persistence
 - Responsive field UI for desktop, tablet and phone
+- People and role administration, activation, MFA visibility and email preferences
+- Mail & Alerts center with announcements, read state and a transparent local email outbox
+- Security policy controls and a traceable audit trail for critical changes
 
 ## Run locally
 
@@ -59,7 +67,10 @@ After pulling a new version, hard-refresh the browser once so the PWA cache upda
 11. Open **Preventive maintenance** and test **Generate now**.
 12. Add a meter reading and evaluate PM triggers.
 13. Turn networking off and confirm the app still opens after it has been loaded once online.
-14. Open **Supplies**, create a supplier and draft purchase order, move it through approval and ordering, then receive it and verify stock increases.
+14. Open **Asset register**, take an asset offline with a reason and verify the event, corrective work order and alerts.
+15. Open **Supplies**, post a cycle count with a variance and verify stock and alert history.
+16. Open **Mail & alerts**, review the in-app alert and prepared email copy.
+17. Open **People & access**, **Audit trail** and **Security** to review administration controls.
 
 ## Production boundary
 
@@ -68,11 +79,11 @@ This is a strong single-device field build, not yet a shared multi-user deployme
 The next platform milestone should add:
 
 - Shared backend API and database
-- Authentication and role permissions
+- Server-enforced authentication and role permissions
 - Offline-to-server synchronization and conflict handling
 - Shared photo/file storage
 - Server-side audit history
-- Notifications
+- External mail-provider delivery and push notifications
 - Production QR label generation
 - Central backup, monitoring and recovery
 

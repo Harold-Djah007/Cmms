@@ -34,6 +34,11 @@
     <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 5h11v12H3zM14 9h4l3 4v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></symbol>
     <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM6 6H4v16h16V6h-2M8 12h8m-8 4h5"/></symbol>
     <symbol id="i-supplier" viewBox="0 0 24 24"><path d="M3 21V8l6-4v17m0-10 6-4v14m0-9h6v9M6 11h1m-1 4h1m5-1h1m5 2h1"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3V9Zm4 11h4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 6l9 7 9-7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6l-8-3Zm-3 9 2 2 4-5"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2-5.3L3 10m0-5v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v9m-5-6a9 9 0 1 0 10 0"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
   </svg>
 
@@ -79,6 +84,13 @@
           <p>Insights</p>
           <button class="nav-link" data-route="reports"><svg><use href="#i-chart"/></svg><span>Reliability</span></button>
         </div>
+        <div class="nav-group">
+          <p>Administration</p>
+          <button class="nav-link" data-route="people"><svg><use href="#i-user"/></svg><span>People & access</span></button>
+          <button class="nav-link" data-route="notifications"><svg><use href="#i-mail"/></svg><span>Mail & alerts</span><b id="alertBadge"></b></button>
+          <button class="nav-link" data-route="audit"><svg><use href="#i-history"/></svg><span>Audit trail</span></button>
+          <button class="nav-link" data-route="security"><svg><use href="#i-shield"/></svg><span>Security</span></button>
+        </div>
       </nav>
 
       <div class="rail-status">
@@ -101,6 +113,7 @@
             <button type="button" class="mode-btn" data-mode="field">Field</button>
           </div>
           <button class="quiet-btn" id="scanButton"><svg><use href="#i-scan"/></svg><span>Scan</span></button>
+          <button class="icon-btn notification-button" id="notificationButton" aria-label="Open notifications"><svg><use href="#i-bell"/></svg><b id="notificationBadge"></b></button>
           <button class="quiet-btn" id="syncButton"><svg><use href="#i-sync"/></svg><span>Sync</span></button>
           <button class="primary-btn" id="newWorkButton"><svg><use href="#i-plus"/></svg><span>New work order</span></button>
           <div class="user-chip"><span>AS</span><div><strong>Abena Sarpong</strong><small>Operations manager</small></div></div>
@@ -173,6 +186,53 @@
       <input type="hidden" name="action" id="supplyAction">
       <div class="form-grid" id="supplyFields"></div>
       <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="supplyDialog">Cancel</button><button class="primary-btn" id="supplySubmit" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="assetDialog" class="modal">
+    <form id="assetForm">
+      <div class="modal-head"><div><p class="eyebrow">Asset management</p><h2 id="assetDialogTitle">Create asset</h2></div><button class="icon-btn" type="button" data-close-dialog="assetDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+      <input type="hidden" name="assetId" id="assetEditId">
+      <div class="form-grid">
+        <label>Asset code<input name="code" required></label><label>Asset name<input name="name" required></label>
+        <label>Type<select name="type"><option>Equipment</option><option>Tool</option><option>Facility</option><option>Site</option></select></label>
+        <label>Parent asset<select name="parentId" id="assetParentSelect"></select></label>
+        <label>Condition<select name="status"><option>Healthy</option><option>Attention</option><option>Down</option></select></label>
+        <label>Criticality<select name="criticality"><option>A</option><option>B</option><option>C</option></select></label>
+        <label class="span-2">Physical location<input name="location" required></label>
+        <label>Manufacturer<input name="manufacturer"></label><label>Model<input name="model"></label>
+        <label>Serial number<input name="serial"></label><label>Commissioned<input name="commissioned" type="date"></label>
+        <label class="span-2">Responsible person<select name="responsibleUserId" id="assetResponsibleSelect"></select></label>
+      </div>
+      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="assetDialog">Cancel</button><button class="primary-btn" type="submit">Save asset</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="assetStateDialog" class="modal compact-modal">
+    <form id="assetStateForm">
+      <div class="modal-head"><div><p class="eyebrow">Operational state</p><h2 id="assetStateTitle">Change asset state</h2></div><button class="icon-btn" type="button" data-close-dialog="assetStateDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+      <input type="hidden" name="assetId" id="assetStateId"><input type="hidden" name="nextState" id="assetNextState">
+      <div class="form-grid one">
+        <label>Reason<textarea name="reason" rows="3" required placeholder="Why is this asset changing state?"></textarea></label>
+        <label id="expectedReturnLabel">Expected return to service<input name="expectedReturn" type="datetime-local"></label>
+        <label class="check-row" id="correctiveWorkLabel"><input name="createWork" type="checkbox" checked> Create a corrective work order</label>
+        <div class="recipient-preview" id="assetAlertRecipients"></div>
+      </div>
+      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="assetStateDialog">Cancel</button><button class="primary-btn" id="assetStateSubmit" type="submit">Confirm change</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="messageDialog" class="modal">
+    <form id="messageForm">
+      <div class="modal-head"><div><p class="eyebrow">Operations communication</p><h2>Send announcement</h2></div><button class="icon-btn" type="button" data-close-dialog="messageDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+      <div class="form-grid">
+        <label>Recipients<select name="audience"><option value="All users">All users</option><option value="Operations manager">Operations managers</option><option value="Maintenance planner">Maintenance planners</option><option value="Technician">Technicians</option></select></label>
+        <label>Severity<select name="severity"><option>Information</option><option>Warning</option><option>Critical</option></select></label>
+        <label class="span-2">Subject<input name="subject" required></label>
+        <label class="span-2">Message<textarea name="message" rows="4" required></textarea></label>
+        <label class="span-2 check-row"><input name="emailCopy" type="checkbox" checked> Queue an email copy for recipients with email alerts enabled</label>
+      </div>
+      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="messageDialog">Cancel</button><button class="primary-btn" type="submit">Send announcement</button></div>
     </form>
   </dialog>
 
