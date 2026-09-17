@@ -1,4 +1,4 @@
-const CACHE='safimaint-fiix-connected-v25';
+const CACHE='safimaint-simple-hierarchy-v26';
 const APP_SHELL=[
   './',
   './index.html',

@@ -5,6 +5,7 @@
 (function(){
   const KEY='safimaint-v23-collapsed';
   let collapsed=new Set();
+  let selected=new Set();
   try{collapsed=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(_){collapsed=new Set()}
   ui.assetView=ui.assetView||'hierarchy';
   ui.assetScope=ui.assetScope||'all';
@@ -65,14 +66,13 @@
       const desc=a.description||a.category||a.location||'—';
       return `<div class="fx23-row ${ui.selectedAsset===a.id?'selected':''}" draggable="true" data-fx23-drag="${a.id}" data-fx23-drop="${a.id}" style="--depth:${Math.min(depth,9)}">
         <div class="fx23-cell fx23-location">
-          <button class="fx23-check" type="button" aria-label="Select ${esc(a.name)}"><span></span></button>
+          <input class="fx23-check" type="checkbox" data-fx23-select="${a.id}" ${selected.has(String(a.id))?'checked':''} aria-label="Select ${esc(a.name)}">
           <button class="fx23-expand ${kids.length?'':'empty'}" type="button" ${kids.length?`data-fx23-toggle="${a.id}"`:''} aria-label="${shut?'Expand':'Collapse'} ${esc(a.name)}">${kids.length?(shut?'＋':'−'):''}</button>
-          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small>${esc(a.type)}${kids.length?` · ${kids.length} sub-asset${kids.length===1?'':'s'}`:''}</small></span></button>
+          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small>${esc(a.type)}${kids.length?` · ${kids.length} directly below`:''}</small></span></button>
         </div>
         <div class="fx23-cell fx23-desc">${esc(desc)}</div>
         <div class="fx23-cell fx23-code"><strong>${esc(a.code)}</strong></div>
-        <div class="fx23-cell fx23-work">${work?`<button type="button" data-fx23-open="${a.id}" class="fx23-work-pill">${work} open</button>`:'—'}</div>
-        <div class="fx23-cell fx23-state"><span class="fx23-state-pill ${a.operatingState==='Offline'?'offline':''}"><i></i>${esc(a.operatingState||'Unknown')}</span></div>
+        <div class="fx23-cell fx23-state"><span class="fx23-state-pill ${a.operatingState==='Offline'?'offline':''}"><i></i>${esc(a.operatingState||'Unknown')}</span>${work?`<button type="button" data-fx23-open="${a.id}" class="fx23-work-pill">${work} open work</button>`:''}</div>
         <div class="fx23-cell fx23-more"><button type="button" data-fx23-rowmenu="${a.id}" aria-label="Asset actions">•••</button></div>
       </div>${kids.length&&!shut?`<div class="fx23-children">${kids.map(k=>row(k,depth+1)).join('')}</div>`:''}`;
     }
@@ -88,24 +88,22 @@
 
   function hierarchyView(){
     const s=site();
-    return pageHead('Asset management','Assets','Build and maintain the equipment hierarchy, then open any record for history, parts, meters and work.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
+    return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
       +`<section class="fx23-shell card">
         <div class="fx23-titlebar">
-          <div class="fx23-title"><span class="fx23-title-icon">▦</span><strong>Assets</strong><div class="fx23-viewicons"><button class="active" title="Hierarchy view">▦</button><button title="Record view">▤</button></div></div>
-          <div class="fx23-filter"><b>filter by</b><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
+          <div class="fx23-title"><span class="fx23-title-icon">▦</span><strong>Assets</strong></div>
+          <div class="fx23-filter"><b>Filter by</b><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
           <div class="fx23-site"><small>Current site</small><strong>${esc(s?.name||'Workspace')}</strong></div>
         </div>
         <div class="fx23-subbar">
-          <div class="fx23-scopechips">
-            ${[['all','All assets'],['facilities','Facilities'],['equipment','Equipment'],['tools','Tools']].map(([id,label])=>`<button type="button" data-fx23-scope="${id}" class="${ui.assetScope===id?'active':''}">${label}<b>${scopeCount(id)}</b></button>`).join('')}
-          </div>
-          <div class="fx23-search"><span>⌕</span><input data-filter="asset" value="${esc(ui.assetSearch||'')}" placeholder="Search by location, name, description or code"><button type="button" data-fx23-expand-all>Expand all</button><button type="button" data-fx23-collapse-all>Collapse all</button></div>
+          <div class="fx23-guidance"><strong>Follow the tree from left to right.</strong><span>Use + to reveal what sits below an asset. Select its name to open the full record.</span></div>
+          <div class="fx23-search"><span>⌕</span><input data-filter="asset" value="${esc(ui.assetSearch||'')}" placeholder="Find an asset, location or code"><button type="button" data-fx23-expand-all>Expand all</button><button type="button" data-fx23-collapse-all>Collapse all</button></div>
         </div>
         <div class="fx23-table">
-          <div class="fx23-head"><div>Location / asset</div><div>Description</div><div>Code</div><div>Open work</div><div>Status</div><div></div></div>
+          <div class="fx23-head"><div><input id="fx23SelectAll" type="checkbox" aria-label="Select all visible assets"><span>Location / asset</span></div><div>Description</div><div>Code</div><div>Status / work</div><div></div></div>
           <div class="fx23-body">${hierarchyRows()}</div>
         </div>
-        <div class="fx23-footer"><span>Tip: drag an asset onto another asset to change its parent.</span><span>${assets().length} total asset${assets().length===1?'':'s'}</span></div>
+        <div class="fx23-footer"><span>${selected.size?`${selected.size} selected · `:''}Drag an asset onto another asset to move it in the hierarchy.</span><span>${assets().length} total asset${assets().length===1?'':'s'}</span></div>
       </section>
       <input id="fx23CsvInput" type="file" accept=".csv,text/csv" hidden>`;
   }
@@ -202,6 +200,7 @@
     const scope=e.target.closest('[data-fx23-scope]');if(scope){e.preventDefault();e.stopImmediatePropagation();ui.assetScope=scope.dataset.fx23Scope;render();return}
     if(e.target.closest('[data-fx23-expand-all]')){e.preventDefault();e.stopImmediatePropagation();collapsed.clear();saveCollapsed();render();return}
     if(e.target.closest('[data-fx23-collapse-all]')){e.preventDefault();e.stopImmediatePropagation();collapsed=new Set(assets().filter(a=>children(a.id).length).map(a=>String(a.id)));saveCollapsed();render();return}
+    const select=e.target.closest('[data-fx23-select]');if(select){e.stopImmediatePropagation();const id=String(select.dataset.fx23Select);select.checked?selected.add(id):selected.delete(id);render();return}
     const tab=e.target.closest('[data-fx23-tab]');if(tab){e.preventDefault();e.stopImmediatePropagation();ui.assetRecordTab=tab.dataset.fx23Tab;render();return}
     const child=e.target.closest('[data-fx23-add-child]');if(child){e.preventDefault();e.stopImmediatePropagation();showAssetForm(null,String(child.dataset.fx23AddChild));return}
     const clone=e.target.closest('[data-fx23-clone]');if(clone){e.preventDefault();e.stopImmediatePropagation();cloneAsset(clone.dataset.fx23Clone);return}
@@ -211,6 +210,7 @@
 
   document.addEventListener('change',e=>{
     if(e.target.id==='fx23Scope'){ui.assetScope=e.target.value;render();return}
+    if(e.target.id==='fx23SelectAll'){const visible=visibleSet();const ids=assets().filter(a=>!visible||visible.has(String(a.id))).map(a=>String(a.id));if(e.target.checked)ids.forEach(id=>selected.add(id));else ids.forEach(id=>selected.delete(id));render();return}
     if(e.target.id==='fx23CsvInput'&&e.target.files?.[0]){importCsv(e.target.files[0]);e.target.value='';return}
   },true);
 
