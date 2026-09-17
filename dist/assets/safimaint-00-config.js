@@ -1,7 +1,7 @@
 'use strict';
-const STORAGE_KEY = 'safimaint-fiix-v6';
+const STORAGE_KEY = 'safimaint-simple-v7';
 const CURRENT_USER = 'U-1';
-const APP_VERSION = '6.0.0-fiix-model';
+const APP_VERSION = '7.0.0-simple-onboarding';
 
 const iso = () => new Date().toISOString();
 const day = offset => {
