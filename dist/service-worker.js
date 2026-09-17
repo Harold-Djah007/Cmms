@@ -1,4 +1,4 @@
-const CACHE='safimaint-product-v7-assets-alerts-admin';
+const CACHE='safimaint-fiix-cmms-v1';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./assets/styles.css','./assets/app.js','./assets/favicon.svg','./assets/app-icon.svg','./assets/safimaint-logo.svg'];
 
 self.addEventListener('install',event=>{
