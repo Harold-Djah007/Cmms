@@ -1,4 +1,4 @@
-const CACHE='safimaint-simple-v8';
+const CACHE='safimaint-simple-v9';
 const APP_SHELL=[
   './',
   './index.html',
