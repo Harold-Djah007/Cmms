@@ -1,4 +1,4 @@
-const CACHE='safimaint-semantic-motion-v15';
+const CACHE='safimaint-readability-v16';
 const APP_SHELL=[
   './',
   './index.html',
@@ -11,6 +11,7 @@ const APP_SHELL=[
   './assets/safimaint-live-motion-v13.css',
   './assets/safimaint-semantic-motion-v14.css',
   './assets/safimaint-semantic-motion-v15.css',
+  './assets/safimaint-readability-v16.css',
   './assets/safimaint-00-config.js','./assets/safimaint-01-seed.js','./assets/safimaint-02-core.js','./assets/safimaint-03-operations.js','./assets/safimaint-04-assets.js','./assets/safimaint-05-inventory-a.js','./assets/safimaint-06-inventory-b.js','./assets/safimaint-07-admin.js','./assets/safimaint-08-dialogs-search.js','./assets/safimaint-09-events.js','./assets/safimaint-10-fiix-workflows.js','./assets/safimaint-11-simple-onboarding.js','./assets/safimaint-live-ui.js','./assets/safimaint-premium-v12.js','./assets/safimaint-live-motion-v13.js','./assets/safimaint-semantic-motion-v14.js','./assets/safimaint-semantic-motion-v15.js',
   './assets/safimaint-logo.svg',
   './assets/favicon.svg',
