@@ -1,265 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#111b26">
-  <meta name="description" content="SafiMaintain CMMS — field-ready work, asset, preventive maintenance and stores management for Safisana operations.">
+  <meta name="theme-color" content="#17222d">
+  <meta name="description" content="SafiMaintain CMMS — connected maintenance, assets, inventory, purchasing and administration for Safisana operations.">
   <title>SafiMaintain CMMS</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/safimaint-fiix-base.css">
+  <link rel="stylesheet" href="assets/safimaint-fiix-components.css">
 </head>
 <body>
-  <svg class="svg-defs" aria-hidden="true">
-    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H4V11Zm6 10v-6h6v6"/></symbol>
-    <symbol id="i-work" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0-5-5L12 4 9.5 6.5 7 4a4 4 0 0 0 5 5L4 17l3 3 8-8a4 4 0 0 0 5-5L17.5 9 15 6.5 17.5 4a4 4 0 0 0-3 2.5Z"/></symbol>
-    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c.7-4.2 3.3-6 8-6s7.3 1.8 8 6"/></symbol>
-    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4 5h16v16H4zM8 2v6m8-6v6M4 10h16"/></symbol>
-    <symbol id="i-request" viewBox="0 0 24 24"><path d="M4 4h16v13H8l-4 4V4Zm4 5h8m-8 4h5"/></symbol>
-    <symbol id="i-asset" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3M8 12h8m-8 4h5"/></symbol>
-    <symbol id="i-meter" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="m12 13 4-4M7 18h10"/></symbol>
-    <symbol id="i-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10"/></symbol>
-    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V11m6 9V5m6 15v-7m6 7H2"/></symbol>
-    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
-    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5M8 8h3v3H8zm5 5h3v3h-3z"/></symbol>
-    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 7h-5V2M4 17h5v5M19 11a7 7 0 0 0-12-5l-2 2m0 5a7 7 0 0 0 12 5l2-2"/></symbol>
-    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
-    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Zm0 6v5m0 3v1"/></symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
-    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6zM14 2v5h5"/></symbol>
-    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 5h11v12H3zM14 9h4l3 4v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></symbol>
-    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM6 6H4v16h16V6h-2M8 12h8m-8 4h5"/></symbol>
-    <symbol id="i-supplier" viewBox="0 0 24 24"><path d="M3 21V8l6-4v17m0-10 6-4v14m0-9h6v9M6 11h1m-1 4h1m5-1h1m5 2h1"/></symbol>
-    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3V9Zm4 11h4"/></symbol>
-    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 6l9 7 9-7"/></symbol>
-    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6l-8-3Zm-3 9 2 2 4-5"/></symbol>
-    <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2-5.3L3 10m0-5v5h5M12 7v5l3 2"/></symbol>
-    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v9m-5-6a9 9 0 1 0 10 0"/></symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
-  </svg>
-
-  <div class="shell">
-    <aside class="rail" id="rail">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="assets/safimaint-logo.svg" alt="SafiMaintain">
+        <img src="assets/safimaint-logo.svg" alt="SafiMaintain">
         <div><strong>SafiMaintain</strong><span>MAINTENANCE OS</span></div>
       </div>
 
-      <button class="site-switcher" type="button">
-        <span class="site-dot"></span>
-        <span><strong>Safisana Ghana</strong><small>Operations site</small></span>
-        <span class="site-caret">⌄</span>
+      <button class="site-card" id="siteButton" type="button">
+        <span class="site-mark"></span>
+        <span><strong>Safisana Ghana</strong><small>Main operations site</small></span>
+        <span class="chev">⌄</span>
       </button>
 
-      <nav class="nav-groups" aria-label="Primary">
-        <div class="nav-group">
+      <nav id="navigation">
+        <section>
           <p>Command center</p>
-          <button class="nav-link active" data-route="dashboard"><svg><use href="#i-home"/></svg><span>Overview</span></button>
-          <button class="nav-link" data-route="my-work"><svg><use href="#i-user"/></svg><span>My work</span><b id="myWorkBadge"></b></button>
-        </div>
-        <div class="nav-group">
+          <button class="nav-item active" data-route="dashboard"><span class="nav-icon">⌂</span><span>Overview</span></button>
+          <button class="nav-item" data-route="calendar"><span class="nav-icon">▦</span><span>Maintenance calendar</span></button>
+        </section>
+        <section>
           <p>Work management</p>
-          <button class="nav-link" data-route="work-orders"><svg><use href="#i-work"/></svg><span>Work orders</span><b id="workBadge"></b></button>
-          <button class="nav-link" data-route="pm"><svg><use href="#i-calendar"/></svg><span>Preventive maintenance</span></button>
-          <button class="nav-link" data-route="requests"><svg><use href="#i-request"/></svg><span>Requests</span><b id="requestBadge"></b></button>
-        </div>
-        <div class="nav-group">
-          <p>Asset care</p>
-          <button class="nav-link" data-route="assets"><svg><use href="#i-asset"/></svg><span>Asset register</span></button>
-          <button class="nav-link" data-route="meters"><svg><use href="#i-meter"/></svg><span>Meters</span></button>
-          <button class="nav-link nav-parent" id="suppliesToggle" type="button" aria-expanded="true" aria-controls="suppliesMenu"><svg><use href="#i-box"/></svg><span>Supplies</span><b id="stockBadge"></b><svg class="nav-caret"><use href="#i-chevron"/></svg></button>
-          <div class="nav-submenu" id="suppliesMenu">
-            <button class="nav-link nav-child" data-route="inventory"><span>Parts & supplies</span></button>
-            <button class="nav-link nav-child" data-route="receipts"><span>Stock receipts</span></button>
-            <button class="nav-link nav-child" data-route="counts"><span>Cycle counts</span></button>
-            <button class="nav-link nav-child" data-route="purchase-orders"><span>Purchase orders</span></button>
-            <button class="nav-link nav-child" data-route="suppliers"><span>Suppliers</span></button>
-          </div>
-        </div>
-        <div class="nav-group">
+          <button class="nav-item" data-route="work-orders"><span class="nav-icon">⚒</span><span>Work orders</span><b id="workBadge"></b></button>
+          <button class="nav-item" data-route="pm"><span class="nav-icon">↻</span><span>Scheduled maintenance</span></button>
+          <button class="nav-item" data-route="requests"><span class="nav-icon">✉</span><span>Requests</span><b id="requestBadge"></b></button>
+        </section>
+        <section>
+          <p>Asset management</p>
+          <button class="nav-item" data-route="assets"><span class="nav-icon">▣</span><span>Assets</span><b id="offlineBadge"></b></button>
+          <button class="nav-item" data-route="meters"><span class="nav-icon">◴</span><span>Meters</span></button>
+          <button class="nav-item" data-route="downtime"><span class="nav-icon">◉</span><span>Downtime</span></button>
+        </section>
+        <section>
+          <p>Parts & purchasing</p>
+          <button class="nav-item" data-route="inventory"><span class="nav-icon">◇</span><span>Parts & supplies</span><b id="stockBadge"></b></button>
+          <button class="nav-item" data-route="transactions"><span class="nav-icon">⇄</span><span>Stock transactions</span></button>
+          <button class="nav-item" data-route="counts"><span class="nav-icon">✓</span><span>Cycle counts</span></button>
+          <button class="nav-item" data-route="planning"><span class="nav-icon">☷</span><span>Purchase planning</span><b id="purchaseBadge"></b></button>
+          <button class="nav-item" data-route="purchase-orders"><span class="nav-icon">▤</span><span>Purchase orders</span></button>
+          <button class="nav-item" data-route="vendors"><span class="nav-icon">⌂</span><span>Vendors</span></button>
+          <button class="nav-item" data-route="tool-crib"><span class="nav-icon">⚙</span><span>Tool crib</span></button>
+        </section>
+        <section>
           <p>Insights</p>
-          <button class="nav-link" data-route="reports"><svg><use href="#i-chart"/></svg><span>Reliability</span></button>
-        </div>
-        <div class="nav-group">
+          <button class="nav-item" data-route="reliability"><span class="nav-icon">⌁</span><span>Reliability</span></button>
+        </section>
+        <section>
           <p>Administration</p>
-          <button class="nav-link" data-route="people"><svg><use href="#i-user"/></svg><span>People & access</span></button>
-          <button class="nav-link" data-route="notifications"><svg><use href="#i-mail"/></svg><span>Mail & alerts</span><b id="alertBadge"></b></button>
-          <button class="nav-link" data-route="audit"><svg><use href="#i-history"/></svg><span>Audit trail</span></button>
-          <button class="nav-link" data-route="security"><svg><use href="#i-shield"/></svg><span>Security</span></button>
-        </div>
+          <button class="nav-item" data-route="people"><span class="nav-icon">♙</span><span>People & groups</span></button>
+          <button class="nav-item" data-route="roles"><span class="nav-icon">◫</span><span>Roles & permissions</span></button>
+          <button class="nav-item" data-route="sites"><span class="nav-icon">⌖</span><span>Sites & stores</span></button>
+          <button class="nav-item" data-route="notifications"><span class="nav-icon">●</span><span>Mail & alerts</span><b id="alertBadge"></b></button>
+          <button class="nav-item" data-route="audit"><span class="nav-icon">↺</span><span>Audit trail</span></button>
+          <button class="nav-item" data-route="security"><span class="nav-icon">⬡</span><span>Security</span></button>
+        </section>
       </nav>
 
-      <div class="rail-status">
-        <span class="connection" id="connectionDot"></span>
-        <div><strong id="connectionLabel">Saved on this device</strong><small id="syncLabel">Offline-ready</small></div>
+      <div class="sidebar-foot">
+        <span class="connection-dot" id="connectionDot"></span>
+        <div><strong id="connectionText">Device data ready</strong><small id="connectionSub">Offline-capable prototype</small></div>
       </div>
     </aside>
 
-    <div class="workspace">
-      <header class="command-bar">
-        <button class="icon-btn mobile-menu" id="menuButton" aria-label="Open navigation"><svg><use href="#i-menu"/></svg></button>
-        <button class="global-search" id="searchButton">
-          <svg><use href="#i-search"/></svg>
-          <span>Search work, assets, parts…</span>
-          <kbd>Ctrl K</kbd>
+    <section class="workspace">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menuButton" type="button" aria-label="Open navigation">☰</button>
+        <button class="search-box" id="globalSearchButton" type="button">
+          <span>⌕</span><span>Search assets, work, parts…</span><kbd>Ctrl K</kbd>
         </button>
-        <div class="command-actions">
-          <div class="mode-switch" role="group" aria-label="Workspace mode">
-            <button type="button" class="mode-btn active" data-mode="planner">Planner</button>
-            <button type="button" class="mode-btn" data-mode="field">Field</button>
-          </div>
-          <button class="quiet-btn" id="scanButton"><svg><use href="#i-scan"/></svg><span>Scan</span></button>
-          <button class="icon-btn notification-button" id="notificationButton" aria-label="Open notifications"><svg><use href="#i-bell"/></svg><b id="notificationBadge"></b></button>
-          <button class="quiet-btn" id="syncButton"><svg><use href="#i-sync"/></svg><span>Sync</span></button>
-          <button class="primary-btn" id="newWorkButton"><svg><use href="#i-plus"/></svg><span>New work order</span></button>
+        <div class="top-actions">
+          <button class="button ghost" id="scanButton" type="button">▦ Scan</button>
+          <button class="icon-button notice-button" id="noticeButton" type="button" aria-label="Notifications">●<b id="topNoticeBadge"></b></button>
+          <button class="button primary" id="newWorkButton" type="button">＋ New work order</button>
           <div class="user-chip"><span>AS</span><div><strong>Abena Sarpong</strong><small>Operations manager</small></div></div>
         </div>
       </header>
 
       <main id="appView" tabindex="-1"></main>
-    </div>
+    </section>
   </div>
 
-  <div class="mobile-scrim" id="mobileScrim"></div>
-  <aside class="record-drawer" id="recordDrawer" aria-hidden="true"></aside>
+  <div class="scrim" id="scrim"></div>
+  <dialog class="modal" id="modal"><form method="dialog" id="modalForm"></form></dialog>
+  <dialog class="modal search-modal" id="searchModal"><form method="dialog" id="searchForm"></form></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <dialog id="workDialog" class="modal">
-    <form id="workForm">
-      <div class="modal-head">
-        <div><p class="eyebrow">Maintenance record</p><h2>Create work order</h2></div>
-        <button class="icon-btn" type="button" data-close-dialog="workDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-      </div>
-      <div class="form-grid">
-        <label class="span-2">Work summary<input name="title" required minlength="4" placeholder="What needs to be done?"></label>
-        <label>Asset<select name="assetId" id="workAssetSelect" required></select></label>
-        <label>Type<select name="type"><option>Corrective</option><option>Preventive</option><option>Inspection</option><option>Project</option></select></label>
-        <label>Priority<select name="priority"><option>Medium</option><option>High</option><option>Critical</option><option>Low</option></select></label>
-        <label>Assigned to<select name="assigneeId" id="workAssigneeSelect"></select></label>
-        <label>Due date<input name="due" type="date" required></label>
-        <label>Estimated labor<input name="estimateHours" type="number" min="0" step=".25" value="1"></label>
-        <label class="span-2">Instructions<textarea name="instructions" rows="4" placeholder="Safety notes, isolation requirements, procedure, expected result…"></textarea></label>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="workDialog">Cancel</button><button class="primary-btn" type="submit">Create work order</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="meterDialog" class="modal compact-modal">
-    <form id="meterForm">
-      <div class="modal-head">
-        <div><p class="eyebrow">Field reading</p><h2>Add meter reading</h2></div>
-        <button class="icon-btn" type="button" data-close-dialog="meterDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-      </div>
-      <div class="form-grid one">
-        <label>Meter<select name="meterId" id="meterSelect"></select></label>
-        <label>Reading<input name="value" type="number" step=".01" required></label>
-        <label>Note<input name="note" placeholder="Optional observation"></label>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="meterDialog">Cancel</button><button class="primary-btn" type="submit">Save reading</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="requestDialog" class="modal compact-modal">
-    <form id="requestForm">
-      <div class="modal-head">
-        <div><p class="eyebrow">Operator request</p><h2>Report a maintenance need</h2></div>
-        <button class="icon-btn" type="button" data-close-dialog="requestDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-      </div>
-      <div class="form-grid one">
-        <label>Asset<select name="assetId" id="requestAssetSelect"></select></label>
-        <label>What did you notice?<textarea name="summary" rows="4" required></textarea></label>
-        <label>Urgency<select name="urgency"><option>Normal</option><option>Urgent</option><option>Safety critical</option></select></label>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="requestDialog">Cancel</button><button class="primary-btn" type="submit">Submit request</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="supplyDialog" class="modal">
-    <form id="supplyForm">
-      <div class="modal-head">
-        <div><p class="eyebrow" id="supplyDialogKicker">Supplies</p><h2 id="supplyDialogTitle">Add supply record</h2></div>
-        <button class="icon-btn" type="button" data-close-dialog="supplyDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-      </div>
-      <input type="hidden" name="action" id="supplyAction">
-      <div class="form-grid" id="supplyFields"></div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="supplyDialog">Cancel</button><button class="primary-btn" id="supplySubmit" type="submit">Save</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="assetDialog" class="modal">
-    <form id="assetForm">
-      <div class="modal-head"><div><p class="eyebrow">Asset management</p><h2 id="assetDialogTitle">Create asset</h2></div><button class="icon-btn" type="button" data-close-dialog="assetDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
-      <input type="hidden" name="assetId" id="assetEditId">
-      <div class="form-grid">
-        <label>Asset code<input name="code" required></label><label>Asset name<input name="name" required></label>
-        <label>Type<select name="type"><option>Equipment</option><option>Tool</option><option>Facility</option><option>Site</option></select></label>
-        <label>Parent asset<select name="parentId" id="assetParentSelect"></select></label>
-        <label>Condition<select name="status"><option>Healthy</option><option>Attention</option><option>Down</option></select></label>
-        <label>Criticality<select name="criticality"><option>A</option><option>B</option><option>C</option></select></label>
-        <label class="span-2">Physical location<input name="location" required></label>
-        <label>Manufacturer<input name="manufacturer"></label><label>Model<input name="model"></label>
-        <label>Serial number<input name="serial"></label><label>Commissioned<input name="commissioned" type="date"></label>
-        <label class="span-2">Responsible person<select name="responsibleUserId" id="assetResponsibleSelect"></select></label>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="assetDialog">Cancel</button><button class="primary-btn" type="submit">Save asset</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="assetStateDialog" class="modal compact-modal">
-    <form id="assetStateForm">
-      <div class="modal-head"><div><p class="eyebrow">Operational state</p><h2 id="assetStateTitle">Change asset state</h2></div><button class="icon-btn" type="button" data-close-dialog="assetStateDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
-      <input type="hidden" name="assetId" id="assetStateId"><input type="hidden" name="nextState" id="assetNextState">
-      <div class="form-grid one">
-        <label>Reason<textarea name="reason" rows="3" required placeholder="Why is this asset changing state?"></textarea></label>
-        <label id="expectedReturnLabel">Expected return to service<input name="expectedReturn" type="datetime-local"></label>
-        <label class="check-row" id="correctiveWorkLabel"><input name="createWork" type="checkbox" checked> Create a corrective work order</label>
-        <div class="recipient-preview" id="assetAlertRecipients"></div>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="assetStateDialog">Cancel</button><button class="primary-btn" id="assetStateSubmit" type="submit">Confirm change</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="messageDialog" class="modal">
-    <form id="messageForm">
-      <div class="modal-head"><div><p class="eyebrow">Operations communication</p><h2>Send announcement</h2></div><button class="icon-btn" type="button" data-close-dialog="messageDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
-      <div class="form-grid">
-        <label>Recipients<select name="audience"><option value="All users">All users</option><option value="Operations manager">Operations managers</option><option value="Maintenance planner">Maintenance planners</option><option value="Technician">Technicians</option></select></label>
-        <label>Severity<select name="severity"><option>Information</option><option>Warning</option><option>Critical</option></select></label>
-        <label class="span-2">Subject<input name="subject" required></label>
-        <label class="span-2">Message<textarea name="message" rows="4" required></textarea></label>
-        <label class="span-2 check-row"><input name="emailCopy" type="checkbox" checked> Queue an email copy for recipients with email alerts enabled</label>
-      </div>
-      <div class="modal-actions"><button class="secondary-btn" type="button" data-close-dialog="messageDialog">Cancel</button><button class="primary-btn" type="submit">Send announcement</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="scanDialog" class="modal scan-modal">
-    <div class="modal-head">
-      <div><p class="eyebrow">Tag lookup</p><h2>Open a tagged record</h2></div>
-      <button class="icon-btn" type="button" data-close-dialog="scanDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-    </div>
-    <div class="scan-stage">
-      <div class="scan-frame"><span></span><svg><use href="#i-scan"/></svg></div>
-      <p>Use the camera when supported, or enter a SafiMaintain tag code.</p>
-      <div class="scan-entry"><input id="scanCode" placeholder="Example: P-201 or WO-2407"><button class="primary-btn" id="openTagButton" type="button">Open tag</button></div>
-      <button class="secondary-btn" id="cameraScanButton" type="button">Start camera scanner</button>
-      <video id="scanVideo" playsinline hidden></video>
-      <small id="scanHelp">Camera scanning requires a supported browser and HTTPS or localhost.</small>
-    </div>
-  </dialog>
-
-  <dialog id="searchDialog" class="modal search-modal">
-    <div class="search-command">
-      <svg><use href="#i-search"/></svg><input id="globalSearchInput" placeholder="Search work orders, assets, parts and PM…" autocomplete="off">
-      <button class="icon-btn" type="button" data-close-dialog="searchDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-    </div>
-    <div id="searchResults" class="search-results"></div>
-  </dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"><svg><use href="#i-check"/></svg><span></span></div>
-  <script src="assets/app.js" defer></script>
+  <script src="assets/safimaint-00-config.js" defer></script>
+  <script src="assets/safimaint-01-seed.js" defer></script>
+  <script src="assets/safimaint-02-core.js" defer></script>
+  <script src="assets/safimaint-03-operations.js" defer></script>
+  <script src="assets/safimaint-04-assets.js" defer></script>
+  <script src="assets/safimaint-05-inventory-a.js" defer></script>
+  <script src="assets/safimaint-06-inventory-b.js" defer></script>
+  <script src="assets/safimaint-07-admin.js" defer></script>
+  <script src="assets/safimaint-08-dialogs-search.js" defer></script>
+  <script src="assets/safimaint-09-events.js" defer></script>
 </body>
 </html>
