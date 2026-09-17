@@ -1,7 +1,7 @@
 {
   "name": "SafiMaintain CMMS",
   "short_name": "SafiMaintain",
-  "description": "Field-first maintenance operations for work orders, assets, PM, meters, requests and spare parts.",
+  "description": "Computerized maintenance management: work orders, scheduled maintenance, assets, inventory and purchasing.",
   "start_url": "./#/dashboard",
   "scope": "./",
   "display": "standalone",
@@ -25,20 +25,20 @@
     {
       "name": "Work orders",
       "short_name": "Work",
-      "description": "Open the maintenance work board",
+      "description": "Open work orders",
       "url": "./#/work-orders"
     },
     {
-      "name": "Asset register",
+      "name": "All assets",
       "short_name": "Assets",
-      "description": "Open the plant asset hierarchy",
+      "description": "Open the asset hierarchy",
       "url": "./#/assets"
     },
     {
-      "name": "Maintenance requests",
+      "name": "Work requests",
       "short_name": "Requests",
-      "description": "Review maintenance requests",
-      "url": "./#/requests"
+      "description": "Open the work request portal",
+      "url": "./#/work-requests"
     }
   ]
 }
