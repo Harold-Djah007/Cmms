@@ -204,7 +204,7 @@
     if(e.target.closest('[data-fx23-collapse-all]')){e.preventDefault();e.stopImmediatePropagation();collapsed=new Set(assets().filter(a=>children(a.id).length).map(a=>String(a.id)));saveCollapsed();render();return}
     const select=e.target.closest('[data-fx23-select]');if(select){e.stopImmediatePropagation();const id=String(select.dataset.fx23Select);select.checked?selected.add(id):selected.delete(id);render();return}
     const tab=e.target.closest('[data-fx23-tab]');if(tab){e.preventDefault();e.stopImmediatePropagation();ui.assetRecordTab=tab.dataset.fx23Tab;render();return}
-    const child=e.target.closest('[data-fx23-add-child]');if(child){e.preventDefault();e.stopImmediatePropagation();showAssetForm(null,String(child.dataset.fx23AddChild));return}
+    const child=e.target.closest('[data-fx23-add-child]');if(child){e.preventDefault();e.stopImmediatePropagation();(window.showFiixAssetCreator||showAssetForm)(null,String(child.dataset.fx23AddChild));return}
     const clone=e.target.closest('[data-fx23-clone]');if(clone){e.preventDefault();e.stopImmediatePropagation();cloneAsset(clone.dataset.fx23Clone);return}
     if(e.target.closest('[data-fx23-print]')){e.preventDefault();e.stopImmediatePropagation();window.print();return}
     if(e.target.closest('[data-fx23-import]')){e.preventDefault();e.stopImmediatePropagation();document.getElementById('fx23CsvInput')?.click();return}

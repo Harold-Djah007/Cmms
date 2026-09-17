@@ -35,7 +35,7 @@ document.addEventListener('click',e=>{
   if(action==='add-pm') showNewPM();
   if(action==='manual-po') showManualPO();
   if(action==='manual-scan'){const code=prompt('Enter asset or part code');if(code){stopScanner();closeModal();if(!resolveCode(code))toast('No matching asset or part')}}
-  if(action==='add-asset') showAssetForm();
+  if(action==='add-asset') (window.showFiixAssetCreator||showAssetForm)();
   if(action==='add-part') showPartForm();
   if(action==='global-stock-move') showGlobalStockMove();
   if(action==='cycle-count') showCycleCount();
