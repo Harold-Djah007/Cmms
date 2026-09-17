@@ -211,6 +211,7 @@ Implemented in the current SafiMaintain prototype:
 - per-person alert channels and relevant-asset scope
 - configurable asset event types with automatic work-order creation
 - batch meter readings with meter-threshold PM generation
+- guided asset creation for facilities, rooms/areas, equipment/machines and tools, with validated hierarchy placement
 - audit history
 - reports/reliability views
 - local-first service-worker caching

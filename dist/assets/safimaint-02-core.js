@@ -173,7 +173,7 @@ function flattenAssets(parentId=null,depth=0,out=[]){
   state.assets.filter(a=>a.parentId===parentId).sort((a,b)=>a.name.localeCompare(b.name)).forEach(a=>{out.push({asset:a,depth});flattenAssets(a.id,depth+1,out)});
   return out;
 }
-function assetIcon(a){return a.type==='Site'?'⌂':a.type==='Facility'?'▥':a.type==='Production area'?'▦':a.type==='Tool'?'⚙':'▣'}
+function assetIcon(a){return a.type==='Site'?'⌂':a.type==='Facility'?'▥':['Room','Production area'].includes(a.type)?'▦':a.type==='Tool'?'⚙':'▣'}
 function durationHours(start,end=iso()){
   if(!start) return 0;return Math.max(0,(new Date(end)-new Date(start))/3600000);
 }
