@@ -1,8 +1,8 @@
 'use strict';
 
-// SafiMaintain v28 — one canonical, Fiix-style asset creation flow.
+// SafiMaintain v29 — Fiix hierarchy rules: physical location + system/subsystem.
 (function(){
-  const LOCATION_TYPES=['Facility','Room','Production area'];
+  const LOCATION_TYPES=['Facility','Department','Room','Area','Production area'];
   const EQUIPMENT_TYPES=['Equipment','Subassembly'];
 
   function kindFor(type){return LOCATION_TYPES.includes(type)?'location':EQUIPMENT_TYPES.includes(type)?'equipment':'tool'}
@@ -52,16 +52,22 @@
     const groups=[{value:'',label:'Unassigned'},...state.groups.map(g=>({value:g.id,label:g.name}))];
     return `${field('ownerUserId','Responsible person',existing?.ownerUserId||'',{type:'select',options:users})}${field('ownerGroupId','Responsible group',existing?.ownerGroupId||'',{type:'select',options:groups})}${field('criticality','Criticality',existing?.criticality||'B',{type:'select',options:['A','B','C'].map(x=>({value:x,label:x}))})}${field('condition','Condition',existing?.condition||'Healthy',{type:'select',options:['Healthy','Attention','Critical'].map(x=>({value:x,label:x}))})}`;
   }
+  function relationshipChoice(value,title,description,checked){
+    return `<label class="v27-relation-choice ${checked?'selected':''}"><input type="radio" name="placementMode" value="${esc(value)}" ${checked?'checked':''}><span><strong>${esc(title)}</strong><small>${esc(description)}</small></span><b>✓</b></label>`;
+  }
   function editorBody(existing,kind,suggestedParent){
     const suggested=getAsset(suggestedParent);
     const locationDefault=suggested&&LOCATION_TYPES.includes(suggested.type)?suggested.id:(suggested?.locationId||currentLocationId(existing));
     const partDefault=suggested&&EQUIPMENT_TYPES.includes(suggested.type)?suggested.id:currentPartOfId(existing);
     if(kind==='location'){
       const parentDefault=suggested&&LOCATION_TYPES.includes(suggested.type)?suggested.id:(existing?.parentId||'');
-      return `<div class="v27-editor"><section><h3>Location identity</h3><div class="form-grid">${identityFields(existing,['Facility','Room'],existing?.type==='Production area'?'Room':existing?.type||'Facility')}</div></section><section><h3>Where is it?</h3><div class="v27-placement-help"><strong>Facility:</strong> may be top level. <strong>Room / area:</strong> must sit inside a facility or another area.</div><div class="form-grid">${field('locationParentId','Inside facility / area',parentDefault,{type:'select',options:optionsFor(locationAssets(),'Top level — main facility',existing)})}${responsibilityFields(existing)}</div></section></div>`;
+      const mode=parentDefault?'partOf':'top';
+      return `<div class="v27-editor"><section><h3>Location identity</h3><div class="form-grid">${identityFields(existing,['Facility','Department','Room','Area'],existing?.type==='Production area'?'Area':existing?.type||'Facility')}</div><p class="v27-category-note">Categories group similar records for filtering. They do not create levels in the hierarchy.</p></section><section><h3>Position in the hierarchy</h3><div class="v27-placement-help">Match the real facility layout. Begin with the main facility, then add its departments, rooms and areas beneath it.</div><div class="v27-relation-grid">${relationshipChoice('top','This is a top-level facility','Use only for the main facility or building.',mode==='top')}${relationshipChoice('partOf','This location is part of','Place a room, department or area inside an existing location.',mode==='partOf')}</div><div class="v27-relation-panel ${mode==='partOf'?'':'hidden'}" data-v27-panel="partOf">${field('locationParentId','Parent facility / location',parentDefault,{type:'select',options:optionsFor(locationAssets(),'Select the parent facility',existing)})}</div></section><section><h3>Responsibility</h3><div class="form-grid">${responsibilityFields(existing)}</div></section></div>`;
     }
     const types=kind==='equipment'?['Equipment','Subassembly']:['Tool'];
-    return `<div class="v27-editor"><section><h3>${kind==='tool'?'Tool':'Equipment'} identity</h3><div class="form-grid">${identityFields(existing,types,existing?.type||types[0])}</div></section><section><h3>Placement</h3><div class="v27-placement-help"><strong>Located at</strong> is the physical facility or room. <strong>Part of</strong> is optional and links a component or tool to a machine.</div><div class="form-grid">${field('locationId','Located at',locationDefault,{type:'select',options:optionsFor(locationAssets(),'Select a facility or room',existing)})}${field('partOfAssetId','Part of (optional)',partDefault,{type:'select',options:optionsFor(equipmentAssets(),'Not part of another machine',existing)})}</div></section><section><h3>Responsibility</h3><div class="form-grid">${responsibilityFields(existing)}</div></section><details class="v27-advanced" ${existing?'open':''}><summary>Nameplate & purchase details</summary><div class="form-grid">${field('manufacturer','Manufacturer',existing?.manufacturer||'')}${field('model','Model',existing?.model||'')}${field('serial','Serial number',existing?.serial||'')}${field('warrantyExpiry','Warranty expiry',existing?.warrantyExpiry||'',{type:'date'})}</div></details></div>`;
+    const mode=partDefault?'partOf':'locatedAt';
+    const subject=kind==='tool'?'tool':'equipment';
+    return `<div class="v27-editor"><section><h3>${kind==='tool'?'Tool':'Equipment'} identity</h3><div class="form-grid">${identityFields(existing,types,existing?.type||types[0])}</div><p class="v27-category-note">Use Category for similar asset types. Use the hierarchy only for physical location and system relationships.</p></section><section><h3>Position in the hierarchy</h3><div class="v27-placement-help">Choose the one relationship that describes this ${subject} in real life.</div><div class="v27-relation-grid">${relationshipChoice('locatedAt',`This ${subject} is located at`,'Place it directly inside a facility, department, room or area.',mode==='locatedAt')}${relationshipChoice('partOf',`This ${subject} is part of`,'Make it a child component of an equipment system.',mode==='partOf')}</div><div class="v27-relation-panel ${mode==='locatedAt'?'':'hidden'}" data-v27-panel="locatedAt">${field('locationId','Facility / room',locationDefault,{type:'select',options:optionsFor(locationAssets(),'Select its physical location',existing)})}</div><div class="v27-relation-panel ${mode==='partOf'?'':'hidden'}" data-v27-panel="partOf">${field('partOfAssetId','Parent equipment',partDefault,{type:'select',options:optionsFor(equipmentAssets(),'Select the parent equipment',existing)})}<p class="v27-inherit-note">The physical location will be inherited from the parent equipment.</p></div></section><section><h3>Responsibility</h3><div class="form-grid">${responsibilityFields(existing)}</div></section><details class="v27-advanced" ${existing?'open':''}><summary>Nameplate & purchase details</summary><div class="form-grid">${field('manufacturer','Manufacturer',existing?.manufacturer||'')}${field('model','Model',existing?.model||'')}${field('serial','Serial number',existing?.serial||'')}${field('warrantyExpiry','Warranty expiry',existing?.warrantyExpiry||'',{type:'date'})}</div></details></div>`;
   }
 
   function openAssetEditor(existing=null,suggestedParent=null,kind=null){
@@ -72,17 +78,26 @@
       const v=Object.fromEntries(fd.entries());const type=String(v.type||'Equipment');const code=String(v.code||'').trim(),name=String(v.name||'').trim();
       if(!code||!name){toast('Asset code and name are required');return}
       const duplicate=allAssets().find(a=>String(a.id)!==String(editId)&&String(a.code||'').trim().toLowerCase()===code.toLowerCase());if(duplicate){toast(`Asset code ${code} is already in use`);return}
-      let locationId=null,partOfAssetId=null,parentId=null;
+      const placementMode=String(v.placementMode||'');let locationId=null,partOfAssetId=null,parentId=null;
       if(kind==='location'){
-        parentId=String(v.locationParentId||'').trim()||null;locationId=parentId;
-        if(type!=='Facility'&&!parentId){toast('A room or area must be placed inside a facility');return}
+        if(placementMode==='top'){
+          if(type!=='Facility'){toast('Only a facility can be a top-level asset. Place the department, room or area inside a facility.');return}
+        }else{
+          parentId=String(v.locationParentId||'').trim()||null;locationId=parentId;
+          if(!parentId){toast('Select the facility or location this record is part of');return}
+        }
         if(parentId&&!LOCATION_TYPES.includes(getAsset(parentId)?.type)){toast('A location can only be placed inside a facility or area');return}
       }else{
-        locationId=String(v.locationId||'').trim()||null;partOfAssetId=String(v.partOfAssetId||'').trim()||null;
-        if(!locationId){toast(`${typeLabel(type)} must have a facility or room in Located at`);return}
-        if(!LOCATION_TYPES.includes(getAsset(locationId)?.type)){toast('Located at must be a facility, room or area');return}
-        if(partOfAssetId&&!EQUIPMENT_TYPES.includes(getAsset(partOfAssetId)?.type)){toast('Part of must be equipment or a machine');return}
-        parentId=partOfAssetId||locationId;
+        if(placementMode==='partOf'){
+          partOfAssetId=String(v.partOfAssetId||'').trim()||null;
+          const parentEquipment=getAsset(partOfAssetId);
+          if(!parentEquipment||!EQUIPMENT_TYPES.includes(parentEquipment.type)){toast('Select the equipment this record is part of');return}
+          locationId=parentEquipment.locationId||null;parentId=partOfAssetId;
+        }else{
+          locationId=String(v.locationId||'').trim()||null;
+          if(!locationId||!LOCATION_TYPES.includes(getAsset(locationId)?.type)){toast('Select the facility, room or area where this asset is located');return}
+          parentId=locationId;
+        }
       }
       if(editId){const bad=new Set([String(editId),...descendantsOf(editId).map(a=>String(a.id))]);if(parentId&&bad.has(String(parentId))){toast('A record cannot be placed beneath itself or one of its children');return}}
       const values={code,name,type,category:v.category||typeLabel(type),description:v.description||'',parentId,locationId,partOfAssetId,location:locationId?assetPath(getAsset(locationId)):'',ownerUserId:v.ownerUserId||'',ownerGroupId:v.ownerGroupId||'',criticality:v.criticality||'B',condition:v.condition||'Healthy',manufacturer:v.manufacturer||'',model:v.model||'',serial:v.serial||'',warrantyExpiry:v.warrantyExpiry||'',siteId:existing?.siteId||state.sites?.find(s=>s.active)?.id||state.sites?.[0]?.id||null,lastUpdatedAt:iso()};
@@ -103,5 +118,11 @@
 
   document.addEventListener('click',e=>{
     const choice=e.target.closest('[data-v27-kind]');if(!choice)return;e.preventDefault();e.stopImmediatePropagation();const kind=choice.dataset.v27Kind,parentId=choice.dataset.v27Parent||null;closeModal();openAssetEditor(null,parentId,kind);
+  },true);
+  document.addEventListener('change',e=>{
+    const radio=e.target.closest('input[name="placementMode"]');if(!radio)return;
+    const editor=radio.closest('.v27-editor');if(!editor)return;
+    editor.querySelectorAll('.v27-relation-choice').forEach(x=>x.classList.toggle('selected',x.contains(radio)));
+    editor.querySelectorAll('[data-v27-panel]').forEach(x=>x.classList.toggle('hidden',x.dataset.v27Panel!==radio.value));
   },true);
 })();

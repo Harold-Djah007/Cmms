@@ -31,7 +31,7 @@
 
   function scopeMatch(a){
     return ui.assetScope==='all'||
-      (ui.assetScope==='facilities'&&['Facility','Room','Production area'].includes(a.type))||
+      (ui.assetScope==='facilities'&&['Facility','Department','Room','Area','Production area'].includes(a.type))||
       (ui.assetScope==='equipment'&&['Equipment','Subassembly'].includes(a.type))||
       (ui.assetScope==='tools'&&a.type==='Tool');
   }
@@ -63,12 +63,14 @@
       const kids=children(a.id).filter(c=>!visible||visible.has(String(c.id)));
       const shut=!q&&collapsed.has(String(a.id));
       const work=activeWork(a).length;
-      const desc=a.description||a.category||a.location||'—';
+      const isLocation=['Facility','Department','Room','Area','Production area'].includes(a.type);
+      const relation=isLocation?(a.parentId?'Part of location':'Top-level facility'):a.partOfAssetId?'Part of equipment':a.locationId?'Located at':'Unplaced';
+      const desc=a.description||`${relation} · ${a.category||a.type||'Asset'}`;
       return `<div class="fx23-row ${ui.selectedAsset===a.id?'selected':''}" draggable="true" data-fx23-drag="${a.id}" data-fx23-drop="${a.id}" style="--depth:${Math.min(depth,9)}">
         <div class="fx23-cell fx23-location">
           <input class="fx23-check" type="checkbox" data-fx23-select="${a.id}" ${selected.has(String(a.id))?'checked':''} aria-label="Select ${esc(a.name)}">
           <button class="fx23-expand ${kids.length?'':'empty'}" type="button" ${kids.length?`data-fx23-toggle="${a.id}"`:''} aria-label="${shut?'Expand':'Collapse'} ${esc(a.name)}">${kids.length?(shut?'＋':'−'):''}</button>
-          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small>${esc(a.type)}${kids.length?` · ${kids.length} directly below`:''}</small></span></button>
+          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small>${esc(a.type)} · ${relation}${kids.length?` · ${kids.length} directly below`:''}</small></span></button>
         </div>
         <div class="fx23-cell fx23-desc">${esc(desc)}</div>
         <div class="fx23-cell fx23-code"><strong>${esc(a.code)}</strong></div>
@@ -83,13 +85,14 @@
 
   function scopeCount(scope){
     if(scope==='all')return assets().length;
-    return assets().filter(a=>scope==='facilities'?['Facility','Room','Production area'].includes(a.type):scope==='equipment'?['Equipment','Subassembly'].includes(a.type):a.type==='Tool').length;
+    return assets().filter(a=>scope==='facilities'?['Facility','Department','Room','Area','Production area'].includes(a.type):scope==='equipment'?['Equipment','Subassembly'].includes(a.type):a.type==='Tool').length;
   }
 
   function hierarchyView(){
     const s=site();
     return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
       +`<section class="fx23-shell card">
+        <div class="fx23-model"><strong>Build the hierarchy as it exists in the field</strong><div><span>Facility</span><b>›</b><span>Department / room</span><b>›</b><span>Equipment</span><b>›</b><span>Sub-component / tool</span></div><small>Use categories to group similar assets. Never create fake locations just to group asset types.</small></div>
         <div class="fx23-titlebar">
           <div class="fx23-title"><span class="fx23-title-icon">▦</span><strong>Assets</strong></div>
           <div class="fx23-filter"><b>Filter by</b><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
@@ -128,10 +131,11 @@
   function detailGrid(rows){return `<div class="fx23-detail-grid">${rows.map(([l,v])=>`<div><small>${esc(l)}</small><strong>${v}</strong></div>`).join('')}</div>`}
   function generalRecord(a){
     const owner=getUser(a.ownerUserId),group=getGroup(a.ownerGroupId),p=parentOf(a),kids=children(a.id);
+    const isLocation=['Facility','Department','Room','Area','Production area'].includes(a.type);
     const dt=downtimeFor(a),hours=dt.reduce((n,d)=>n+durationHours(d.startedAt,d.endedAt||iso()),0);
     return `<section class="fx23-section"><div class="fx23-section-head"><strong>General information</strong><small>Asset master record</small></div>${detailGrid([
       ['Asset code',esc(a.code)],['Asset type',esc(a.type)],['Category',esc(a.category||'—')],['Criticality',esc(a.criticality||'—')],
-      ['Hierarchy parent',p?`<button data-fx23-open="${p.id}">${esc(p.name)}</button>`:'Top level'],['Sub-assets',String(kids.length)],['Located at',esc(getAsset(a.locationId)?.name||a.location||'—')],['Part of',esc(getAsset(a.partOfAssetId)?.name||'—')],['Condition',status(a.condition||'Unknown')],
+      ['Hierarchy parent',p?`<button data-fx23-open="${p.id}">${esc(p.name)}</button>`:'Top level'],['Sub-assets',String(kids.length)],['Located at',isLocation?'—':esc(getAsset(a.locationId)?.name||a.location||'—')],['Part of',isLocation?esc(p?.name||'—'):esc(getAsset(a.partOfAssetId)?.name||'—')],['Condition',status(a.condition||'Unknown')],
       ['Manufacturer',esc(a.manufacturer||'—')],['Model',esc(a.model||'—')],['Serial number',esc(a.serial||'—')],['Commissioned',dateFmt(a.commissioned)],
       ['Responsible person',esc(owner?.name||'Unassigned')],['Responsible group',esc(group?.name||'Unassigned')],['Warranty expiry',dateFmt(a.warrantyExpiry)],['Total downtime',`${hours.toFixed(1)} h`]
     ])}</section><section class="fx23-section"><div class="fx23-section-head"><strong>Sub-assets</strong><button class="button" type="button" data-fx23-add-child="${a.id}">＋ Add sub-asset</button></div><div class="fx23-subassets">${kids.map(k=>`<button type="button" data-fx23-open="${k.id}"><span>${typeIcon(k)}</span><div><strong>${esc(k.name)}</strong><small>${esc(k.code)} · ${esc(k.type)}</small></div><b>›</b></button>`).join('')||'<div class="fx23-inline-empty">No sub-assets linked.</div>'}</div></section>`;
@@ -174,8 +178,11 @@
   function moveAsset(childId,parentId){
     const child=getAsset(childId),parent=getAsset(parentId);if(!child||!parent||child.type==='Site'||parent.type==='Site'||String(child.id)===String(parent.id))return;
     const banned=new Set(descendants(child.id).map(a=>String(a.id)));if(banned.has(String(parent.id))){toast('Cannot move an asset under one of its own sub-assets');return}
+    const childIsLocation=['Facility','Department','Room','Area','Production area'].includes(child.type),parentIsLocation=['Facility','Department','Room','Area','Production area'].includes(parent.type),parentIsEquipment=['Equipment','Subassembly'].includes(parent.type);
+    if(childIsLocation&&!parentIsLocation){toast('A facility, room or area can only sit inside another location');return}
+    if(!childIsLocation&&!parentIsLocation&&!parentIsEquipment){toast('Equipment and tools can only be placed at a location or under equipment');return}
     child.parentId=parent.id;child.siteId=parent.siteId||site()?.id||child.siteId;
-    if(['Facility','Room','Production area'].includes(child.type)||['Facility','Room','Production area'].includes(parent.type)){child.locationId=parent.id;child.partOfAssetId=null}else{child.locationId=parent.locationId||null;child.partOfAssetId=parent.id}
+    if(childIsLocation||parentIsLocation){child.locationId=parent.id;child.partOfAssetId=null}else{child.locationId=parent.locationId||null;child.partOfAssetId=parent.id}
     state.assetEvents.unshift({id:uid('AE'),assetId:child.id,type:'Hierarchy change',at:iso(),userId:CURRENT_USER,detail:`Moved under ${parent.name}`});addAudit('ASSET_REPARENTED',child.id,`${child.code} moved under ${parent.code}`);saveState();render();toast(`${child.name} moved under ${parent.name}`);
   }
 

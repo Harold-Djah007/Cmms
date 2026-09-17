@@ -1,4 +1,4 @@
-const CACHE='safimaint-guided-assets-v28';
+const CACHE='safimaint-fiix-hierarchy-v29';
 const APP_SHELL=[
   './',
   './index.html',
