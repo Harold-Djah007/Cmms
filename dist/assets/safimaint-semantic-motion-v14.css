@@ -1,0 +1,91 @@
+/* SafiMaintain semantic motion v14
+   Preserves the existing logo and SafiMaintain colour palette.
+   Motion is intentionally related to each KPI's meaning. */
+
+/* ---------- Make the live command-centre background clearly visible ---------- */
+.workspace{background:linear-gradient(180deg,#f7faf9 0%,#f4f7f8 58%,#f6f9f8 100%)}
+.sm-live-bg{background:linear-gradient(180deg,rgba(233,248,241,.52),rgba(245,247,248,.12) 38%,rgba(233,248,241,.24));opacity:1}
+.sm-live-bg:before{inset:-10%;background:radial-gradient(circle at 10% 16%,rgba(22,163,106,.18),transparent 25%),radial-gradient(circle at 88% 10%,rgba(45,108,223,.09),transparent 20%),radial-gradient(circle at 76% 72%,rgba(22,163,106,.13),transparent 26%),radial-gradient(circle at 24% 86%,rgba(22,163,106,.10),transparent 23%);animation:sm14BgDrift 13s ease-in-out infinite}
+.sm-live-bg:after{opacity:.31;background-image:linear-gradient(rgba(22,163,106,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(22,163,106,.11) 1px,transparent 1px),radial-gradient(circle,rgba(22,163,106,.22) 1px,transparent 1.5px);background-size:72px 72px,72px 72px,24px 24px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.28));animation:sm14GridDrift 15s linear infinite}
+.sm-bg-node{width:11px;height:11px;box-shadow:0 0 0 7px rgba(22,163,106,.11),0 0 24px rgba(22,163,106,.35);animation:sm14NodePulse 2.4s ease-in-out infinite}
+.sm-bg-link{height:2px;background:linear-gradient(90deg,transparent,rgba(22,163,106,.10),rgba(22,163,106,.42),rgba(22,163,106,.12),transparent);filter:drop-shadow(0 0 3px rgba(22,163,106,.18))}
+.sm-bg-link:after{width:7px;height:7px;top:-3px;box-shadow:0 0 14px rgba(22,163,106,.58);animation-duration:3.8s}
+
+.sm-bg-orb{position:absolute;border-radius:50%;border:1px solid rgba(22,163,106,.18);box-shadow:0 0 0 18px rgba(22,163,106,.035),0 0 0 38px rgba(22,163,106,.018);animation:sm14OrbBreath 6s ease-in-out infinite}
+.sm-bg-orb.o1{width:170px;height:170px;right:7%;top:15%}
+.sm-bg-orb.o2{width:118px;height:118px;left:8%;bottom:10%;animation-delay:1.8s}
+.sm-bg-orb:before,.sm-bg-orb:after{content:"";position:absolute;border-radius:50%;background:var(--accent);box-shadow:0 0 14px rgba(22,163,106,.45)}
+.sm-bg-orb:before{width:8px;height:8px;left:50%;top:-4px;animation:sm14OrbitMarker 7s linear infinite;transform-origin:0 89px}
+.sm-bg-orb:after{width:6px;height:6px;right:8%;bottom:21%;animation:sm14NodePulse 2.8s ease-in-out infinite}
+.sm-bg-scan{position:absolute;left:0;right:0;height:90px;top:-100px;background:linear-gradient(180deg,transparent,rgba(22,163,106,.055),rgba(22,163,106,.11),rgba(22,163,106,.035),transparent);filter:blur(.2px);animation:sm14BackgroundScan 11s linear infinite}
+
+/* ---------- Semantic KPI activity ---------- */
+.sm-kpi{min-height:128px;padding-right:150px!important}
+.sm-kpi>div{position:relative;z-index:4}
+.sm-kpi-icon{z-index:5}
+.sm-kpi .sm-kpi-signal{opacity:.42}
+.sm-kpi-live{position:absolute;right:14px;top:13px;bottom:13px;width:118px;border-left:1px solid rgba(22,163,106,.10);z-index:2;pointer-events:none;overflow:hidden}
+.sm-kpi-live:after{content:"";position:absolute;inset:7px 0 7px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(233,248,241,.65),rgba(255,255,255,.15));z-index:-1}
+
+/* Assets: monitored equipment with a radar/scan sweep. */
+.sm-live-assets .asset-machine{position:absolute;left:46px;top:35px;width:39px;height:39px;border:2px solid rgba(12,122,76,.58);border-radius:11px;transform:rotate(45deg);background:rgba(233,248,241,.74);animation:sm14AssetMachine 4.2s ease-in-out infinite}
+.sm-live-assets .asset-machine:before{content:"";position:absolute;inset:8px;border:2px solid var(--accent);border-radius:5px;background:white}
+.sm-live-assets .asset-ring{position:absolute;left:33px;top:22px;width:66px;height:66px;border:1px dashed rgba(22,163,106,.37);border-radius:50%;animation:sm14AssetRing 5s linear infinite}
+.sm-live-assets .asset-ring.r2{left:23px;top:12px;width:86px;height:86px;border-style:solid;border-color:rgba(22,163,106,.10);animation-duration:7.5s;animation-direction:reverse}
+.sm-live-assets .asset-scan{position:absolute;left:24px;right:7px;height:2px;top:18px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 8px rgba(22,163,106,.55);animation:sm14AssetScan 2.5s ease-in-out infinite}
+.sm-live-assets .asset-dot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(22,163,106,.10)}
+.sm-live-assets .asset-dot.d1{left:21px;top:26px;animation:sm14NodePulse 2s infinite}.sm-live-assets .asset-dot.d2{right:8px;bottom:24px;animation:sm14NodePulse 2s .8s infinite}
+
+/* Open Work: maintenance cycle + task progression. */
+.sm-live-work .work-orbit{position:absolute;left:37px;top:18px;width:66px;height:66px;border-radius:50%;background:conic-gradient(var(--accent) 0 28%,rgba(22,163,106,.10) 28% 44%,var(--accent) 44% 68%,rgba(22,163,106,.10) 68% 100%);animation:sm14WorkRotate 4.6s linear infinite}
+.sm-live-work .work-orbit:before{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff}
+.sm-live-work .work-tool{position:absolute;left:58px;top:39px;width:24px;height:24px;z-index:2;animation:sm14WorkTool 2.4s ease-in-out infinite}
+.sm-live-work .work-tool svg{width:24px;height:24px;color:var(--accent-dark)}
+.sm-live-work .work-task{position:absolute;left:19px;height:5px;border-radius:999px;background:rgba(22,163,106,.12);overflow:hidden}
+.sm-live-work .work-task:after{content:"";display:block;height:100%;width:54%;border-radius:inherit;background:var(--accent);animation:sm14TaskProgress 3.2s ease-in-out infinite}
+.sm-live-work .work-task.t1{right:16px;bottom:20px}.sm-live-work .work-task.t2{right:31px;bottom:10px}.sm-live-work .work-task.t2:after{animation-delay:.8s;width:72%}
+
+/* Stock: boxes move across a small conveyor. */
+.sm-live-stock .stock-conveyor{position:absolute;left:15px;right:7px;bottom:24px;height:10px;border-top:3px solid rgba(12,122,76,.38);border-bottom:2px solid rgba(22,163,106,.10)}
+.sm-live-stock .stock-conveyor:before{content:"";position:absolute;left:4px;right:4px;top:2px;height:2px;background:repeating-linear-gradient(90deg,rgba(22,163,106,.30) 0 7px,transparent 7px 13px);animation:sm14Conveyor 1.3s linear infinite}
+.sm-live-stock .stock-box{position:absolute;width:24px;height:24px;border-radius:6px;background:var(--accent-soft);border:2px solid rgba(12,122,76,.40);bottom:34px;left:10px;box-shadow:0 5px 10px rgba(23,34,45,.08);animation:sm14StockFlow 4.8s linear infinite}
+.sm-live-stock .stock-box:before,.sm-live-stock .stock-box:after{content:"";position:absolute;background:rgba(12,122,76,.28)}
+.sm-live-stock .stock-box:before{left:50%;top:2px;bottom:2px;width:1px}.sm-live-stock .stock-box:after{left:3px;right:3px;top:50%;height:1px}
+.sm-live-stock .stock-box.b2{animation-delay:1.55s}.sm-live-stock .stock-box.b3{animation-delay:3.1s}
+.sm-live-stock .stock-level{position:absolute;left:16px;right:9px;top:14px;height:8px;border-radius:999px;background:rgba(22,163,106,.10);overflow:hidden}
+.sm-live-stock .stock-level:after{content:"";display:block;width:62%;height:100%;background:linear-gradient(90deg,var(--accent-dark),var(--accent));border-radius:inherit;animation:sm14StockLevel 3.8s ease-in-out infinite}
+
+/* Team: people nodes communicate across the tile. */
+.sm-live-team .team-link{position:absolute;height:2px;background:linear-gradient(90deg,rgba(22,163,106,.15),rgba(22,163,106,.50),rgba(22,163,106,.15));transform-origin:left center;overflow:visible}
+.sm-live-team .team-link:after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);top:-2px;left:0;box-shadow:0 0 9px rgba(22,163,106,.5);animation:sm14TeamSignal 2.6s linear infinite}
+.sm-live-team .team-link.l1{left:35px;top:43px;width:50px;transform:rotate(-24deg)}.sm-live-team .team-link.l2{left:36px;top:46px;width:51px;transform:rotate(25deg)}.sm-live-team .team-link.l3{left:38px;top:45px;width:38px;transform:rotate(0)}
+.sm-live-team .team-link.l2:after{animation-delay:.65s}.sm-live-team .team-link.l3:after{animation-delay:1.3s}
+.sm-live-team .person{position:absolute;width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid rgba(12,122,76,.34);box-shadow:0 0 0 5px rgba(22,163,106,.07);animation:sm14PersonPulse 3s ease-in-out infinite}
+.sm-live-team .person:before{content:"";position:absolute;left:7px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.sm-live-team .person:after{content:"";position:absolute;left:5px;right:5px;bottom:4px;height:7px;border-radius:8px 8px 5px 5px;background:rgba(22,163,106,.30)}
+.sm-live-team .person.p1{left:18px;top:33px}.sm-live-team .person.p2{right:13px;top:12px;animation-delay:.7s}.sm-live-team .person.p3{right:13px;bottom:11px;animation-delay:1.4s}
+.sm-live-team .team-status{position:absolute;left:15px;right:8px;bottom:7px;height:3px;border-radius:999px;background:rgba(22,163,106,.12);overflow:hidden}.sm-live-team .team-status:after{content:"";display:block;width:34%;height:100%;background:var(--accent);animation:sm14TeamPresence 3.5s ease-in-out infinite}
+
+/* ---------- Animations ---------- */
+@keyframes sm14BgDrift{0%,100%{transform:translate3d(0,0,0) scale(1)}35%{transform:translate3d(22px,-12px,0) scale(1.035)}70%{transform:translate3d(-15px,15px,0) scale(1.02)}}
+@keyframes sm14GridDrift{from{background-position:0 0,0 0,0 0}to{background-position:72px 72px,72px 72px,24px 24px}}
+@keyframes sm14NodePulse{0%,100%{opacity:.48;transform:scale(.82)}50%{opacity:1;transform:scale(1.22)}}
+@keyframes sm14OrbBreath{0%,100%{transform:scale(.94);opacity:.55}50%{transform:scale(1.08);opacity:1}}
+@keyframes sm14OrbitMarker{to{transform:rotate(360deg)}}
+@keyframes sm14BackgroundScan{0%{top:-100px;opacity:0}8%{opacity:1}88%{opacity:1}100%{top:calc(100% + 20px);opacity:0}}
+@keyframes sm14AssetMachine{0%,100%{transform:rotate(45deg) scale(.96)}50%{transform:rotate(45deg) scale(1.06)}}
+@keyframes sm14AssetRing{to{transform:rotate(360deg)}}
+@keyframes sm14AssetScan{0%,100%{top:17px;opacity:.25}50%{top:85px;opacity:1}}
+@keyframes sm14WorkRotate{to{transform:rotate(360deg)}}
+@keyframes sm14WorkTool{0%,100%{transform:rotate(-16deg) scale(.96)}50%{transform:rotate(18deg) scale(1.08)}}
+@keyframes sm14TaskProgress{0%,100%{width:18%;opacity:.55}50%{width:92%;opacity:1}}
+@keyframes sm14Conveyor{to{background-position:13px 0}}
+@keyframes sm14StockFlow{0%{left:8px;transform:translateY(0) rotate(0);opacity:0}8%{opacity:1}45%{transform:translateY(-3px) rotate(1deg)}90%{opacity:1}100%{left:86px;transform:translateY(0) rotate(0);opacity:0}}
+@keyframes sm14StockLevel{0%,100%{width:38%}50%{width:82%}}
+@keyframes sm14TeamSignal{0%{left:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% - 6px);opacity:0}}
+@keyframes sm14PersonPulse{0%,100%{transform:scale(.94);box-shadow:0 0 0 5px rgba(22,163,106,.07)}50%{transform:scale(1.08);box-shadow:0 0 0 9px rgba(22,163,106,0)}}
+@keyframes sm14TeamPresence{0%,100%{transform:translateX(0)}50%{transform:translateX(190%)}}
+
+@media(max-width:1260px){.sm-kpi{padding-right:130px!important}.sm-kpi-live{width:101px}.sm-live-stock .stock-box{width:21px;height:21px}.sm-live-stock .stock-box{animation-name:sm14StockFlowCompact}@keyframes sm14StockFlowCompact{0%{left:6px;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:69px;opacity:0}}}
+@media(max-width:760px){.sm-kpi{padding-right:125px!important}.sm-live-bg:after{opacity:.22}.sm-bg-orb.o1{right:-35px}.sm-bg-orb.o2{left:-30px}}
+@media(prefers-reduced-motion:reduce){.sm-bg-orb,.sm-bg-orb:before,.sm-bg-orb:after,.sm-bg-scan,.sm-live-assets *, .sm-live-work *, .sm-live-stock *, .sm-live-team *{animation:none!important}}
