@@ -16,8 +16,15 @@
   window.SafiLocalization=state.meta.localization;
 
   function localPermissions(){
-    if(typeof safiSync!=='undefined'&&Array.isArray(safiSync.permissions))return new Set(safiSync.permissions);
-    const user=currentUser(),role=user&&getRole(user.roleId);return new Set(role?.permissions||[]);
+    const user=currentUser(),role=user&&getRole(user.roleId),local=new Set(role?.permissions||[]);
+    if(typeof safiSync!=='undefined'&&safiSync.identity&&Array.isArray(safiSync.permissions)){
+      const remote=new Set(safiSync.permissions);
+      if(remote.has('*'))return remote;
+      // In device/fresh-workspace mode keep the locally configured role usable
+      // until the shared identity maps to the same persisted user.
+      if(remote.size)return remote;
+    }
+    return local;
   }
   function can(permission){
     const set=localPermissions();return set.has('*')||set.has(permission);
