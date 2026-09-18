@@ -128,6 +128,27 @@
     if(e.target.closest('[data-v67-load-demo]')){e.preventDefault();e.stopImmediatePropagation();loadDemo();return}
   },true);
 
+  function repairLoadedDemo(){
+    if(!state.meta?.demo)return;
+    let changed=false;
+    if(!Array.isArray(state.workStatusDefinitions)||!state.workStatusDefinitions.length){
+      state.workStatusDefinitions=[
+        {name:'Requested',control:'PENDING',color:'neutral',order:10},
+        {name:'Open',control:'ACTIVE',color:'info',order:20},
+        {name:'Work In Progress',control:'ACTIVE',color:'warn',order:30},
+        {name:'Awaiting Parts',control:'ACTIVE',color:'warn',order:40},
+        {name:'Completed',control:'CLOSED',color:'good',order:90},
+        {name:'Cancelled',control:'CLOSED',color:'bad',order:100}
+      ];changed=true
+    }
+    if(!state.workSettings){state.workSettings={requireAllTasksOnClose:true,requireLaborOnClose:true,requireCompletionNote:true,requireFailureCodesForCorrective:true};changed=true}
+    for(const key of ['notificationRules','failureCodeDefinitions','customFields','taskGroups','projects','businesses','inventoryLots','rfqs','receipts','downtime','assetEvents','notifications','mailOutbox','audit','auditLog']){
+      if(!Array.isArray(state[key])){state[key]=[];changed=true}
+    }
+    if(changed)saveState()
+  }
+  repairLoadedDemo();
+
   // The user explicitly requested demo data for testing. Auto-load it once only when
   // the current local workspace is still sparse, preserving a restorable backup.
   if(!localStorage.getItem(DEMO_FLAG)&&workspaceSparse()){
