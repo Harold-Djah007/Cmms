@@ -76,7 +76,7 @@
     if(!p)return '<div class="v66-empty"><strong>No part selected</strong><span>Select a part from the list.</span></div>';
     const on=partOnHand(p),value=partValue(p),s=supplier(p),tabs=[['stock','Stock'],['cycle','Cycle Count'],['boms','BOMs'],['purchasing','Purchasing'],['history','History']];
     return '<div class="v66-part-record">'+
-      '<div class="v66-part-command"><button class="button" data-v66-edit-part="'+esc(p.id)+'">Edit</button><button class="button" data-stock-move="'+esc(p.id)+'">Stock movement</button><button class="button" data-count-part="'+esc(p.id)+'">Cycle count</button><span class="grow"></span><button class="button primary" data-v66-request-part="'+esc(p.id)+'">Submit purchase request</button></div>'+
+      '<div class="v66-part-command"><button class="button" data-v56-edit-part="'+esc(p.id)+'">Edit</button><button class="button" data-stock-move="'+esc(p.id)+'">Stock movement</button><button class="button" data-count-part="'+esc(p.id)+'">Cycle count</button><span class="grow"></span><button class="button primary" data-v66-request-part="'+esc(p.id)+'">Submit purchase request</button></div>'+
       '<div class="v66-part-head"><div class="v66-part-picture">'+partIcon()+'</div><div class="v66-part-title"><small>Stock item</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.code)+' · '+esc(p.category)+' · '+esc(p.uom)+'</p><div class="v66-part-meta"><div><small>Qty on hand</small><strong>'+on+' '+esc(p.uom)+'</strong></div><div><small>Min / Max</small><strong>'+Number(p.min||0)+' / '+Number(p.max||0)+'</strong></div><div><small>Preferred supplier</small><strong>'+esc(s?.name||'—')+'</strong></div><div><small>Stock value</small><strong>'+money(value)+'</strong></div></div></div><div class="v66-part-status"><span class="v66-active"><i></i>Active</span><div class="v66-part-code"><small>PART NUMBER</small><strong>'+esc(p.code)+'</strong></div></div></div>'+
       '<div class="v66-part-tabs">'+tabs.map(t=>'<button class="v66-part-tab '+(ui.v66PartTab===t[0]?'active':'')+'" data-v66-part-tab="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>'+
       '<div class="v66-part-body">'+tabBody(p)+'</div></div>'
@@ -133,7 +133,6 @@
     const request=e.target.closest('[data-v66-request-part]');if(request){e.preventDefault();e.stopImmediatePropagation();const p=getPart(request.dataset.v66RequestPart);if(p){makePurchaseRequest(p);ui.v66PartTab='purchasing';render()}return}
     const modalReq=e.target.closest('[data-v66-modal-request]');if(modalReq){e.preventDefault();e.stopImmediatePropagation();const [pid,idx]=modalReq.dataset.v66ModalRequest.split('|'),p=getPart(pid);if(p)makePurchaseRequest(p,idx===''?null:p.locations[Number(idx)]);return}
     const asset=e.target.closest('[data-v66-open-asset]');if(asset){e.preventDefault();e.stopImmediatePropagation();ui.selectedAsset=asset.dataset.v66OpenAsset;ui.assetView='record';ui.assetRecordTab='bom';go('assets');return}
-    const edit=e.target.closest('[data-v66-edit-part]');if(edit){e.preventDefault();e.stopImmediatePropagation();const p=getPart(edit.dataset.v66EditPart);if(!p)return;if(document.querySelector('[data-v56-edit-part="'+CSS.escape(p.id)+'"]'))document.querySelector('[data-v56-edit-part="'+CSS.escape(p.id)+'"]').click();else toast('Use Purchasing → Edit sourcing to update supplier details');return}
   },true);
 
   if(ui.route==='inventory')render();
