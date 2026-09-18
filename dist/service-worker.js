@@ -1,4 +1,4 @@
-const CACHE='safimaint-asset-command-center-v45';
+const CACHE='safimaint-asset-command-center-v46';
 const APP_SHELL=[
   './',
   './index.html',
