@@ -69,10 +69,18 @@
       target.innerHTML=files.length?files.map(f=>'<div class="attachment-row"><div><strong>'+esc(f.name)+'</strong><small>'+fileSize(f.size)+' · '+dateTimeFmt(f.addedAt)+' · '+esc(f.addedBy)+'</small></div><div class="attachment-actions"><button class="button small" type="button" data-local-file-open="'+esc(f.id)+'">Open</button><button class="button small danger" type="button" data-local-file-delete="'+esc(f.id)+'">Delete</button></div></div>').join(''):'<div class="attachment-empty"><strong>No files yet</strong>Add manuals, inspection photos, certificates, drawings or other asset records.</div>';
     }catch(err){target.innerHTML='<div class="notice">Files could not be loaded: '+esc(err.message)+'</div>'}
   }
-  async function refreshVisibleFiles(){
+  async function refreshVisibleFiles(force=false){
     const assetList=document.querySelector('[data-local-file-list]');
-    if(assetList)await paintFileList('asset',assetList.dataset.localFileList,assetList);
-    document.querySelectorAll('[data-work-file-list]').forEach(el=>paintFileList('work',el.dataset.workFileList,el));
+    if(assetList&&(force||assetList.dataset.safiFilesReady!=='1')){
+      assetList.dataset.safiFilesReady='1';
+      await paintFileList('asset',assetList.dataset.localFileList,assetList);
+    }
+    document.querySelectorAll('[data-work-file-list]').forEach(el=>{
+      if(force||el.dataset.safiFilesReady!=='1'){
+        el.dataset.safiFilesReady='1';
+        paintFileList('work',el.dataset.workFileList,el);
+      }
+    });
   }
   window.SafiFileUI={paint:paintFileList,refresh:refreshVisibleFiles};
 
@@ -88,7 +96,7 @@
     if(del){
       e.preventDefault();const f=await SafiFiles.get(del.dataset.localFileDelete);if(!f)return;
       if(!confirm('Delete '+f.name+' from this device?'))return;
-      await SafiFiles.remove(f.id);addAudit('FILE_DELETED',f.entityId,f.name);saveState();toast('File deleted');refreshVisibleFiles();return;
+      await SafiFiles.remove(f.id);addAudit('FILE_DELETED',f.entityId,f.name);saveState();toast('File deleted');refreshVisibleFiles(true);return;
     }
   },true);
   document.addEventListener('change',async e=>{
@@ -99,7 +107,7 @@
       for(const file of files)await SafiFiles.add('asset',input.dataset.localFileInput,file);
       addAudit('FILES_ADDED',input.dataset.localFileInput,files.map(f=>f.name).join(', '));saveState();
       toast(files.length===1?files[0].name+' added':files.length+' files added');
-      await refreshVisibleFiles();
+      await refreshVisibleFiles(true);
     }catch(err){toast(err.message)}
     finally{input.value='';input.disabled=false}
   },true);
