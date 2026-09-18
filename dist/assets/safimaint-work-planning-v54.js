@@ -74,7 +74,9 @@
     const p=getPart(pid),line=w?.parts?.find(x=>x.partId===pid);if(!w||!p||!line||Number(line.actual||0)<=0)return;
     const qty=Number(prompt('Quantity to return from '+w.id,String(line.actual||1)));if(!(qty>0)||qty>Number(line.actual||0)){toast('Enter a valid quantity no greater than the amount used');return}
     const loc=(p.locations||[])[0];if(!loc){toast('Part has no stock location');return}
-    postStock(pid,'Receipt',qty,loc.storeId,loc.bin,{reference:w.id,workOrderId:w.id,note:'Returned unused material from work order'});line.actual=Number(line.actual||0)-qty;w.history=w.history||[];w.history.unshift({at:iso(),text:qty+' '+p.uom+' '+p.code+' returned to stock'});addAudit('WORK_PART_RETURNED',w.id,p.code+' × '+qty);saveState();closeModal();setTimeout(()=>openWorkDrawer(w.id),0);toast('Part returned to stock')
+    const beforeActual=Number(line.actual||0),returnUnit=beforeActual>0&&Number(line.actualCost||0)>0?Number(line.actualCost)/beforeActual:Number(p.lastPrice||p.unitCost||0);
+    postStock(pid,'Receipt',qty,loc.storeId,loc.bin,{reference:w.id,workOrderId:w.id,note:'Returned unused material from work order',unitCost:returnUnit});
+    line.actual=Math.max(0,beforeActual-qty);if(line.actualCost!==undefined)line.actualCost=Math.max(0,Number(line.actualCost||0)-qty*returnUnit);w.history=w.history||[];w.history.unshift({at:iso(),text:qty+' '+p.uom+' '+p.code+' returned to stock'});addAudit('WORK_PART_RETURNED',w.id,p.code+' × '+qty);saveState();closeModal();setTimeout(()=>openWorkDrawer(w.id),0);toast('Part returned to stock')
   }
 
   function requestPart(w,pid){
