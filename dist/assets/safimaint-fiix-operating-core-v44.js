@@ -34,7 +34,7 @@
     const set=(k,v)=>{if(w[k]===undefined){w[k]=v;changed=true}};
     set('labor',[]);set('miscCosts',[]);set('completionNote','');set('closedAt',w.completedAt||null);set('closedBy',null);set('failureNote','');
     if(!w.failureCodes){w.failureCodes={problem:'Not selected',cause:'Not selected',action:'Not selected'};changed=true}
-    (w.tasks||[]).forEach(t=>{if(t.result===undefined){t.result=null;changed=true}if(t.resultNote===undefined){t.resultNote='';changed=true}if(t.assigneeId===undefined){t.assigneeId=null;changed=true}if(t.completedAt===undefined){t.completedAt:t.status==='Done'?iso():null;changed=true}});
+    (w.tasks||[]).forEach(t=>{if(t.result===undefined){t.result=null;changed=true}if(t.resultNote===undefined){t.resultNote='';changed=true}if(t.assigneeId===undefined){t.assigneeId=null;changed=true}if(t.completedAt===undefined){t.completedAt=t.status==='Done'?iso():null;changed=true}});
     return changed;
   }
   ensureModel();
