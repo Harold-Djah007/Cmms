@@ -1,0 +1,210 @@
+/* SafiMaintain operations console v41
+   Replaces the previous hub/network animation with a restrained CMMS control-console visual. */
+
+/* Remove previous decorative live layers completely. */
+.sm37-telemetry,.sm15-backdrop,.sm-live-bg{display:none!important}
+.sm-hero:before{opacity:.42!important}
+.sm-hero-visual{padding:24px!important}
+.sm-visual-panel{display:none!important}
+
+/* New live operations console */
+.sm41-console{
+  position:relative;
+  width:min(100%,460px);
+  min-height:236px;
+  border:1px solid rgba(23,34,45,.10);
+  border-radius:20px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,251,249,.96));
+  box-shadow:0 22px 54px rgba(23,34,45,.10);
+  overflow:hidden;
+}
+.sm41-console:before{
+  content:"";
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(22,163,106,.026) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(22,163,106,.026) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+}
+.sm41-head{
+  position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:15px 16px 12px;
+  border-bottom:1px solid rgba(23,34,45,.07);
+}
+.sm41-head>div{display:flex;align-items:center;gap:9px}
+.sm41-head-icon{
+  width:31px;height:31px;border-radius:9px;
+  display:grid;place-items:center;
+  background:#eaf7f1;color:#0d7a53;
+}
+.sm41-head-icon svg{width:17px;height:17px}
+.sm41-head strong{display:block;font-size:12.5px;line-height:1.15}
+.sm41-head small{display:block;margin-top:2px;font-size:9.5px;color:#75857e}
+.sm41-live{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 9px;border-radius:999px;
+  background:#edf8f3;color:#0d7851;
+  font-size:9px;font-weight:900;letter-spacing:.45px;text-transform:uppercase;
+}
+.sm41-live:before{content:"";width:6px;height:6px;border-radius:50%;background:#18a96d;animation:sm41Beat 3.4s ease-in-out infinite}
+
+.sm41-body{
+  position:relative;z-index:2;
+  display:grid;
+  grid-template-columns:1.08fr .92fr;
+  gap:10px;
+  padding:12px 14px 14px;
+}
+.sm41-card{
+  position:relative;
+  min-width:0;
+  border:1px solid #dfe7e3;
+  border-radius:12px;
+  background:rgba(255,255,255,.88);
+  padding:11px 12px;
+  overflow:hidden;
+}
+.sm41-card small{
+  display:block;
+  font-size:8.5px;
+  font-weight:900;
+  letter-spacing:.65px;
+  color:#7b8a84;
+  text-transform:uppercase;
+}
+.sm41-card strong{display:block;margin-top:4px;font-size:15px;line-height:1.1;color:#17222d}
+.sm41-card em{display:block;margin-top:3px;font-style:normal;font-size:9px;color:#71817b}
+.sm41-health{grid-row:span 2}
+.sm41-health-value{display:flex;align-items:flex-end;gap:7px;margin-top:8px}
+.sm41-health-value b{font-size:31px;line-height:1;color:#17222d;letter-spacing:-1px}
+.sm41-health-value span{font-size:9px;color:#71817b;margin-bottom:4px}
+.sm41-health-bars{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;align-items:end;height:54px;margin-top:9px}
+.sm41-health-bars i{display:block;border-radius:2px 2px 0 0;background:#cde9dc;animation:sm41Bars 5.6s ease-in-out infinite}
+.sm41-health-bars i:nth-child(2n){animation-delay:.35s}.sm41-health-bars i:nth-child(3n){animation-delay:.8s}
+.sm41-health-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #e6ece9;font-size:8.8px;color:#72817b}
+.sm41-health-foot b{font-size:9px;color:#0d7851}
+
+.sm41-cycle{display:grid;grid-template-columns:minmax(0,1fr) 52px;align-items:center}
+.sm41-cycle-ring{
+  width:48px;height:48px;border-radius:50%;
+  background:conic-gradient(#16a36a var(--sm41-work-angle),#e8efec 0);
+  position:relative;
+}
+.sm41-cycle-ring:after{
+  content:"";position:absolute;inset:6px;border-radius:50%;background:#fff;
+}
+.sm41-cycle-ring span{
+  position:absolute;inset:0;z-index:2;display:grid;place-items:center;
+  font-size:9px;font-weight:900;color:#0d7851;
+}
+
+.sm41-stock-track{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:9px}
+.sm41-stock-track i{height:7px;border-radius:99px;background:#dfe7e3}
+.sm41-stock-track i.ok{background:#6fd3a5}
+.sm41-stock-track i.warn{background:#f3c45a}
+.sm41-stock-pulse{
+  position:absolute;left:10px;right:10px;bottom:7px;height:1px;
+  background:linear-gradient(90deg,transparent,#8eddb9,transparent);
+  transform:translateX(-110%);
+  animation:sm41Sweep 6s linear infinite;
+}
+
+.sm41-team-row{display:flex;align-items:center;gap:5px;margin-top:9px}
+.sm41-person{
+  width:23px;height:23px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid #d9e4df;background:#f7faf8;
+  color:#65776f;font-size:8px;font-weight:900;
+}
+.sm41-person.active{background:#e7f7ef;color:#0b7850;border-color:#bfe7d4}
+.sm41-person.active:after{
+  content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:#18a96d;
+  margin:18px 0 0 18px;box-shadow:0 0 0 3px #fff;
+}
+
+.sm41-systemline{
+  position:relative;z-index:2;
+  margin:0 14px 13px;height:26px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border-top:1px solid #e4ebe7;
+  color:#708078;font-size:8.5px;font-weight:800;letter-spacing:.35px;
+}
+.sm41-systemline>span:first-child{display:flex;align-items:center;gap:6px}
+.sm41-systemline>span:first-child:before{
+  content:"";width:6px;height:6px;border-radius:50%;background:#16a36a;animation:sm41Beat 3.4s ease-in-out infinite;
+}
+.sm41-pulse-line{
+  position:absolute;left:0;right:0;top:-1px;height:1px;overflow:hidden;
+}
+.sm41-pulse-line:after{
+  content:"";position:absolute;top:0;left:-26%;width:26%;height:1px;
+  background:linear-gradient(90deg,transparent,#16a36a,transparent);
+  animation:sm41Line 7.5s linear infinite;
+}
+
+/* KPI cards become clean enterprise cards with tiny telemetry strips. */
+.sm-kpi{
+  padding:18px 20px!important;
+  padding-right:116px!important;
+  min-height:108px!important;
+  animation:none!important;
+  transform:none!important;
+}
+.sm-kpi-live{display:none!important}
+.sm41-kpi-meter{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  width:78px;height:48px;
+  display:flex;align-items:flex-end;gap:4px;
+  padding:8px 9px;
+  border-left:1px solid #e1e8e5;
+}
+.sm41-kpi-meter i{
+  flex:1;display:block;border-radius:3px 3px 1px 1px;
+  background:#cde9dc;
+  animation:sm41Meter 5.2s ease-in-out infinite;
+}
+.sm41-kpi-meter i:nth-child(2){animation-delay:.35s}
+.sm41-kpi-meter i:nth-child(3){animation-delay:.7s}
+.sm41-kpi-meter i:nth-child(4){animation-delay:1.05s}
+.sm41-kpi-meter i:nth-child(5){animation-delay:1.4s}
+.sm41-kpi-meter.work i{background:#9fd9bf}
+.sm41-kpi-meter.stock i{background:#b9dfcf}
+.sm41-kpi-meter.team i{border-radius:50%;height:10px!important;align-self:center;animation:sm41Dot 4.5s ease-in-out infinite}
+
+/* Clean home background: no moving full-page network. */
+.sm-home{background:transparent!important}
+.sm-home:before,.sm-home:after{display:none!important}
+
+/* Preserve professional micro-interactions from v37. */
+.nav-item:hover{transform:translateX(3px)!important}
+.fx23-children{animation-duration:.2s!important}
+
+@keyframes sm41Beat{0%,76%,100%{opacity:.45;transform:scale(.9)}83%{opacity:1;transform:scale(1.12)}90%{opacity:.62;transform:scale(.96)}}
+@keyframes sm41Bars{0%,100%{height:28%}30%{height:66%}55%{height:44%}78%{height:82%}}
+@keyframes sm41Sweep{to{transform:translateX(110%)}}
+@keyframes sm41Line{to{left:100%}}
+@keyframes sm41Meter{0%,100%{height:22%}45%{height:78%}70%{height:46%}}
+@keyframes sm41Dot{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1.08)}}
+
+@media(max-width:1260px){
+  .sm41-console{max-width:410px}
+  .sm-kpi{padding-right:102px!important}
+  .sm41-kpi-meter{width:67px}
+}
+@media(max-width:820px){
+  .sm41-console{width:100%;max-width:520px}
+}
+@media(max-width:600px){
+  .sm-hero-visual{padding:14px!important}
+  .sm41-body{grid-template-columns:1fr}
+  .sm41-health{grid-row:auto}
+  .sm41-console{min-height:0}
+  .sm-kpi{padding-right:86px!important}
+  .sm41-kpi-meter{width:58px;right:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .sm41-live:before,.sm41-health-bars i,.sm41-stock-pulse,.sm41-systemline>span:first-child:before,.sm41-pulse-line:after,.sm41-kpi-meter i{animation:none!important}
+}
