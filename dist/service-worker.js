@@ -1,4 +1,4 @@
-const CACHE='safimaint-asset-icons-motion-v32';
+const CACHE='safimaint-sidebar-icons-v33';
 const APP_SHELL=[
   './',
   './index.html',

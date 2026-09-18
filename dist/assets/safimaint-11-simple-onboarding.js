@@ -35,6 +35,34 @@ function siteCode(name){
 }
 function operationalAssets(){return state.assets.filter(a=>a.type!=='Site')}
 
+function navIcon(name){
+  const icons={
+    home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-7h6v7"/>',
+    work:'<path d="m14.7 6.3 3-3a4 4 0 0 1-5.2 5.2L5 16l-2 5 5-2 7.5-7.5a4 4 0 0 1 5.2-5.2l-3 3-3-3Z"/>',
+    assets:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/><path d="M10 7h4a3 3 0 0 1 3 3v4M7 10v7h7"/>',
+    stock:'<path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/>',
+    team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    requests:'<path d="M4 4h16v16H4z"/><path d="M4 14h4l2 3h4l2-3h4M8 8h8M8 11h5"/>',
+    pm:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2M18.4 5.6 20 4M4 4l1.6 1.6"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+    meters:'<path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 14 4-4M7 18h10"/>',
+    downtime:'<circle cx="12" cy="12" r="9"/><path d="M12 3v9M8 17h8"/>',
+    history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+    count:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 10l2 2 4-4M8 16h8"/>',
+    planning:'<path d="M3 6h18M7 3v6M17 3v6M5 10h14v11H5z"/><path d="M8 14h3M8 17h7"/>',
+    purchase:'<path d="M6 3h12l2 4-2 4H6L4 7l2-4Z"/><path d="M7 11v10M17 11v10M4 21h16M9 7h6"/>',
+    suppliers:'<path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
+    tools:'<path d="M14.7 6.3a4 4 0 0 1-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 1 5.2-5.2l-3 3-3-3 3-3Z"/>',
+    reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    roles:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><circle cx="12" cy="9" r="2"/><path d="M8.5 16a4 4 0 0 1 7 0"/>',
+    sites:'<path d="M12 22s7-6.1 7-13a7 7 0 1 0-14 0c0 6.9 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/>',
+    alerts:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+    audit:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+    security:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><rect x="9" y="10" width="6" height="5" rx="1"/><path d="M10 10V8a2 2 0 0 1 4 0v2"/>'
+  };
+  return `<svg class="safi-nav-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[name]||icons.assets}</svg>`;
+}
+
 function syncSimpleShell(){
   const user=currentUser();
   const site=state.sites[0];
@@ -49,31 +77,31 @@ function simpleNavigation(){
   nav.innerHTML=`
     <section>
       <p>Everyday</p>
-      <button class="nav-item" data-route="dashboard"><span class="nav-icon">⌂</span><span>Home</span></button>
-      <button class="nav-item" data-route="work-orders"><span class="nav-icon">⚒</span><span>Work</span><b id="workBadge"></b></button>
-      <button class="nav-item" data-route="assets"><span class="nav-icon">▣</span><span>Assets</span><b id="offlineBadge"></b></button>
-      <button class="nav-item" data-route="inventory"><span class="nav-icon">◇</span><span>Stock & parts</span><b id="stockBadge"></b></button>
-      <button class="nav-item" data-route="people"><span class="nav-icon">♙</span><span>Team</span></button>
+      <button class="nav-item" data-route="dashboard"><span class="nav-icon">${navIcon('home')}</span><span>Home</span></button>
+      <button class="nav-item" data-route="work-orders"><span class="nav-icon">${navIcon('work')}</span><span>Work</span><b id="workBadge"></b></button>
+      <button class="nav-item" data-route="assets"><span class="nav-icon">${navIcon('assets')}</span><span>Assets</span><b id="offlineBadge"></b></button>
+      <button class="nav-item" data-route="inventory"><span class="nav-icon">${navIcon('stock')}</span><span>Stock & parts</span><b id="stockBadge"></b></button>
+      <button class="nav-item" data-route="people"><span class="nav-icon">${navIcon('team')}</span><span>Team</span></button>
     </section>
     <section id="advancedNav" class="advanced-nav">
       <p>More tools</p>
-      <button class="nav-item" data-route="requests"><span class="nav-icon">✉</span><span>Requests</span><b id="requestBadge"></b></button>
-      <button class="nav-item" data-route="pm"><span class="nav-icon">↻</span><span>Preventive maintenance</span></button>
-      <button class="nav-item" data-route="calendar"><span class="nav-icon">▦</span><span>Calendar</span></button>
-      <button class="nav-item" data-route="meters"><span class="nav-icon">◴</span><span>Meters</span></button>
-      <button class="nav-item" data-route="downtime"><span class="nav-icon">◉</span><span>Downtime</span></button>
-      <button class="nav-item" data-route="transactions"><span class="nav-icon">⇄</span><span>Stock history</span></button>
-      <button class="nav-item" data-route="counts"><span class="nav-icon">✓</span><span>Cycle counts</span></button>
-      <button class="nav-item" data-route="planning"><span class="nav-icon">☷</span><span>Purchase planning</span><b id="purchaseBadge"></b></button>
-      <button class="nav-item" data-route="purchase-orders"><span class="nav-icon">▤</span><span>Purchase orders</span></button>
-      <button class="nav-item" data-route="vendors"><span class="nav-icon">⌂</span><span>Suppliers</span></button>
-      <button class="nav-item" data-route="tool-crib"><span class="nav-icon">⚙</span><span>Tools</span></button>
-      <button class="nav-item" data-route="reliability"><span class="nav-icon">⌁</span><span>Reports</span></button>
-      <button class="nav-item" data-route="roles"><span class="nav-icon">◫</span><span>Roles & permissions</span></button>
-      <button class="nav-item" data-route="sites"><span class="nav-icon">⌖</span><span>Sites & stores</span></button>
-      <button class="nav-item" data-route="notifications"><span class="nav-icon">●</span><span>Alerts & mail</span><b id="alertBadge"></b></button>
-      <button class="nav-item" data-route="audit"><span class="nav-icon">↺</span><span>Audit trail</span></button>
-      <button class="nav-item" data-route="security"><span class="nav-icon">⬡</span><span>Security</span></button>
+      <button class="nav-item" data-route="requests"><span class="nav-icon">${navIcon('requests')}</span><span>Requests</span><b id="requestBadge"></b></button>
+      <button class="nav-item" data-route="pm"><span class="nav-icon">${navIcon('pm')}</span><span>Preventive maintenance</span></button>
+      <button class="nav-item" data-route="calendar"><span class="nav-icon">${navIcon('calendar')}</span><span>Calendar</span></button>
+      <button class="nav-item" data-route="meters"><span class="nav-icon">${navIcon('meters')}</span><span>Meters</span></button>
+      <button class="nav-item" data-route="downtime"><span class="nav-icon">${navIcon('downtime')}</span><span>Downtime</span></button>
+      <button class="nav-item" data-route="transactions"><span class="nav-icon">${navIcon('history')}</span><span>Stock history</span></button>
+      <button class="nav-item" data-route="counts"><span class="nav-icon">${navIcon('count')}</span><span>Cycle counts</span></button>
+      <button class="nav-item" data-route="planning"><span class="nav-icon">${navIcon('planning')}</span><span>Purchase planning</span><b id="purchaseBadge"></b></button>
+      <button class="nav-item" data-route="purchase-orders"><span class="nav-icon">${navIcon('purchase')}</span><span>Purchase orders</span></button>
+      <button class="nav-item" data-route="vendors"><span class="nav-icon">${navIcon('suppliers')}</span><span>Suppliers</span></button>
+      <button class="nav-item" data-route="tool-crib"><span class="nav-icon">${navIcon('tools')}</span><span>Tools</span></button>
+      <button class="nav-item" data-route="reliability"><span class="nav-icon">${navIcon('reports')}</span><span>Reports</span></button>
+      <button class="nav-item" data-route="roles"><span class="nav-icon">${navIcon('roles')}</span><span>Roles & permissions</span></button>
+      <button class="nav-item" data-route="sites"><span class="nav-icon">${navIcon('sites')}</span><span>Sites & stores</span></button>
+      <button class="nav-item" data-route="notifications"><span class="nav-icon">${navIcon('alerts')}</span><span>Alerts & mail</span><b id="alertBadge"></b></button>
+      <button class="nav-item" data-route="audit"><span class="nav-icon">${navIcon('audit')}</span><span>Audit trail</span></button>
+      <button class="nav-item" data-route="security"><span class="nav-icon">${navIcon('security')}</span><span>Security</span></button>
     </section>
     <button class="more-tools-toggle" id="advancedToggle" type="button"></button>`;
   const show=localStorage.getItem(SIMPLE_ADVANCED_KEY)==='true';
