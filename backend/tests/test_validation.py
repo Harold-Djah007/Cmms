@@ -220,7 +220,7 @@ def test_inventory_issue_permission_only_changes_on_hand_quantity():
     authorize_changes(changed, {"inventory.issue"}, current=after, previous=before)
 
     bad = copy.deepcopy(before)
-    bad["parts"][0]["min"] = 99
+    bad["parts"][0]["min"] = 4
     changed = validate_state(bad, before)
     with pytest.raises(HTTPException, match="on-hand quantity"):
         authorize_changes(changed, {"inventory.issue"}, current=bad, previous=before)
