@@ -1,0 +1,10 @@
+/* SafiMaintain offline attachment synchronization v58 */
+
+.v58-file-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border-bottom:1px solid #e3e9e6}
+.v58-file-row:last-child{border-bottom:0}.v58-file-row strong{display:block;font-size:9px}.v58-file-row small{display:block;margin-top:2px;font-size:7.6px;color:#75847d}
+.v58-file-state{display:inline-flex;padding:3px 6px;border-radius:99px;font-size:6.8px;font-weight:900;background:#eef4f1;color:#5f7068;margin-left:5px}
+.v58-file-state.synced{background:#e8f7ef;color:#0b7951}.v58-file-state.pending{background:#fff4d9;color:#8c6410}.v58-file-state.error{background:#fff0f2;color:#b03d49}
+.v58-sync-card{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:10px;border:1px solid #d8e2dd;border-radius:8px;background:#fff}
+.v58-sync-card>div{padding:8px;border:1px solid #e0e7e3;border-radius:6px;background:#fafcfb}.v58-sync-card small{display:block;font-size:7px;text-transform:uppercase;font-weight:900;color:#74837c}.v58-sync-card strong{display:block;margin-top:3px;font-size:10.5px}
+.v58-request-files{grid-column:1/-1;border:1px dashed #cbd8d2;border-radius:7px;padding:9px;background:#fafcfb}.v58-request-files label{font-size:8.5px;font-weight:900}.v58-request-files small{display:block;margin-top:3px;font-size:7.5px;color:#74837c}
+@media(max-width:650px){.v58-sync-card{grid-template-columns:repeat(2,1fr)}}
