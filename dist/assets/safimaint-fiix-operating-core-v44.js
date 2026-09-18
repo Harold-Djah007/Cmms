@@ -60,7 +60,7 @@
   function assetText(w){return (w.assetIds||[]).map(id=>getAsset(id)?.name||id).join(', ')||'No asset'}
   function assigneeText(w){const people=(w.assigneeIds||[]).map(id=>getUser(id)?.name).filter(Boolean);const group=w.assigneeGroupId?getGroup(w.assigneeGroupId)?.name:null;return [...people,group].filter(Boolean).join(', ')||'Unassigned'}
   function laborCost(w){return (w.labor||[]).reduce((n,x)=>n+Number(x.hours||0)*Number(getUser(x.userId)?.hourlyRate||0),0)}
-  function partsCost(w){return (w.parts||[]).reduce((n,x)=>n+Number(x.actual||0)*Number(getPart(x.partId)?.unitCost||0),0)}
+  function partsCost(w){return (w.parts||[]).reduce((n,x)=>n+(x.actualCost!==undefined?Number(x.actualCost||0):Number(x.actual||0)*Number(getPart(x.partId)?.lastPrice||getPart(x.partId)?.unitCost||0)),0)}
   function miscCost(w){return (w.miscCosts||[]).reduce((n,x)=>n+Number(x.amount||0),0)}
   function totalCost(w){return laborCost(w)+partsCost(w)+miscCost(w)}
   function workHistory(w,text){w.history=w.history||[];w.history.unshift({at:iso(),text})}
