@@ -1,0 +1,14 @@
+/* SafiMaintain work planning v54 */
+
+.v54-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:180px;overflow:auto;padding:6px;border:1px solid #dce4e0;border-radius:6px;background:#fafcfb}
+.v54-choice{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid #e2e8e5;border-radius:5px;background:#fff;font-size:8.5px}
+.v54-choice input{accent-color:#16a36a}
+.v54-form-section{grid-column:1/-1;border-top:1px solid #dfe6e2;margin-top:3px;padding-top:8px}
+.v54-form-section>strong{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:#6e7f77;margin-bottom:6px}
+.v54-task-form{display:grid;grid-template-columns:minmax(0,1.6fr) 100px 125px 125px 90px 115px auto;gap:6px;padding:9px;background:#f7faf8;border-top:1px solid #dfe6e2}
+.v54-task-form input,.v54-task-form select{height:35px;border:1px solid #cad6d1;border-radius:5px;background:#fff;padding:0 7px;font-size:8.7px}
+.v54-task-extra{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:7.5px;color:#74837c}
+.v54-part-actions{display:flex;gap:4px;align-items:center}
+.v54-required{color:#b33c47}
+@media(max-width:1100px){.v54-task-form{grid-template-columns:repeat(3,1fr)}.v54-task-form>input:first-child{grid-column:1/-1}.v54-task-form .button{grid-column:1/-1}}
+@media(max-width:650px){.v54-choice-grid{grid-template-columns:1fr}.v54-task-form{grid-template-columns:1fr}.v54-task-form>*{grid-column:1!important}}
