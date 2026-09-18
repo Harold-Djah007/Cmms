@@ -53,8 +53,13 @@ async function apiJson(path,options={}){
   }
   return body;
 }
+function staticTestMode(){
+  const local=['localhost','127.0.0.1','::1'].includes(location.hostname);
+  const explicitShared=new URLSearchParams(location.search).get('shared')==='1'||localStorage.getItem('safimaint-shared-service')==='1';
+  return local&&location.port==='8080'&&!explicitShared;
+}
 async function probeSharedService(){
-  if(!navigator.onLine){safiSync.apiAvailable=false;safiSync.probed=true;return false}
+  if(staticTestMode()||!navigator.onLine){safiSync.apiAvailable=false;safiSync.probed=true;return false}
   try{
     const response=await fetch('/api/health',{headers:{'Accept':'application/json'},credentials:'same-origin',cache:'no-store'});
     const contentType=response.headers.get('content-type')||'';
