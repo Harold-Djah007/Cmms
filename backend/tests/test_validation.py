@@ -5,7 +5,7 @@ import copy
 import pytest
 from fastapi import HTTPException
 
-from backend.app.validation import validate_state
+from backend.app.validation import authorize_changes, validate_state
 
 
 COLLECTIONS = [
@@ -122,3 +122,105 @@ def test_notification_preferences_get_stable_legacy_ids():
     state["userNotificationPreferences"] = [{"userId": "U1", "inApp": True, "email": True}]
     validate_state(state)
     assert state["userNotificationPreferences"][0]["id"] == "UNP-U1"
+
+
+def test_asset_state_permission_cannot_edit_asset_master_data():
+    before = valid_state()
+    validate_state(before)
+    after = copy.deepcopy(before)
+    after["assets"][1]["operatingState"] = "Online"
+    changed = validate_state(after, before)
+    authorize_changes(changed, {"asset.state"}, current=after, previous=before)
+
+    bad = copy.deepcopy(before)
+    bad["assets"][1]["name"] = "Renamed without asset.edit"
+    changed = validate_state(bad, before)
+    with pytest.raises(HTTPException, match="master data"):
+        authorize_changes(changed, {"asset.state"}, current=bad, previous=before)
+
+
+def test_work_execute_permission_cannot_replan_or_create_work():
+    before = valid_state()
+    validate_state(before)
+    before["workOrders"][0].update({
+        "status": "Open",
+        "title": "Repair pump",
+        "priority": "Medium",
+        "tasks": [{"id": "T1", "text": "Inspect", "type": "Inspection", "status": "Todo"}],
+        "parts": [{"partId": "P1", "planned": 1, "actual": 0}],
+        "labor": [],
+    })
+    after = copy.deepcopy(before)
+    after["workOrders"][0]["tasks"][0].update({"status": "Done", "result": "PASS"})
+    after["workOrders"][0]["labor"].append({"id": "L1", "userId": "U1", "hours": 0.5})
+    after["workOrders"][0]["actualHours"] = 0.5
+    changed = validate_state(after, before)
+    authorize_changes(changed, {"work.execute"}, current=after, previous=before)
+
+    replanned = copy.deepcopy(before)
+    replanned["workOrders"][0]["priority"] = "Critical"
+    changed = validate_state(replanned, before)
+    with pytest.raises(HTTPException, match="planning fields"):
+        authorize_changes(changed, {"work.execute"}, current=replanned, previous=before)
+
+    created = copy.deepcopy(before)
+    created["workOrders"].append({
+        "id": "W2", "assetIds": ["A2"], "assigneeIds": ["U1"], "status": "Open"
+    })
+    changed = validate_state(created, before)
+    with pytest.raises(HTTPException, match="create work orders"):
+        authorize_changes(changed, {"work.execute"}, current=created, previous=before)
+
+
+def test_work_closure_controls_are_server_enforced():
+    before = valid_state()
+    validate_state(before)
+    before["workStatusDefinitions"] = [
+        {"id": "S1", "name": "Open", "control": "ACTIVE"},
+        {"id": "S2", "name": "Completed", "control": "CLOSED"},
+    ]
+    before["workSettings"] = {
+        "requireAllTasksOnClose": True,
+        "requireLaborOnClose": True,
+        "requireCompletionNote": True,
+        "requireFailureCodesForCorrective": True,
+    }
+    before["workOrders"][0].update({
+        "status": "Open",
+        "type": "Corrective",
+        "tasks": [{"id": "T1", "text": "Inspect", "status": "Todo"}],
+        "actualHours": 0,
+        "completionNote": "",
+        "failureCodes": {"problem": "Not selected", "cause": "Not selected", "action": "Not selected"},
+    })
+
+    after = copy.deepcopy(before)
+    after["workOrders"][0]["status"] = "Completed"
+    with pytest.raises(HTTPException, match="incomplete tasks"):
+        validate_state(after, before)
+
+    after["workOrders"][0]["tasks"][0]["status"] = "Done"
+    after["workOrders"][0]["actualHours"] = 1
+    after["workOrders"][0]["completionNote"] = "Repaired and tested"
+    after["workOrders"][0]["failureCodes"] = {
+        "problem": "Leak", "cause": "Seal failure", "action": "Replace seal"
+    }
+    validate_state(after, before)
+
+
+def test_inventory_issue_permission_only_changes_on_hand_quantity():
+    before = valid_state()
+    validate_state(before)
+    after = copy.deepcopy(before)
+    after["parts"][0]["locations"][0]["onHand"] = 1
+    after["stockTransactions"].append({
+        "id": "T2", "partId": "P1", "storeId": "ST1", "qty": -1, "type": "Issue"
+    })
+    changed = validate_state(after, before)
+    authorize_changes(changed, {"inventory.issue"}, current=after, previous=before)
+
+    bad = copy.deepcopy(before)
+    bad["parts"][0]["min"] = 99
+    changed = validate_state(bad, before)
+    with pytest.raises(HTTPException, match="on-hand quantity"):
+        authorize_changes(changed, {"inventory.issue"}, current=bad, previous=before)
