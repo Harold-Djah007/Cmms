@@ -1,0 +1,22 @@
+/* SafiMaintain v63: embedded asset stock/BOM controls + interaction stability */
+.v63-asset-stock-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px;border-bottom:1px solid #dfe7e3;background:linear-gradient(180deg,#fbfdfc,#f6faf8)}
+.v63-asset-stock-summary>div{padding:11px 12px;border:1px solid #dce5e0;border-radius:8px;background:#fff}
+.v63-asset-stock-summary>div.warn{border-color:#ead6aa;background:#fffaf0}
+.v63-asset-stock-summary small{display:block;font-size:9px;font-weight:900;letter-spacing:.45px;text-transform:uppercase;color:#71817a}
+.v63-asset-stock-summary strong{display:block;margin-top:4px;font-size:18px;color:#17222d}
+.v63-asset-stock-summary span{display:block;margin-top:3px;font-size:9.5px;color:#7b8983}
+.v63-bom-table{min-width:1100px}
+.v63-bom-table td{vertical-align:top}
+.v63-bom-table td>strong{font-size:10px}
+.v63-bom-table td>small{font-size:8.5px}
+.v63-low{color:#b1424d!important}
+.v63-location-list{display:flex;gap:4px;flex-wrap:wrap;max-width:320px}
+.v63-location-chip{display:inline-flex!important;align-items:center;min-height:24px;padding:3px 7px;border:1px solid #d5e5dd;border-radius:999px;background:#f4faf7;color:#49645a!important;font-size:8.5px!important;white-space:normal}
+.v63-bom-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:220px}
+.v63-stock-location-modal{display:grid;gap:7px}
+.v63-stock-location-card{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #dbe4df;border-radius:8px;background:#fff;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.v63-stock-location-card:hover{transform:translateY(-1px);border-color:#acd5c2;box-shadow:0 7px 18px rgba(27,72,54,.07)}
+.v63-stock-location-card strong{display:block;font-size:11px}.v63-stock-location-card small{display:block;margin-top:3px;font-size:9px;color:#73827b}
+.v63-stock-location-card b{font-size:11px;color:#17222d}.v63-stock-location-card em{font-style:normal;font-size:9px;color:#0d7a54}
+.v63-stock-modal-footer{display:flex;justify-content:flex-end;margin-top:10px}
+@media(max-width:900px){.v63-asset-stock-summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.v63-asset-stock-summary{grid-template-columns:1fr}.v63-stock-location-card{grid-template-columns:1fr}.v63-stock-location-card b,.v63-stock-location-card em{text-align:left}}
