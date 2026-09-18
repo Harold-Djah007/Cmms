@@ -100,6 +100,26 @@ def _require_many(values: list | None, allowed: set[str], message: str) -> None:
         _fail(message)
 
 
+def _validate_failure_hierarchy(state: dict, work: dict) -> None:
+    codes = work.get("failureCodes") or {}
+    problem = codes.get("problem")
+    cause = codes.get("cause")
+    action = codes.get("action")
+    if not problem or problem == "Not selected":
+        return
+    problem_def = next(
+        (item for item in state.get("failureCodeDefinitions", []) if item.get("problem") == problem),
+        None,
+    )
+    if not problem_def:
+        _fail(f"Work order {work['id']} uses an unconfigured failure problem: {problem}")
+    cause_def = next((item for item in problem_def.get("causes", []) if item.get("name") == cause), None)
+    if not cause_def:
+        _fail(f"Work order {work['id']} cause is not valid for problem {problem}")
+    if action not in cause_def.get("actions", []):
+        _fail(f"Work order {work['id']} action is not valid for cause {cause}")
+
+
 def validate_state(state: dict, previous: dict | None = None) -> set[str]:
     if not isinstance(state, dict):
         _fail("State must be a JSON object")
@@ -220,6 +240,9 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         _require(count.get("storeId"), store_ids, f"Cycle count {count['id']} references a missing store")
         _require(count.get("userId"), user_ids, f"Cycle count {count['id']} references a missing user")
 
+    previous_work_map = {
+        item["id"]: item for item in (previous or {}).get("workOrders", [])
+    }
     for work in state["workOrders"]:
         _require_many(work.get("assetIds"), asset_ids, f"Work order {work['id']} references a missing asset")
         _require_many(work.get("assigneeIds"), user_ids, f"Work order {work['id']} references a missing assignee")
@@ -239,6 +262,10 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             _require(labor.get("userId"), user_ids, f"Work order {work['id']} labor references a missing user")
             if float(labor.get("hours", 0) or 0) < 0:
                 _fail(f"Work order {work['id']} has negative labor")
+
+        old_work = previous_work_map.get(work["id"])
+        if old_work is None or work.get("failureCodes") != old_work.get("failureCodes"):
+            _validate_failure_hierarchy(state, work)
 
     pm_map = {pm["id"]: pm for pm in state["scheduledMaintenance"]}
     for pm in state["scheduledMaintenance"]:
@@ -346,6 +373,7 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
                 _fail(f"Closed work order {work['id']} is read-only until reopened")
 
             if old_control != "CLOSED" and new_control == "CLOSED" and work.get("status") != "Cancelled":
+                _validate_failure_hierarchy(state, work)
                 if work_settings.get("requireAllTasksOnClose", True) and any(
                     task.get("status") != "Done" for task in work.get("tasks", [])
                 ):
