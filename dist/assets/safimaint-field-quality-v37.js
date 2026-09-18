@@ -82,7 +82,7 @@
     const open=e.target.closest('[data-local-file-open]');
     if(open){
       e.preventDefault();const f=await SafiFiles.get(open.dataset.localFileOpen);if(!f)return;
-      const url=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return;
+      const url=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return;
     }
     const del=e.target.closest('[data-local-file-delete]');
     if(del){
