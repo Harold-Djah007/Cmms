@@ -224,3 +224,91 @@ def test_inventory_issue_permission_only_changes_on_hand_quantity():
     changed = validate_state(bad, before)
     with pytest.raises(HTTPException, match="on-hand quantity"):
         authorize_changes(changed, {"inventory.issue"}, current=bad, previous=before)
+
+
+def test_nested_pm_references_and_cycles_are_validated():
+    state = valid_state()
+    validate_state(state)
+    state["scheduledMaintenance"] = [
+        {"id": "PM1", "assetIds": ["A2"], "triggers": [], "requiredParts": [], "nestedPlanIds": ["PM2"]},
+        {"id": "PM2", "assetIds": ["A2"], "triggers": [], "requiredParts": [], "nestedPlanIds": []},
+    ]
+    validate_state(state)
+
+    state["scheduledMaintenance"][1]["nestedPlanIds"] = ["PM1"]
+    with pytest.raises(HTTPException, match="nesting cycle"):
+        validate_state(state)
+
+
+def test_fifo_lots_reject_invalid_quantity_and_missing_references():
+    state = valid_state()
+    validate_state(state)
+    state["inventoryLots"] = [{
+        "id": "LOT1", "partId": "P1", "storeId": "ST1",
+        "qtyOriginal": 5, "qtyRemaining": 3, "unitCost": 12.5,
+    }]
+    validate_state(state)
+
+    bad = copy.deepcopy(state)
+    bad["inventoryLots"][0]["qtyRemaining"] = 6
+    with pytest.raises(HTTPException, match="FIFO quantities"):
+        validate_state(bad)
+
+    missing = copy.deepcopy(state)
+    missing["inventoryLots"][0]["partId"] = "MISSING"
+    with pytest.raises(HTTPException, match="missing part"):
+        validate_state(missing)
+
+
+def test_purchase_approver_can_only_approve_existing_po():
+    before = valid_state()
+    validate_state(before)
+    before["purchaseOrders"] = [{
+        "id": "PO1", "status": "Awaiting Approval", "approvalStatus": "Pending",
+        "lines": [{"partId": "P1", "qty": 2, "unitCost": 10, "receivedQty": 0}],
+        "sourceRequestIds": [],
+    }]
+    after = copy.deepcopy(before)
+    after["purchaseOrders"][0].update({
+        "status": "Approved", "approvalStatus": "Approved",
+        "approvedBy": "U1", "approvedAt": "2030-01-01T00:00:00Z",
+    })
+    changed = validate_state(after, before)
+    authorize_changes(changed, {"purchase.approve"}, current=after, previous=before)
+
+    bad = copy.deepcopy(before)
+    bad["purchaseOrders"][0]["lines"][0]["unitCost"] = 999
+    changed = validate_state(bad, before)
+    with pytest.raises(HTTPException, match="only approve"):
+        authorize_changes(changed, {"purchase.approve"}, current=bad, previous=before)
+
+
+def test_inventory_issue_can_consume_fifo_lot_and_record_actual_cost():
+    before = valid_state()
+    validate_state(before)
+    before["inventoryLots"] = [{
+        "id": "LOT1", "partId": "P1", "storeId": "ST1",
+        "qtyOriginal": 2, "qtyRemaining": 2, "unitCost": 10,
+    }]
+    before["workOrders"][0].update({
+        "status": "Open",
+        "tasks": [],
+        "parts": [{"partId": "P1", "planned": 1, "actual": 0, "actualCost": 0}],
+        "labor": [],
+    })
+    after = copy.deepcopy(before)
+    after["parts"][0]["locations"][0]["onHand"] = 1
+    after["inventoryLots"][0]["qtyRemaining"] = 1
+    after["stockTransactions"].append({
+        "id": "T2", "partId": "P1", "storeId": "ST1", "qty": -1,
+        "type": "Issue", "workOrderId": "W1",
+    })
+    after["workOrders"][0]["parts"][0]["actual"] = 1
+    after["workOrders"][0]["parts"][0]["actualCost"] = 10
+    changed = validate_state(after, before)
+    authorize_changes(
+        changed,
+        {"inventory.issue", "work.execute"},
+        current=after,
+        previous=before,
+    )
