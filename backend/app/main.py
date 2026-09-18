@@ -90,7 +90,7 @@ def put_state(payload: StateWrite, identity: Identity = Depends(require_identity
         if payload.revision != revision:
             raise HTTPException(status_code=409, detail={"message": "State changed on another device", "serverRevision": revision})
         changed = validate_state(payload.state, previous)
-        authorize_changes(changed, permission_set(previous, identity))
+        authorize_changes(changed, permission_set(previous, identity), current=payload.state, previous=previous)
         next_revision = revision + 1
         payload.state.setdefault("meta", {})["serverRevision"] = next_revision
         payload.state["meta"]["serverUpdatedAt"] = now()
