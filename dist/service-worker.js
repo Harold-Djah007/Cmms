@@ -1,4 +1,4 @@
-const CACHE='safimaint-system-upgrade-v39';
+const CACHE='safimaint-system-upgrade-v40';
 const APP_SHELL=[
   './',
   './index.html',
