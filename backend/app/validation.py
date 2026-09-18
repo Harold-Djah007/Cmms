@@ -30,14 +30,14 @@ PERMISSIONS = {
     "groups": {"admin.people"},
     "users": {"admin.people"},
     "assets": {"asset.edit", "asset.state"},
-    "meters": {"asset.edit"},
+    "meters": {"asset.edit", "work.execute"},
     "vendors": {"vendor.manage", "purchase.manage"},
     "businesses": {"vendor.manage", "purchase.manage"},
     "parts": {"inventory.manage", "inventory.issue", "purchase.manage"},
     "stockTransactions": {"inventory.manage", "inventory.issue", "purchase.manage"},
     "cycleCounts": {"inventory.count"},
     "bomGroups": {"inventory.manage"},
-    "purchaseRequests": {"purchase.manage", "inventory.manage"},
+    "purchaseRequests": {"purchase.manage", "inventory.manage", "work.execute"},
     "rfqs": {"purchase.manage"},
     "purchaseOrders": {"purchase.manage"},
     "receipts": {"purchase.manage", "inventory.manage"},
@@ -292,6 +292,43 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         _require(notification.get("userId"), user_ids, f"Notification {notification['id']} references a missing user")
 
     if previous:
+        previous_work = {item["id"]: item for item in previous.get("workOrders", [])}
+        status_defs = {item.get("name"): item.get("control") for item in state.get("workStatusDefinitions", [])}
+        work_settings = state.get("workSettings") or {}
+
+        def work_control(work: dict) -> str:
+            status = work.get("status")
+            if status in status_defs:
+                return status_defs[status] or "ACTIVE"
+            return "CLOSED" if status in {"Completed", "Closed", "Cancelled"} else "ACTIVE"
+
+        for work in state["workOrders"]:
+            old = previous_work.get(work["id"])
+            if not old:
+                continue
+            old_control = work_control(old)
+            new_control = work_control(work)
+
+            # Closed work is immutable until it is explicitly reopened. This prevents
+            # silent post-close edits to costs, tasks, parts or failure history.
+            if old_control == "CLOSED" and new_control == "CLOSED" and work != old:
+                _fail(f"Closed work order {work['id']} is read-only until reopened")
+
+            if old_control != "CLOSED" and new_control == "CLOSED" and work.get("status") != "Cancelled":
+                if work_settings.get("requireAllTasksOnClose", True) and any(
+                    task.get("status") != "Done" for task in work.get("tasks", [])
+                ):
+                    _fail(f"Work order {work['id']} cannot close with incomplete tasks")
+                if work_settings.get("requireLaborOnClose", True) and float(work.get("actualHours", 0) or 0) <= 0:
+                    _fail(f"Work order {work['id']} requires actual labor before closure")
+                if work_settings.get("requireCompletionNote", True) and not str(work.get("completionNote", "")).strip():
+                    _fail(f"Work order {work['id']} requires a completion note")
+                if work_settings.get("requireFailureCodesForCorrective", True) and work.get("type") == "Corrective":
+                    codes = work.get("failureCodes") or {}
+                    if any(not codes.get(key) or codes.get(key) == "Not selected" for key in ("problem", "cause", "action")):
+                        _fail(f"Corrective work order {work['id']} requires Problem, Cause and Action before closure")
+
+    if previous:
         for name in APPEND_ONLY:
             current_by_id = {x["id"]: x for x in state[name]}
             for old in previous.get(name, []):
@@ -301,9 +338,170 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
     return changed
 
 
-def authorize_changes(changed: set[str], permissions: set[str]) -> None:
+def _same_ids(current: list, previous: list) -> bool:
+    return {item.get("id") for item in current} == {item.get("id") for item in previous}
+
+
+def _record_map(items: list) -> dict[str, dict]:
+    return {str(item.get("id")): item for item in items}
+
+
+def _asset_state_only(current: list, previous: list) -> bool:
+    if not _same_ids(current, previous):
+        return False
+    allowed = {"operatingState", "offlineSince", "downtimeReason"}
+    old = _record_map(previous)
+    for item in current:
+        before = old[item["id"]]
+        if any(item.get(key) != before.get(key) for key in set(item) | set(before) if key not in allowed):
+            return False
+    return True
+
+
+def _meter_execution_only(current: list, previous: list) -> bool:
+    if not _same_ids(current, previous):
+        return False
+    allowed = {"current", "readings"}
+    old = _record_map(previous)
+    for item in current:
+        before = old[item["id"]]
+        if any(item.get(key) != before.get(key) for key in set(item) | set(before) if key not in allowed):
+            return False
+    return True
+
+
+def _part_issue_only(current: list, previous: list) -> bool:
+    if not _same_ids(current, previous):
+        return False
+    old = _record_map(previous)
+    for item in current:
+        before = old[item["id"]]
+        # Inventory issue may change quantity on hand, but not reorder policy,
+        # prices, preferred suppliers, part identity or stock-location identity.
+        item_base = {key: value for key, value in item.items() if key != "locations"}
+        before_base = {key: value for key, value in before.items() if key != "locations"}
+        if item_base != before_base:
+            return False
+        current_locations = [
+            {key: value for key, value in location.items() if key != "onHand"}
+            for location in item.get("locations", [])
+        ]
+        previous_locations = [
+            {key: value for key, value in location.items() if key != "onHand"}
+            for location in before.get("locations", [])
+        ]
+        if current_locations != previous_locations:
+            return False
+    return True
+
+
+def _task_execution_shape(task: dict) -> dict:
+    execution = {
+        "status", "result", "resultNote", "completedAt", "completedBy",
+        "meterId", "meterReading", "actualHours", "note",
+    }
+    return {key: value for key, value in task.items() if key not in execution}
+
+
+def _part_execution_shape(line: dict) -> dict:
+    return {key: value for key, value in line.items() if key != "actual"}
+
+
+def _work_execution_only(current: list, previous: list) -> bool:
+    # Technicians may execute existing work, but cannot create/delete work orders
+    # or change planning fields such as assets, assignees, priority or dates.
+    if not _same_ids(current, previous):
+        return False
+    allowed_top = {
+        "status", "actualStart", "actualHours", "labor", "parts", "tasks",
+        "completionNote", "completedAt", "closedAt", "closedBy",
+        "failureCodes", "failureNote", "history", "customFields",
+    }
+    old = _record_map(previous)
+    for work in current:
+        before = old[work["id"]]
+        if any(work.get(key) != before.get(key) for key in set(work) | set(before) if key not in allowed_top):
+            return False
+
+        before_tasks = _record_map(before.get("tasks", []))
+        current_tasks = _record_map(work.get("tasks", []))
+        if set(before_tasks) != set(current_tasks):
+            return False
+        for task_id, task in current_tasks.items():
+            if _task_execution_shape(task) != _task_execution_shape(before_tasks[task_id]):
+                return False
+
+        before_parts = _record_map([
+            {"id": line.get("partId"), **line} for line in before.get("parts", [])
+        ])
+        current_parts = _record_map([
+            {"id": line.get("partId"), **line} for line in work.get("parts", [])
+        ])
+        if set(before_parts) != set(current_parts):
+            return False
+        for part_id, line in current_parts.items():
+            if _part_execution_shape(line) != _part_execution_shape(before_parts[part_id]):
+                return False
+
+        old_status = before.get("status")
+        new_status = work.get("status")
+        if old_status in {"Completed", "Closed", "Cancelled"} and new_status not in {"Completed", "Closed", "Cancelled"}:
+            return False
+    return True
+
+
+def _new_purchase_requests_only(current: list, previous: list) -> bool:
+    old = _record_map(previous)
+    now = _record_map(current)
+    if not set(old).issubset(now):
+        return False
+    if any(now[item_id] != item for item_id, item in old.items()):
+        return False
+    return all(
+        item.get("status") in {"Requested", "Open"} and item.get("workOrderId")
+        for item_id, item in now.items() if item_id not in old
+    )
+
+
+def authorize_changes(
+    changed: set[str],
+    permissions: set[str],
+    *,
+    current: dict | None = None,
+    previous: dict | None = None,
+) -> None:
     if "*" in permissions:
         return
-    denied = [name for name in sorted(changed) if name in PERMISSIONS and not (permissions & PERMISSIONS[name])]
+
+    denied: list[str] = []
+    for name in sorted(changed):
+        required = PERMISSIONS.get(name)
+        if required and not (permissions & required):
+            denied.append(name)
     if denied:
         raise HTTPException(status_code=403, detail=f"Your role cannot change: {', '.join(denied)}")
+
+    if not current or previous is None:
+        return
+
+    if "assets" in changed and "asset.edit" not in permissions:
+        if "asset.state" not in permissions or not _asset_state_only(current["assets"], previous.get("assets", [])):
+            raise HTTPException(status_code=403, detail="Asset-state permission cannot edit asset master data")
+
+    if "meters" in changed and "asset.edit" not in permissions:
+        if "work.execute" not in permissions or not _meter_execution_only(current["meters"], previous.get("meters", [])):
+            raise HTTPException(status_code=403, detail="Work execution may only post meter readings")
+
+    if "parts" in changed and not (permissions & {"inventory.manage", "purchase.manage"}):
+        if "inventory.issue" not in permissions or not _part_issue_only(current["parts"], previous.get("parts", [])):
+            raise HTTPException(status_code=403, detail="Inventory issue permission may only change on-hand quantity")
+
+    if "workOrders" in changed and "work.manage" not in permissions:
+        if "work.execute" not in permissions or not _work_execution_only(current["workOrders"], previous.get("workOrders", [])):
+            raise HTTPException(status_code=403, detail="Work execution permission cannot change planning fields or create work orders")
+
+    if "purchaseRequests" in changed and not (permissions & {"purchase.manage", "inventory.manage"}):
+        if "work.execute" not in permissions or not _new_purchase_requests_only(
+            current["purchaseRequests"], previous.get("purchaseRequests", [])
+        ):
+            raise HTTPException(status_code=403, detail="Work execution may only create new purchase requests linked to work")
