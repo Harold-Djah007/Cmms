@@ -32,8 +32,12 @@
     if(document.querySelector('.v61-hub'))return;
     document.body.insertAdjacentHTML('beforeend','<div class="v61-hub-backdrop"></div><aside class="v61-hub" aria-label="Context tools"><div class="v61-hub-head"><div><small>Context tools</small><h2></h2><p></p></div><button class="v61-hub-close" type="button" aria-label="Close">×</button></div><div class="v61-hub-body"></div></aside>')
   }
-  function openHub(key){
+  function openHub(key,anchor=null){
     ensureHub();const h=hubs[key],hub=document.querySelector('.v61-hub');if(!h||!hub)return;
+    if(anchor&&window.innerWidth>900){
+      const rect=anchor.getBoundingClientRect(),top=Math.max(70,Math.min(rect.top-18,window.innerHeight-535));
+      hub.style.left=Math.round(rect.right+8)+'px';hub.style.top=Math.round(top)+'px';
+    }else{hub.style.left='';hub.style.top=''}
     hub.querySelector('h2').textContent=h.title;hub.querySelector('.v61-hub-head p').textContent=h.desc;
     hub.querySelector('.v61-hub-body').innerHTML=h.sections.map(([label,items])=>{const visible=items.filter(i=>allowed(i[4]));if(!visible.length)return'';return '<section class="v61-hub-section"><p>'+esc(label)+'</p><div class="v61-hub-grid">'+visible.map(i=>'<button class="v61-tool '+(ui.route===i[0]?'current':'')+'" data-route="'+esc(i[0])+'"><span class="nav-icon">'+navSvg(i[3])+'</span><span><strong>'+esc(i[1])+'</strong><small>'+esc(i[2])+'</small></span></button>').join('')+'</div></section>'}).join('');
     hub.classList.add('open');document.querySelector('.v61-hub-backdrop').classList.add('open')
@@ -56,7 +60,7 @@
   };
   window.simpleNavigation=simpleNavigation;
   document.addEventListener('click',e=>{
-    const b=e.target.closest('[data-v61-hub]');if(b){e.preventDefault();e.stopImmediatePropagation();openHub(b.dataset.v61Hub);return}
+    const b=e.target.closest('[data-v61-hub]');if(b){e.preventDefault();e.stopImmediatePropagation();openHub(b.dataset.v61Hub,b);return}
     if(e.target.closest('.v61-hub-close,.v61-hub-backdrop')){e.preventDefault();closeHub();return}
     if(e.target.closest('.v61-tool[data-route]'))setTimeout(closeHub,80)
   },true);
