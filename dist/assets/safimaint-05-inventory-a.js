@@ -23,18 +23,22 @@ function renderDowntime(){
 }
 
 function renderInventory(){
-  const q=ui.inventorySearch.toLowerCase();
-  const parts=state.parts.filter(p=>!q||`${p.code} ${p.name} ${p.category}`.toLowerCase().includes(q));
-  if(!getPart(ui.selectedPart)) ui.selectedPart=parts[0]?.id||state.parts[0]?.id;
+  const q=String(ui.inventorySearch||'').trim().toLowerCase();
+  const all=state.parts.slice();
+  const visible=all.filter(p=>!q||`${p.code} ${p.name} ${p.category} ${getVendor(p.vendorId)?.name||''}`.toLowerCase().includes(q));
+  if(!getPart(ui.selectedPart)||!visible.some(p=>p.id===ui.selectedPart)) ui.selectedPart=visible[0]?.id||all[0]?.id||null;
   const p=getPart(ui.selectedPart);
   return pageHead('Parts & purchasing','Parts & supplies','Multi-location stock, min/max controls, usage history, BOM links and replenishment demand.',
     `<button class="button" data-action="add-part">＋ Add part</button>`)
   +`<div class="split-view">
     <section class="card record-list">
-      <div class="toolbar"><input data-filter="inventory" value="${esc(ui.inventorySearch)}" placeholder="Search parts & supplies"></div>
-      ${parts.map(part=>`<button class="record-row ${part.id===ui.selectedPart?'active':''}" data-select-part="${part.id}"><span><strong>${esc(part.code)} · ${esc(part.name)}</strong><small>${esc(part.category)} · ${partOnHand(part)} ${esc(part.uom)} on hand</small></span>${partOnHand(part)<Number(part.min)?status('Low stock'):status('In stock')}</button>`).join('')}
+      <div class="toolbar"><input data-filter="inventory" value="${esc(ui.inventorySearch)}" placeholder="Search parts, codes or suppliers"><span class="grow"></span><small class="muted" data-inventory-count>${visible.length} record${visible.length===1?'':'s'}</small></div>
+      <div data-inventory-list>
+      ${all.map(part=>{const blob=`${part.code} ${part.name} ${part.category} ${getVendor(part.vendorId)?.name||''}`.toLowerCase(),show=!q||blob.includes(q);return `<button class="record-row ${part.id===ui.selectedPart?'active':''}" data-select-part="${part.id}" data-inventory-row data-search="${esc(blob)}" ${show?'':'hidden'}><span><strong>${esc(part.code)} · ${esc(part.name)}</strong><small>${esc(part.category)} · ${partOnHand(part)} ${esc(part.uom)} on hand</small></span>${partOnHand(part)<Number(part.min)?status('Low stock'):status('In stock')}</button>`}).join('')}
+      ${!visible.length?'<div class="empty" data-inventory-empty><strong>No matching parts</strong><span>Try another code, description, category or supplier.</span></div>':''}
+      </div>
     </section>
-    <section class="card">${renderPartDetail(p)}</section>
+    <section class="card" data-inventory-detail>${renderPartDetail(p)}</section>
   </div>`;
 }
 function renderPartDetail(p){
