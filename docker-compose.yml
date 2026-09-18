@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "8000:8000"
+      - "8080:8000"
     environment:
       SAFIMAINT_DEV_AUTH: "true"
       SAFIMAINT_DEV_USER_EMAIL: "abena.sarpong@safisana.org"
