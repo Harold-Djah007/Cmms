@@ -141,6 +141,7 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
     work_ids = ids["workOrders"]
     project_ids = ids["projects"]
     task_group_ids = ids["taskGroups"]
+    pm_ids = ids["scheduledMaintenance"]
 
     for store in state["stores"]:
         _require(store.get("siteId"), site_ids, f"Store {store['id']} references a missing site")
@@ -239,12 +240,14 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             if float(labor.get("hours", 0) or 0) < 0:
                 _fail(f"Work order {work['id']} has negative labor")
 
+    pm_map = {pm["id"]: pm for pm in state["scheduledMaintenance"]}
     for pm in state["scheduledMaintenance"]:
         pm_assets = pm.get("assetIds") or ([pm.get("assetId")] if pm.get("assetId") else [])
         _require_many(pm_assets, asset_ids, f"Scheduled maintenance {pm['id']} references a missing asset")
         _require(pm.get("assigneeGroupId"), group_ids, f"Scheduled maintenance {pm['id']} references a missing group")
         _require(pm.get("taskGroupId"), task_group_ids, f"Scheduled maintenance {pm['id']} references a missing task group")
         _require_many(pm.get("includeTaskGroupIds"), task_group_ids, f"Scheduled maintenance {pm['id']} references a missing task group")
+        _require_many(pm.get("nestedPlanIds"), pm_ids, f"Scheduled maintenance {pm['id']} references a missing nested plan")
         _require(pm.get("projectId"), project_ids, f"Scheduled maintenance {pm['id']} references a missing project")
         for line in pm.get("requiredParts", []):
             _require(line.get("partId"), part_ids, f"Scheduled maintenance {pm['id']} references a missing part")
@@ -252,6 +255,21 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             if trigger.get("type") not in {"Time", "Meter", "Event", None}:
                 _fail(f"Scheduled maintenance {pm['id']} has an invalid trigger type")
             _require(trigger.get("meterId"), meter_ids, f"Scheduled maintenance {pm['id']} references a missing meter")
+
+        seen = {pm["id"]}
+        stack = list(pm.get("nestedPlanIds", []))
+        while stack:
+            child_id = stack.pop()
+            if child_id in seen:
+                _fail(f"Scheduled maintenance nesting cycle detected at {pm['id']}")
+            seen.add(child_id)
+            stack.extend(pm_map[child_id].get("nestedPlanIds", []))
+
+    purchasing_settings = state.get("purchasingSettings") or {}
+    if float(purchasing_settings.get("poApprovalThreshold", 0) or 0) < 0:
+        _fail("Purchase-order approval threshold cannot be negative")
+    if purchasing_settings.get("costingMethod") not in {None, "FIFO"}:
+        _fail("Unsupported inventory costing method")
 
     for request in state["requests"]:
         _require(request.get("assetId"), asset_ids, f"Request {request['id']} references a missing asset")
@@ -417,7 +435,7 @@ def _task_execution_shape(task: dict) -> dict:
 
 
 def _part_execution_shape(line: dict) -> dict:
-    return {key: value for key, value in line.items() if key != "actual"}
+    return {key: value for key, value in line.items() if key not in {"actual", "actualCost"}}
 
 
 def _work_execution_only(current: list, previous: list) -> bool:
@@ -450,9 +468,13 @@ def _work_execution_only(current: list, previous: list) -> bool:
         current_parts = _record_map([
             {"id": line.get("partId"), **line} for line in work.get("parts", [])
         ])
-        if set(before_parts) != set(current_parts):
+        if not set(before_parts).issubset(current_parts):
             return False
         for part_id, line in current_parts.items():
+            if part_id not in before_parts:
+                if float(line.get("planned", 0) or 0) != 0 or float(line.get("actual", 0) or 0) < 0:
+                    return False
+                continue
             if _part_execution_shape(line) != _part_execution_shape(before_parts[part_id]):
                 return False
 
