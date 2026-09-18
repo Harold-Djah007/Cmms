@@ -26,7 +26,16 @@
     if(!state.workSettings){state.workSettings={requireAllTasksOnClose:true,requireLaborOnClose:true,requireCompletionNote:true,requireFailureCodesForCorrective:true};changed=true}
     state.users.forEach(u=>{if(u.hourlyRate===undefined){u.hourlyRate=0;changed=true}});
     state.scheduledMaintenance.forEach(pm=>{if(!pm.scheduleMode){pm.scheduleMode='Fixed';changed=true}if(!pm.assigneeGroupId){pm.assigneeGroupId=null}});
-    state.workOrders.forEach(w=>{if(normalizeWork(w))changed=true});
+    state.workOrders.forEach(w=>{
+      if(w.status==='In Progress'){w.status='Work In Progress';changed=true}
+      if(w.status==='On Hold'){w.status='Awaiting Parts';changed=true}
+      if(normalizeWork(w))changed=true
+    });
+    const ensureRule=(id,event,audiences)=>{
+      if(!state.notificationRules.some(r=>r.event===event)){state.notificationRules.push({id,event,audiences,inApp:true,email:true});changed=true}
+    };
+    ensureRule('NR-WORK-STATUS','Work order status changed',['Assigned users','Maintenance planner']);
+    ensureRule('NR-WORK-CLOSED','Work order closed',['Assigned users','Maintenance planner','Operations manager']);
     if(changed)saveState();
   }
   function normalizeWork(w){
