@@ -48,9 +48,43 @@ document.addEventListener('click',e=>{
   if(action==='reset-demo'){if(confirm('Reset all local SafiMaintain demo data on this device?')){localStorage.removeItem(STORAGE_KEY);state=structuredClone(seed);saveState();go('dashboard');toast('Demo data reset')}}
 });
 document.addEventListener('input',e=>{
-  if(e.target.matches('[data-filter="asset"]')){ui.assetSearch=e.target.value;render()}
-  if(e.target.matches('[data-filter="inventory"]')){ui.inventorySearch=e.target.value;render()}
-  if(e.target.matches('[data-filter="work"]')){ui.workSearch=e.target.value;render()}
+  if(e.target.matches('[data-filter="asset"]')){
+    ui.assetSearch=e.target.value;
+    // Hierarchy search changes parent/child visibility, so it may need a repaint.
+    // The final render wrapper restores focus/caret instead of replacing the user's typing session.
+    render();
+    return;
+  }
+  if(e.target.matches('[data-filter="inventory"]')){
+    ui.inventorySearch=e.target.value;
+    const q=ui.inventorySearch.trim().toLowerCase(),rows=[...document.querySelectorAll('[data-inventory-row]')];
+    let shown=0,first=null,current=null;
+    rows.forEach(row=>{const hit=!q||String(row.dataset.search||'').includes(q);row.hidden=!hit;if(hit){shown++;first=first||row;if(row.dataset.selectPart===ui.selectedPart)current=row}});
+    const count=document.querySelector('[data-inventory-count]');if(count)count.textContent=shown+' record'+(shown===1?'':'s');
+    let empty=document.querySelector('[data-inventory-empty]');
+    if(!shown&&!empty){empty=document.createElement('div');empty.className='empty';empty.dataset.inventoryEmpty='';empty.innerHTML='<strong>No matching parts</strong><span>Try another code, description, category or supplier.</span>';document.querySelector('[data-inventory-list]')?.appendChild(empty)}
+    if(empty)empty.hidden=shown>0;
+    const chosen=current||first;
+    rows.forEach(row=>row.classList.toggle('active',row===chosen));
+    if(chosen){
+      ui.selectedPart=chosen.dataset.selectPart;
+      const detail=document.querySelector('[data-inventory-detail]'),part=getPart(ui.selectedPart);
+      if(detail&&part)detail.innerHTML=renderPartDetail(part);
+    }else{
+      ui.selectedPart=null;
+      const detail=document.querySelector('[data-inventory-detail]');
+      if(detail)detail.innerHTML='<div class="empty"><strong>No matching part selected</strong><span>Clear or change the search to view a stock record.</span></div>';
+    }
+    return;
+  }
+  if(e.target.matches('[data-filter="work"]')){
+    ui.workSearch=e.target.value;
+    const q=ui.workSearch.trim().toLowerCase(),rows=[...document.querySelectorAll('[data-work-search-row]')];let shown=0;
+    rows.forEach(row=>{const hit=!q||String(row.dataset.search||'').includes(q);row.hidden=!hit;if(hit)shown++});
+    const count=document.querySelector('[data-work-count]');if(count)count.textContent=shown+' record'+(shown===1?'':'s');
+    const empty=document.querySelector('[data-work-search-empty]');if(empty)empty.hidden=shown>0;
+    return;
+  }
   if(e.target.closest('#searchForm')&&e.target.name==='q') updateSearch(e.target.value);
 });
 document.addEventListener('change',e=>{
