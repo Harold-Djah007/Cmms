@@ -187,7 +187,7 @@
     const completed=work.filter(w=>control(w)==='CLOSED'&&w.status==='Completed');
     const planned=completed.filter(w=>['Preventive','Inspection','Predictive','Calibration','Meter Reading'].includes(w.type)).length;
     const pmPct=completed.length?Math.round(planned/completed.length*100):100;
-    const maintenanceCost=work.reduce((n,w)=>n+(w.labor||[]).reduce((a,x)=>a+Number(x.hours||0)*Number(getUser(x.userId)?.hourlyRate||0),0)+(w.parts||[]).reduce((a,x)=>a+Number(x.actual||0)*Number(getPart(x.partId)?.unitCost||0),0)+(w.miscCosts||[]).reduce((a,x)=>a+Number(x.amount||0),0),0);
+    const maintenanceCost=work.reduce((n,w)=>n+(w.labor||[]).reduce((a,x)=>a+Number(x.hours||0)*Number(getUser(x.userId)?.hourlyRate||0),0)+(w.parts||[]).reduce((a,x)=>a+(x.actualCost!==undefined?Number(x.actualCost||0):Number(x.actual||0)*Number(getPart(x.partId)?.lastPrice||getPart(x.partId)?.unitCost||0)),0)+(w.miscCosts||[]).reduce((a,x)=>a+Number(x.amount||0),0),0);
     const risks=[
       ...overdue.slice(0,4).map(w=>({level:'bad',title:w.id+' · '+w.title,detail:(getAsset(w.assetIds?.[0])?.name||'No asset')+' · '+Math.max(1,Math.floor((Date.now()-new Date(w.due))/86400000))+'d overdue',route:'work-orders'})),
       ...offline.slice(0,3).map(a=>({level:'bad',title:a.code+' · '+a.name+' offline',detail:a.downtimeReason||'Asset unavailable',route:'downtime'})),
