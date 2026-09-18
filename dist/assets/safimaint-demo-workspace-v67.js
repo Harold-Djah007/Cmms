@@ -7,6 +7,26 @@
     const d=structuredClone(seed);
     d.meta=d.meta||{};d.meta.demo=true;d.meta.demoVersion=67;d.meta.demoLoadedAt=iso();
 
+    // Seed.js intentionally contains the domain sample data, while newer feature
+    // modules add operating-model configuration at runtime. Carry those definitions
+    // into the demo snapshot so loading demo data never drops workflow/security rules.
+    const defaults={
+      workStatusDefinitions:[
+        {name:'Requested',control:'PENDING',color:'neutral',order:10},
+        {name:'Open',control:'ACTIVE',color:'info',order:20},
+        {name:'Work In Progress',control:'ACTIVE',color:'warn',order:30},
+        {name:'Awaiting Parts',control:'ACTIVE',color:'warn',order:40},
+        {name:'Completed',control:'CLOSED',color:'good',order:90},
+        {name:'Cancelled',control:'CLOSED',color:'bad',order:100}
+      ],
+      workSettings:{requireAllTasksOnClose:true,requireLaborOnClose:true,requireCompletionNote:true,requireFailureCodesForCorrective:true}
+    };
+    d.workStatusDefinitions=structuredClone(Array.isArray(state.workStatusDefinitions)&&state.workStatusDefinitions.length?state.workStatusDefinitions:defaults.workStatusDefinitions);
+    d.workSettings=structuredClone(state.workSettings||defaults.workSettings);
+    d.notificationRules=structuredClone(Array.isArray(state.notificationRules)?state.notificationRules:(Array.isArray(d.notificationRules)?d.notificationRules:[]));
+    d.failureCodeDefinitions=structuredClone(Array.isArray(state.failureCodeDefinitions)?state.failureCodeDefinitions:(Array.isArray(d.failureCodeDefinitions)?d.failureCodeDefinitions:[]));
+    d.customFields=structuredClone(Array.isArray(state.customFields)?state.customFields:(Array.isArray(d.customFields)?d.customFields:[]));
+
     // Keep the current tester's identity so loading the demo does not suddenly
     // change the person shown in the header.
     const current=state.users?.find(u=>u.id===CURRENT_USER);
