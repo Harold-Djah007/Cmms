@@ -1,0 +1,135 @@
+/* SafiMaintain field-quality UX v37
+   Professional CMMS telemetry, transitions, hierarchy motion and attachment UI. */
+
+/* --- Motion language: stable surfaces, moving operational indicators only. --- */
+.sm15-backdrop,.sm-live-bg{display:none!important}
+.sm-home{position:relative;isolation:isolate}
+.sm-home>section{position:relative;z-index:2}
+.sm37-telemetry{
+  position:absolute;inset:-24px -30px -50px;z-index:0;overflow:hidden;pointer-events:none;
+  background:
+    radial-gradient(circle at 84% 12%,rgba(22,163,106,.055),transparent 25%),
+    radial-gradient(circle at 12% 76%,rgba(22,163,106,.035),transparent 23%);
+}
+.sm37-telemetry:before{
+  content:"";position:absolute;inset:0;opacity:.52;
+  background-image:
+    linear-gradient(rgba(23,34,45,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(23,34,45,.035) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,.10));
+}
+.sm37-route{position:absolute;height:1px;background:linear-gradient(90deg,transparent,rgba(22,163,106,.12),rgba(22,163,106,.38),rgba(22,163,106,.10),transparent);opacity:.72;transform-origin:left center}
+.sm37-route.r1{left:5%;top:28%;width:37%;transform:rotate(6deg)}
+.sm37-route.r2{left:49%;top:18%;width:39%;transform:rotate(-5deg)}
+.sm37-route.r3{left:18%;top:69%;width:39%;transform:rotate(-6deg)}
+.sm37-route.r4{left:58%;top:72%;width:30%;transform:rotate(8deg)}
+.sm37-route i{position:absolute;left:0;top:-2px;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(22,163,106,.07);animation:sm37Packet 7.5s linear infinite}
+.sm37-route.r2 i{animation-delay:1.5s}.sm37-route.r3 i{animation-delay:3s}.sm37-route.r4 i{animation-delay:4.5s}
+.sm37-node{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(22,163,106,.065);animation:sm37Pulse 4.8s ease-in-out infinite}
+.sm37-node.n1{left:8%;top:27%}.sm37-node.n2{left:43%;top:32%;animation-delay:.7s}.sm37-node.n3{right:11%;top:17%;animation-delay:1.4s}.sm37-node.n4{left:20%;top:68%;animation-delay:2.1s}.sm37-node.n5{right:10%;top:76%;animation-delay:2.8s}
+
+/* Stop the previous floating/bouncy animation style. */
+.sm-kpi-assets,.sm-kpi-work,.sm-kpi-stock,.sm-kpi-team{animation:none!important;transform:none!important}
+.sm-kpi-assets .sm-kpi-icon,.sm-kpi-work .sm-kpi-icon svg,.sm-kpi-stock .sm-kpi-icon,.sm-kpi-team .sm-kpi-icon{animation:none!important}
+.sm-kpi{
+  min-height:136px!important;padding-right:170px!important;
+  border-color:rgba(23,34,45,.10)!important;
+  box-shadow:0 8px 24px rgba(23,34,45,.055)!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+.sm-kpi:hover{transform:translateY(-2px)!important;border-color:rgba(22,163,106,.24)!important;box-shadow:0 14px 34px rgba(23,34,45,.08)!important}
+.sm-kpi-live{
+  right:14px!important;top:13px!important;bottom:13px!important;width:136px!important;
+  border:1px solid rgba(23,34,45,.08)!important;border-radius:13px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(243,248,246,.92))!important;
+  overflow:hidden!important;
+}
+.sm-live-caption{display:none!important}
+.sm37-instrument-head{position:absolute;left:10px;right:10px;top:8px;display:flex;align-items:center;justify-content:space-between;z-index:10;font-size:8px;font-weight:900;letter-spacing:.75px;text-transform:uppercase;color:#74827d}
+.sm37-instrument-head span{display:flex;align-items:center;gap:5px}
+.sm37-instrument-head span:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);animation:sm37Pulse 4s ease-in-out infinite}
+.sm37-instrument-head b{font-size:8px;color:var(--accent-dark)}
+.sm37-instrument-foot{position:absolute;left:11px;right:11px;bottom:8px;height:2px;border-radius:99px;background:rgba(23,34,45,.065);overflow:hidden;z-index:10}
+.sm37-instrument-foot:after{content:"";display:block;width:34%;height:100%;background:var(--accent);border-radius:99px;animation:sm37Telemetry 7s ease-in-out infinite}
+
+/* Assets: slow condition scan. */
+.sm-live-assets .asset-ring{animation:none!important;border-color:rgba(22,163,106,.18)!important}
+.sm-live-assets .asset-ring.r2{animation:sm37Dial 30s linear infinite!important;border-color:rgba(22,163,106,.10)!important}
+.sm-live-assets .asset-machine{animation:none!important;box-shadow:none!important}
+.sm-live-assets .asset-scan{height:1px!important;box-shadow:0 0 6px rgba(22,163,106,.25)!important;animation:sm37Scan 5.5s ease-in-out infinite!important}
+.sm-live-assets:before{animation:none!important;opacity:.25!important}
+
+/* Work: controlled cycle/progress. */
+.sm-live-work .work-orbit{animation:sm37Dial 13s linear infinite!important;box-shadow:none!important}
+.sm-live-work .work-tool{animation:none!important}
+.sm-live-work .work-task:after{animation:sm37Progress 7s ease-in-out infinite!important}
+.sm-live-work:before,.sm-live-work:after{animation:none!important}
+
+/* Stock: warehouse telemetry rather than bouncing boxes. */
+.sm-live-stock .stock-box{animation:none!important;box-shadow:none!important}
+.sm-live-stock .stock-box.b1{left:18px!important}.sm-live-stock .stock-box.b2{left:49px!important}.sm-live-stock .stock-box.b3{left:80px!important}
+.sm-live-stock .stock-conveyor:before{animation:sm37Conveyor 5s linear infinite!important}
+.sm-live-stock .stock-level:after{animation:sm37Level 8s ease-in-out infinite!important}
+.sm-live-stock:before,.sm-live-stock:after{animation:none!important;opacity:.55!important}
+
+/* Team: slow presence packets. */
+.sm-live-team .person{animation:none!important}
+.sm-live-team .team-link:after{animation:sm37Packet 6.5s linear infinite!important}
+.sm-live-team .team-status:after{animation:sm37Telemetry 8s ease-in-out infinite!important}
+.sm-live-team:before{animation:none!important;opacity:.5!important}
+
+/* Hero telemetry */
+.sm-visual-panel{box-shadow:0 18px 46px rgba(23,34,45,.08)!important;border-color:rgba(23,34,45,.10)!important;background:rgba(255,255,255,.90)!important}
+.sm-ring{animation:sm37Dial 34s linear infinite!important;border-style:solid!important;border-color:rgba(22,163,106,.15)!important}
+.sm-wire:after{animation:sm37Packet 7s linear infinite!important;width:5px!important;height:5px!important;top:-2px!important;box-shadow:0 0 0 4px rgba(22,163,106,.06)!important}
+.sm-node i,.sm-live-pill:before{animation:sm37Pulse 4.5s ease-in-out infinite!important}
+
+/* --- Navigation and page transitions --- */
+.nav-item{
+  overflow:hidden;
+  transition:background .2s ease,color .2s ease,transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease!important;
+}
+.nav-item:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(45,223,156,.10),transparent 72%);opacity:0;transform:translateX(-18px);transition:opacity .2s ease,transform .2s ease;pointer-events:none}
+.nav-item:hover:before,.nav-item.active:before{opacity:1;transform:translateX(0)}
+.nav-item:hover{transform:translateX(4px)!important}
+.nav-item .nav-icon{transition:transform .2s ease,color .2s ease!important}
+.nav-item:hover .nav-icon{transform:scale(1.08)!important}
+
+#appView.sm37-page-enter>*{animation:sm37PageIn .28s cubic-bezier(.2,.8,.2,1) both}
+dialog[open] .modal-head,dialog[open] .modal-body,dialog[open] .modal-actions{animation:sm37ModalIn .22s ease both}
+.fx23-children{transform-origin:top;animation:sm37Expand .24s cubic-bezier(.2,.8,.2,1) both}
+.fx23-expand{transition:transform .18s ease,background .18s ease!important}
+.fx23-expand:not(.collapsed){transform:rotate(0)}
+.fx23-expand.collapsed{transform:rotate(-90deg)}
+.fx23-row{transition:background .16s ease,box-shadow .16s ease,transform .16s ease!important}
+.fx23-row:hover{transform:translateX(2px)}
+
+/* --- Real file attachment UI --- */
+.file-input-hidden{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.attachment-list{display:grid;gap:8px;padding:10px}
+.attachment-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:11px 12px;border:1px solid #d9e3df;border-radius:8px;background:#fff}
+.attachment-row:hover{border-color:#bddbce;background:#fbfdfc}
+.attachment-row strong{display:block;font-size:12px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attachment-row small{display:block;margin-top:3px;font-size:10px!important;color:#71817b}
+.attachment-actions{display:flex;align-items:center;gap:6px}
+.attachment-actions .button{min-height:30px!important;height:30px!important;font-size:10px!important}
+.attachment-empty{padding:28px 18px;text-align:center;color:#75857e;font-size:11px}
+.attachment-empty strong{display:block;color:#35463f;font-size:12px;margin-bottom:4px}
+
+@keyframes sm37Packet{0%{left:0;opacity:0}12%{opacity:.7}88%{opacity:.7}100%{left:calc(100% - 5px);opacity:0}}
+@keyframes sm37Pulse{0%,78%,100%{opacity:.48;transform:scale(.9)}84%{opacity:1;transform:scale(1.08)}90%{opacity:.64;transform:scale(.96)}}
+@keyframes sm37Dial{to{transform:rotate(360deg)}}
+@keyframes sm37Scan{0%,100%{top:24px;opacity:.13}50%{top:88px;opacity:.7}}
+@keyframes sm37Progress{0%,100%{width:25%}50%{width:82%}}
+@keyframes sm37Conveyor{to{background-position:26px 0}}
+@keyframes sm37Level{0%,100%{width:52%}50%{width:70%}}
+@keyframes sm37Telemetry{0%,100%{transform:translateX(0);width:28%}50%{transform:translateX(170%);width:40%}}
+@keyframes sm37PageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sm37ModalIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sm37Expand{from{opacity:0;transform:scaleY(.94) translateY(-4px)}to{opacity:1;transform:scaleY(1) translateY(0)}}
+
+@media(max-width:1260px){.sm-kpi{padding-right:145px!important}.sm-kpi-live{width:115px!important}.sm37-instrument-head b{display:none}}
+@media(max-width:820px){.sm37-telemetry{inset:-18px}.sm-kpi{padding-right:132px!important}.sm-kpi-live{width:104px!important}}
+@media(max-width:600px){.sm37-telemetry{opacity:.65}.sm-kpi{padding-right:18px!important;padding-bottom:108px!important}.sm-kpi-live{left:16px!important;right:16px!important;top:auto!important;bottom:12px!important;width:auto!important;height:84px!important}.attachment-row{grid-template-columns:1fr}.attachment-actions{width:100%}.attachment-actions .button{flex:1}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important}.sm37-route i,.sm37-node,.sm37-instrument-head span:before,.sm37-instrument-foot:after,.sm-live-assets .asset-ring.r2,.sm-live-assets .asset-scan,.sm-live-work .work-orbit,.sm-live-work .work-task:after,.sm-live-stock .stock-conveyor:before,.sm-live-stock .stock-level:after,.sm-live-team .team-link:after,.sm-live-team .team-status:after,.sm-ring,.sm-wire:after,.sm-node i,.sm-live-pill:before,#appView.sm37-page-enter>*,dialog[open] .modal-head,dialog[open] .modal-body,dialog[open] .modal-actions,.fx23-children{animation:none!important}}
