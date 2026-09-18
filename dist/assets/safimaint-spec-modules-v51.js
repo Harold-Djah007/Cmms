@@ -62,7 +62,7 @@
     const rows=Object.values(pairs).sort((a,b)=>b.count-a.count);
     return '<div class="v50-page">'+pageHead('Reliability','Failure analysis','Turn corrective maintenance into structured Problem → Cause → Action knowledge.')+
       '<div class="v50-kpis"><button class="v50-kpi"><small>Corrective records</small><strong>'+work.length+'</strong><span>Failure-capable work orders</span></button><button class="v50-kpi"><small>Structured RCA</small><strong>'+work.filter(w=>w.failureCodes?.problem&&w.failureCodes.problem!=='Not selected').length+'</strong><span>With problem code</span></button><button class="v50-kpi"><small>Repeated patterns</small><strong>'+rows.filter(r=>r.count>1).length+'</strong><span>Recurring PCA combinations</span></button></div>'+
-      '<div class="v50-table-wrap"><table class="v50-table"><thead><tr><th>Problem</th><th>Cause</th><th>Action</th><th>Occurrences</th><th>Assets</th><th>Cost</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+esc(r.p)+'</strong></td><td>'+esc(r.c)+'</td><td>'+esc(r.a)+'</td><td>'+r.count+'</td><td>'+r.assets.size+'</td><td>'+money(r.cost)+'</td></tr>').join('')+'</tbody></table></div></div>';
+      '<div class="v50-table-wrap"><table class="v50-table"><thead><tr><th>Problem</th><th>Cause</th><th>Action</th><th>Occurrences</th><th>Assets</th><th>Cost</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+esc(r.p)+'</strong></td><td>'+esc(r.c)+'</td><td>'+esc(r.a)+'</td><td>'+r.count+'</td><td>'+r.assets.size+'</td><td>'+money(r.cost)+'</td></tr>'}).join('')+'</tbody></table></div></div>';
   });
 
   reg('work-insights',()=>{
