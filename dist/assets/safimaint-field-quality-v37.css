@@ -125,7 +125,7 @@ dialog[open] .modal-head,dialog[open] .modal-body,dialog[open] .modal-actions{an
 @keyframes sm37Conveyor{to{background-position:26px 0}}
 @keyframes sm37Level{0%,100%{width:52%}50%{width:70%}}
 @keyframes sm37Telemetry{0%,100%{transform:translateX(0);width:28%}50%{transform:translateX(170%);width:40%}}
-@keyframes sm37PageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sm37PageIn{from{transform:translateY(4px)}to{transform:translateY(0)}}
 @keyframes sm37ModalIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes sm37Expand{from{opacity:0;transform:scaleY(.94) translateY(-4px)}to{opacity:1;transform:scaleY(1) translateY(0)}}
 
