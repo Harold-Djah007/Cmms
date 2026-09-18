@@ -1,4 +1,4 @@
-const CACHE='safimaint-demo-workspace-v67';
+const CACHE='safimaint-demo-workspace-v67-1';
 const APP_SHELL=[
   './',
   './index.html',
