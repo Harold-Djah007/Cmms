@@ -1,0 +1,97 @@
+/* SafiMaintain semantic KPI instruments v43
+   Each dashboard tile has a maintenance-specific animation rather than generic bars. */
+
+.sm41-kpi-meter{display:none!important}
+.sm-kpi{padding-right:154px!important;min-height:116px!important}
+.sm43-scene{
+  position:absolute;right:13px;top:10px;bottom:10px;width:126px;
+  border-left:1px solid #e1e8e5;
+  display:grid;place-items:center;
+  overflow:hidden;
+  color:#0d7b53;
+}
+.sm43-scene svg{width:108px;height:82px;overflow:visible}
+.sm43-scene .base{stroke:#d7e3de;fill:none}
+.sm43-scene .soft{stroke:#acd9c5;fill:#eef8f3}
+.sm43-scene .solid{stroke:#11845a;fill:#dff3e9}
+.sm43-scene .ink{stroke:#294239;fill:none}
+.sm43-scene .accent{stroke:#16a36a;fill:none}
+.sm43-scene text{font:800 7px/1 Arial,sans-serif;fill:#708079;letter-spacing:.25px}
+
+/* Asset monitor */
+.sm43-assets .asset-body{transform-origin:54px 43px;animation:sm43Machine 5s ease-in-out infinite}
+.sm43-assets .health-ring{transform-origin:54px 43px;animation:sm43Ring 8s linear infinite}
+.sm43-assets .scan{
+  stroke:#18ad72;stroke-width:1.5;filter:drop-shadow(0 0 2px rgba(22,163,106,.45));
+  animation:sm43AssetScan 4.8s ease-in-out infinite;
+}
+.sm43-assets .sensor{fill:#16a36a;stroke:none;animation:sm43Sensor 3.6s ease-in-out infinite}
+.sm43-assets .sensor.s2{animation-delay:1.15s}.sm43-assets .sensor.s3{animation-delay:2.3s}
+
+/* Work order execution */
+.sm43-work .sheet{fill:#fbfdfc;stroke:#c9d8d1}
+.sm43-work .task-line{stroke:#c5d3cd;stroke-width:2;stroke-linecap:round}
+.sm43-work .task-progress{stroke:#16a36a;stroke-width:2;stroke-linecap:round;stroke-dasharray:25;stroke-dashoffset:25;animation:sm43TaskLine 6s ease-in-out infinite}
+.sm43-work .check{fill:none;stroke:#16a36a;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:12;stroke-dashoffset:12;animation:sm43Check 6s ease-in-out infinite}
+.sm43-work .c2,.sm43-work .p2{animation-delay:1.25s}.sm43-work .c3,.sm43-work .p3{animation-delay:2.5s}
+.sm43-work .wrench{transform-origin:82px 58px;animation:sm43Wrench 3.6s ease-in-out infinite}
+
+/* Stock / stores */
+.sm43-stock .shelf{stroke:#879990;stroke-width:1.3}
+.sm43-stock .box{fill:#e8f7ef;stroke:#79c7a4}
+.sm43-stock .issue-box{animation:sm43IssueBox 6.4s cubic-bezier(.55,.05,.25,1) infinite}
+.sm43-stock .issue-arrow{stroke:#16a36a;stroke-width:1.5;stroke-dasharray:4 4;animation:sm43Arrow 2s linear infinite}
+.sm43-stock .stock-dot{fill:#16a36a;animation:sm43StockDot 4.2s ease-in-out infinite}
+
+/* Team / assignment */
+.sm43-team .person{fill:#edf7f2;stroke:#9bcfb8}
+.sm43-team .person.active{fill:#dff4e9;stroke:#16a36a}
+.sm43-team .connection{stroke:#b8d8ca;stroke-width:1.2}
+.sm43-team .assignment{
+  fill:#16a36a;stroke:#fff;stroke-width:1.5;
+  offset-path:path("M 27 33 C 45 10, 65 10, 83 31");
+  animation:sm43Assignment 5.2s ease-in-out infinite;
+}
+.sm43-team .tech-pulse{fill:none;stroke:#16a36a;animation:sm43TeamPulse 5.2s ease-in-out infinite;transform-origin:83px 31px}
+
+/* Tiny semantic label */
+.sm43-scene:after{
+  position:absolute;right:5px;bottom:1px;
+  font-size:7.5px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:#819088;
+}
+.sm43-assets:after{content:"Condition"}
+.sm43-work:after{content:"Execution"}
+.sm43-stock:after{content:"Issue flow"}
+.sm43-team:after{content:"Assignment"}
+
+@keyframes sm43Machine{0%,100%{transform:translateY(0)}45%{transform:translateY(-1px)}50%{transform:translateY(1px)}55%{transform:translateY(0)}}
+@keyframes sm43Ring{to{transform:rotate(360deg)}}
+@keyframes sm43AssetScan{0%,100%{transform:translateY(-18px);opacity:.12}50%{transform:translateY(20px);opacity:.9}}
+@keyframes sm43Sensor{0%,78%,100%{opacity:.28;transform:scale(.82)}86%{opacity:1;transform:scale(1.3)}}
+@keyframes sm43TaskLine{0%,12%{stroke-dashoffset:25}42%,75%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
+@keyframes sm43Check{0%,24%{stroke-dashoffset:12;opacity:.2}42%,82%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:.6}}
+@keyframes sm43Wrench{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(8deg)}}
+@keyframes sm43IssueBox{0%,18%{transform:translate(0,0)}45%,62%{transform:translate(31px,0)}82%,100%{transform:translate(31px,19px);opacity:.25}}
+@keyframes sm43Arrow{to{stroke-dashoffset:-8}}
+@keyframes sm43StockDot{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes sm43Assignment{0%,15%{offset-distance:0%;opacity:0}25%{opacity:1}70%{offset-distance:100%;opacity:1}82%,100%{offset-distance:100%;opacity:0}}
+@keyframes sm43TeamPulse{0%,68%{transform:scale(.75);opacity:0}76%{opacity:.8}100%{transform:scale(1.55);opacity:0}}
+
+@media(max-width:1260px){
+  .sm-kpi{padding-right:133px!important}
+  .sm43-scene{width:108px}.sm43-scene svg{width:94px}
+}
+@media(max-width:820px){
+  .sm-kpi{padding-right:124px!important}
+  .sm43-scene{width:98px}.sm43-scene svg{width:88px}
+}
+@media(max-width:600px){
+  .sm-kpi{padding-right:112px!important}
+  .sm43-scene{right:8px;width:91px}.sm43-scene svg{width:82px}
+}
+@media(prefers-reduced-motion:reduce){
+  .sm43-assets .asset-body,.sm43-assets .health-ring,.sm43-assets .scan,.sm43-assets .sensor,
+  .sm43-work .task-progress,.sm43-work .check,.sm43-work .wrench,
+  .sm43-stock .issue-box,.sm43-stock .issue-arrow,.sm43-stock .stock-dot,
+  .sm43-team .assignment,.sm43-team .tech-pulse{animation:none!important}
+}
