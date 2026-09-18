@@ -185,6 +185,15 @@ def test_work_closure_controls_are_server_enforced():
         "requireCompletionNote": True,
         "requireFailureCodesForCorrective": True,
     }
+    before["failureCodeDefinitions"] = [{
+        "id": "FC-LEAK",
+        "problem": "Leak",
+        "causes": [{
+            "id": "CAUSE-SEAL",
+            "name": "Seal failure",
+            "actions": ["Replace seal"],
+        }],
+    }]
     before["workOrders"][0].update({
         "status": "Open",
         "type": "Corrective",
