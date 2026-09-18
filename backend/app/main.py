@@ -22,7 +22,12 @@ from .validation import authorize_changes, validate_state
 
 WORKSPACE = "default"
 MAX_FILE_BYTES = 25 * 1024 * 1024
-ALLOWED_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/webp", "text/plain", "text/csv"}
+ALLOWED_TYPES = {
+    "application/pdf", "image/jpeg", "image/png", "image/webp", "text/plain", "text/csv",
+    "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+}
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -150,14 +155,43 @@ def restore(revision: int, identity: Identity = Depends(require_identity)) -> di
     return {"revision": next_revision, "stateHash": state_hash}
 
 
+def attachment_access(state: dict | None, identity: Identity, entity_type: str, *, write: bool) -> None:
+    permissions = permission_set(state, identity)
+    if "*" in permissions:
+        return
+    entity_type = entity_type.lower()
+    allowed = False
+    if entity_type == "work":
+        allowed = bool(permissions & ({"work.execute", "work.manage"} if write else {"work.view", "work.execute", "work.manage"}))
+    elif entity_type == "asset":
+        allowed = bool(permissions & ({"asset.edit", "asset.state"} if write else {"asset.view", "asset.edit", "asset.state"}))
+    elif entity_type == "request":
+        allowed = bool(permissions & ({"work.manage", "asset.view"} if write else {"work.view", "work.manage", "asset.view"}))
+    if not allowed:
+        raise HTTPException(status_code=403, detail=f"Your role cannot {'add' if write else 'view'} {entity_type} attachments")
+
+
+def validate_attachment_entity(state: dict | None, entity_type: str, entity_id: str) -> None:
+    if not state:
+        raise HTTPException(status_code=404, detail="Workspace is not initialized")
+    collection = {"asset": "assets", "work": "workOrders", "request": "requests"}.get(entity_type.lower())
+    if not collection:
+        raise HTTPException(status_code=422, detail="Unsupported attachment entity type")
+    if not any(str(item.get("id")) == entity_id for item in state.get(collection, [])):
+        raise HTTPException(status_code=404, detail=f"{entity_type.title()} record not found")
+
+
 @app.post("/api/v1/attachments")
 async def upload_attachment(
     entity_type: str = Form(...), entity_id: str = Form(...), file: UploadFile = File(...),
     identity: Identity = Depends(require_identity),
 ) -> dict:
+    entity_type = entity_type.lower().strip()
+    entity_id = entity_id.strip()
     with connect() as db:
         state, _, _ = read_workspace(db)
-    demand(permission_set(state, identity), {"asset.edit"})
+    attachment_access(state, identity, entity_type, write=True)
+    validate_attachment_entity(state, entity_type, entity_id)
     content_type = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
     if content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=415, detail="Unsupported attachment type")
@@ -165,6 +199,17 @@ async def upload_attachment(
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="Attachment exceeds 25 MB")
     digest = hashlib.sha256(data).hexdigest()
+    with connect() as db:
+        duplicate = db.execute(
+            "SELECT id,original_name,content_type,size_bytes,sha256,uploaded_at,uploaded_by "
+            "FROM attachments WHERE workspace_id=? AND entity_type=? AND entity_id=? AND sha256=? AND original_name=? "
+            "ORDER BY uploaded_at DESC LIMIT 1",
+            (WORKSPACE, entity_type, entity_id, digest, file.filename or "attachment"),
+        ).fetchone()
+    if duplicate:
+        result = dict(duplicate)
+        result.update({"name": result.pop("original_name"), "contentType": result.pop("content_type"), "size": result.pop("size_bytes")})
+        return result
     attachment_id = f"ATT-{uuid.uuid4().hex.upper()}"
     storage_name = f"{attachment_id}-{digest[:16]}"
     (settings.attachment_path / storage_name).write_bytes(data)
@@ -176,9 +221,12 @@ async def upload_attachment(
 
 @app.get("/api/v1/attachments/entity/{entity_type}/{entity_id}")
 def list_attachments(entity_type: str, entity_id: str, identity: Identity = Depends(require_identity)) -> dict:
+    entity_type = entity_type.lower().strip()
+    entity_id = entity_id.strip()
     with connect() as db:
         state, _, _ = read_workspace(db)
-        demand(permission_set(state, identity), {"asset.view"})
+        attachment_access(state, identity, entity_type, write=False)
+        validate_attachment_entity(state, entity_type, entity_id)
         rows = db.execute("SELECT id,original_name,content_type,size_bytes,sha256,uploaded_at,uploaded_by FROM attachments WHERE workspace_id=? AND entity_type=? AND entity_id=? ORDER BY uploaded_at DESC", (WORKSPACE, entity_type, entity_id)).fetchall()
     return {"attachments": [dict(row) for row in rows]}
 
@@ -187,10 +235,11 @@ def list_attachments(entity_type: str, entity_id: str, identity: Identity = Depe
 def download_attachment(attachment_id: str, identity: Identity = Depends(require_identity)):
     with connect() as db:
         state, _, _ = read_workspace(db)
-        demand(permission_set(state, identity), {"asset.view"})
         row = db.execute("SELECT * FROM attachments WHERE id=? AND workspace_id=?", (attachment_id, WORKSPACE)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Attachment not found")
+    attachment_access(state, identity, row["entity_type"], write=False)
+    validate_attachment_entity(state, row["entity_type"], row["entity_id"])
     path = settings.attachment_path / row["storage_name"]
     if not path.is_file():
         raise HTTPException(status_code=410, detail="Attachment content is missing")
