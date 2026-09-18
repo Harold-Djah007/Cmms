@@ -28,6 +28,7 @@
   const bomFor=a=>(a.bom||[]).map(getPart).filter(Boolean);
   const saveCollapsed=()=>localStorage.setItem(KEY,JSON.stringify([...collapsed]));
   const typeIcon=a=>assetIcon(a);
+  const hierarchyIcon=()=>'<svg class="safi-hierarchy-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1.2"/><rect x="3" y="16" width="6" height="5" rx="1.2"/><rect x="15" y="16" width="6" height="5" rx="1.2"/><path d="M12 8v4M6 16v-2h12v2"/></svg>';
 
   function scopeMatch(a){
     return ui.assetScope==='all'||
@@ -97,12 +98,17 @@
     return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
       +`<section class="fx23-shell card">
         <div class="fx23-model">
-          <div class="fx31-model-title"><span>${assetTypeIcon('Facility')}</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
-          <div class="fx31-flow"><span><i>01</i><b>Facility</b></span><em>›</em><span><i>02</i><b>Department / room</b></span><em>›</em><span><i>03</i><b>Equipment</b></span><em>›</em><span><i>04</i><b>Component / tool</b></span></div>
+          <div class="fx31-model-title"><span>${hierarchyIcon()}</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
+          <div class="fx31-flow">
+            <div class="fx31-stage fx31-stage-facility"><i>${assetTypeIcon('Facility')}</i><b><small>01</small>Facility</b></div><em aria-hidden="true">›</em>
+            <div class="fx31-stage fx31-stage-room"><i>${assetTypeIcon('Room')}</i><b><small>02</small>Department / room</b></div><em aria-hidden="true">›</em>
+            <div class="fx31-stage fx31-stage-equipment"><i>${assetTypeIcon('Equipment')}</i><b><small>03</small>Equipment</b></div><em aria-hidden="true">›</em>
+            <div class="fx31-stage fx31-stage-tool"><i>${assetTypeIcon('Tool')}</i><b><small>04</small>Component / tool</b></div>
+          </div>
           <small>Categories help with filtering. The tree should show only real locations and equipment relationships.</small>
         </div>
         <div class="fx23-titlebar">
-          <div class="fx23-title"><span class="fx23-title-icon">▦</span><div><strong>Asset structure</strong><small>${esc(s?.name||'Current workspace')}</small></div></div>
+          <div class="fx23-title"><span class="fx23-title-icon">${hierarchyIcon()}</span><div><strong>Asset structure</strong><small>${esc(s?.name||'Current workspace')}</small></div></div>
           <div class="fx31-summary"><span><b>${assets().length}</b> assets</span><span class="online"><i></i><b>${online}</b> online</span><span class="offline"><i></i><b>${offline}</b> offline</span><span><b>${openWork}</b> open work</span></div>
           <div class="fx23-filter"><label for="fx23Scope">Show</label><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
         </div>

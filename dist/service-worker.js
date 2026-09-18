@@ -1,4 +1,4 @@
-const CACHE='safimaint-sidebar-icons-v33';
+const CACHE='safimaint-hierarchy-guide-v34';
 const APP_SHELL=[
   './',
   './index.html',
