@@ -51,6 +51,12 @@ async def require_identity(
 def permission_set(state: dict | None, identity: Identity) -> set[str]:
     if identity.email in settings.owner_emails:
         return {"*"}
+    # Local Docker/test development is an explicitly trusted development mode.
+    # Do not make the local workspace unusable merely because the fresh-workspace
+    # owner entered a different email from SAFIMAINT_DEV_USER_EMAIL. Production
+    # Microsoft Entra identities still resolve through the persisted user/role map.
+    if settings.dev_auth and identity.provider == "development":
+        return {"*"}
     if not state:
         return {"*"} if settings.dev_auth else set()
     user = next((u for u in state.get("users", []) if str(u.get("email", "")).lower() == identity.email), None)
