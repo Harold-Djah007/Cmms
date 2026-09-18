@@ -1,4 +1,4 @@
-const CACHE='safimaint-asset-map-v31';
+const CACHE='safimaint-asset-icons-motion-v32';
 const APP_SHELL=[
   './',
   './index.html',

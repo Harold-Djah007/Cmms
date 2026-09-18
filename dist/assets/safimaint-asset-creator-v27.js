@@ -38,9 +38,9 @@
       ${parent?`<div class="v27-parent-context"><small>Add beneath</small><strong>${esc(assetPath(parent))}</strong></div>`:''}
       <p class="v27-intro">Choose the kind of record first. SafiMaintain will only ask for fields that belong to it.</p>
       <div class="v27-kind-grid">
-        <button type="button" data-v27-kind="location" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon facility">▥</span><span><strong>Locations or Facilities</strong><small>Facility, building, room, area or department</small></span><b>›</b></button>
-        <button type="button" data-v27-kind="equipment" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon equipment">▣</span><span><strong>Equipment or Machines</strong><small>Maintainable equipment located in a facility or room</small></span><b>›</b></button>
-        <button type="button" data-v27-kind="tool" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon tool">⚒</span><span><strong>Tools</strong><small>Portable tools located in a facility or assigned to equipment</small></span><b>›</b></button>
+        <button type="button" data-v27-kind="location" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon facility">${assetTypeIcon('Facility')}</span><span><strong>Locations or Facilities</strong><small>Facility, building, room, area or department</small></span><b>›</b></button>
+        <button type="button" data-v27-kind="equipment" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon equipment">${assetTypeIcon('Equipment')}</span><span><strong>Equipment or Machines</strong><small>Maintainable equipment located in a facility or room</small></span><b>›</b></button>
+        <button type="button" data-v27-kind="tool" data-v27-parent="${esc(parentId||'')}"><span class="v27-kind-icon tool">${assetTypeIcon('Tool')}</span><span><strong>Tools</strong><small>Portable tools located in a facility or assigned to equipment</small></span><b>›</b></button>
       </div>`});
   }
 

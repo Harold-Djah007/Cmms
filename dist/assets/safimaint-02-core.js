@@ -176,7 +176,16 @@ function flattenAssets(parentId=null,depth=0,out=[]){
   state.assets.filter(a=>a.parentId===parentId).sort((a,b)=>a.name.localeCompare(b.name)).forEach(a=>{out.push({asset:a,depth});flattenAssets(a.id,depth+1,out)});
   return out;
 }
-function assetIcon(a){return a.type==='Site'?'⌂':a.type==='Facility'?'▥':['Department','Room','Area','Production area'].includes(a.type)?'▦':a.type==='Tool'?'⚙':'▣'}
+function assetTypeIcon(type){
+  const common='class="safi-asset-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  if(type==='Site')return `<svg ${common}><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>`;
+  if(type==='Facility')return `<svg ${common}><path d="M4 21V7l8-4v18M12 9h8v12M2 21h20"/><path d="M7 9h2m-2 4h2m-2 4h2m8-4h1m-1 4h1"/></svg>`;
+  if(['Department','Room','Area','Production area'].includes(type))return `<svg ${common}><path d="M3 4h18v16H3zM10 4v16M10 11h11"/><path d="M6 8h1m7 7h3"/></svg>`;
+  if(type==='Tool')return `<svg ${common}><path d="M14.7 6.3a4.3 4.3 0 0 0-5.4 5.4L3.7 17.3a1.4 1.4 0 0 0 2 2l5.6-5.6a4.3 4.3 0 0 0 5.4-5.4l-2.5 2.5-2.8-.7-.7-2.8 2.5-2.5a4.3 4.3 0 0 1 1.5 1.5Z"/></svg>`;
+  if(type==='Subassembly')return `<svg ${common}><circle cx="8" cy="12" r="3"/><circle cx="17" cy="8" r="2"/><circle cx="17" cy="17" r="2.5"/><path d="m10.7 10.7 4.4-1.9m-4.2 4.6 3.8 2.3"/></svg>`;
+  return `<svg ${common}><path d="M7 5h10l2 4v8l-2 2H7l-2-2V9l2-4Z"/><path d="M9 5V3h6v2m-5 7h4m-2-2v4"/><circle cx="12" cy="12" r="6.5"/></svg>`;
+}
+function assetIcon(a){return assetTypeIcon(a?.type||'Equipment')}
 function durationHours(start,end=iso()){
   if(!start) return 0;return Math.max(0,(new Date(end)-new Date(start))/3600000);
 }

@@ -70,7 +70,7 @@
       return `<div class="fx23-row ${ui.selectedAsset===a.id?'selected':''}" draggable="true" data-kind="${kind}" data-fx23-drag="${a.id}" data-fx23-drop="${a.id}" style="--depth:${Math.min(depth,9)}">
         <div class="fx23-cell fx23-location">
           <input class="fx23-check" type="checkbox" data-fx23-select="${a.id}" ${selected.has(String(a.id))?'checked':''} aria-label="Select ${esc(a.name)}">
-          <button class="fx23-expand ${kids.length?'':'empty'}" type="button" ${kids.length?`data-fx23-toggle="${a.id}"`:''} aria-label="${shut?'Expand':'Collapse'} ${esc(a.name)}">${kids.length?(shut?'＋':'−'):''}</button>
+          <button class="fx23-expand ${kids.length?'':'empty'} ${shut?'collapsed':''}" type="button" ${kids.length?`data-fx23-toggle="${a.id}" aria-expanded="${shut?'false':'true'}"`:''} aria-label="${shut?'Expand':'Collapse'} ${esc(a.name)}">${kids.length?'<span class="fx23-chevron-icon"></span>':''}</button>
           <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small><b>${esc(a.type)}</b><i>${esc(relation)}</i>${kids.length?`<i>${kids.length} directly below</i>`:''}</small></span></button>
         </div>
         <div class="fx23-cell fx23-desc">${esc(desc)}</div>
@@ -97,7 +97,7 @@
     return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
       +`<section class="fx23-shell card">
         <div class="fx23-model">
-          <div class="fx31-model-title"><span>⌘</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
+          <div class="fx31-model-title"><span>${assetTypeIcon('Facility')}</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
           <div class="fx31-flow"><span><i>01</i><b>Facility</b></span><em>›</em><span><i>02</i><b>Department / room</b></span><em>›</em><span><i>03</i><b>Equipment</b></span><em>›</em><span><i>04</i><b>Component / tool</b></span></div>
           <small>Categories help with filtering. The tree should show only real locations and equipment relationships.</small>
         </div>
@@ -213,7 +213,20 @@
   document.addEventListener('click',e=>{
     const open=e.target.closest('[data-fx23-open]');if(open){e.preventDefault();e.stopImmediatePropagation();ui.selectedAsset=open.dataset.fx23Open;ui.assetView='record';ui.assetRecordTab='general';render();return}
     const back=e.target.closest('[data-fx23-back]');if(back){e.preventDefault();e.stopImmediatePropagation();ui.assetView='hierarchy';render();return}
-    const toggle=e.target.closest('[data-fx23-toggle]');if(toggle){e.preventDefault();e.stopImmediatePropagation();const id=String(toggle.dataset.fx23Toggle);collapsed.has(id)?collapsed.delete(id):collapsed.add(id);saveCollapsed();render();return}
+    const toggle=e.target.closest('[data-fx23-toggle]');if(toggle){
+      e.preventDefault();e.stopImmediatePropagation();const id=String(toggle.dataset.fx23Toggle),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(collapsed.has(id)){
+        collapsed.delete(id);saveCollapsed();render();
+        if(!reduce){const fresh=document.querySelector(`[data-fx23-drag="${CSS.escape(id)}"]`),branch=fresh?.nextElementSibling;if(branch?.classList.contains('fx23-children'))branch.classList.add('is-expanding')}
+      }else{
+        const row=toggle.closest('.fx23-row'),branch=row?.nextElementSibling;
+        if(reduce||!branch?.classList.contains('fx23-children')){collapsed.add(id);saveCollapsed();render();return}
+        branch.style.setProperty('--branch-height',`${branch.scrollHeight}px`);branch.classList.add('is-collapsing');
+        requestAnimationFrame(()=>branch.classList.add('animate-out'));
+        setTimeout(()=>{collapsed.add(id);saveCollapsed();render()},220);
+      }
+      return;
+    }
     const scope=e.target.closest('[data-fx23-scope]');if(scope){e.preventDefault();e.stopImmediatePropagation();ui.assetScope=scope.dataset.fx23Scope;render();return}
     if(e.target.closest('[data-fx23-expand-all]')){e.preventDefault();e.stopImmediatePropagation();collapsed.clear();saveCollapsed();render();return}
     if(e.target.closest('[data-fx23-collapse-all]')){e.preventDefault();e.stopImmediatePropagation();collapsed=new Set(assets().filter(a=>children(a.id).length).map(a=>String(a.id)));saveCollapsed();render();return}
