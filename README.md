@@ -42,7 +42,7 @@ The current build has been reorganized around the **public operating model docum
 - In-app inbox with read state.
 - Email outbox records with subject, recipient, body, time and status.
 
-**Important:** this repository is still a static/offline-capable field build. The email outbox is intentionally labelled **Queued locally** and does not pretend an email was delivered. Real mail delivery requires a shared backend and email provider.
+**Important:** new email records begin as **Queued locally** and do not pretend delivery. When the shared service and SMTP relay are configured, SafiMaintain changes them to **Sent** only after the relay accepts each message.
 
 ### Administration and security
 - People, groups, manager relationships, roles and permission definitions.
@@ -51,21 +51,72 @@ The current build has been reorganized around the **public operating model docum
 - Notification-rule configuration.
 - Security policy configuration for MFA expectation, session timeout and audit retention.
 - Audit trail for critical asset, stock, purchasing, security and administration actions.
-- Explicit production boundary for SSO, IP restrictions, password policy and server-enforced RBAC.
+- Microsoft Entra-compatible identity, server-enforced RBAC and explicit hosting boundaries for MFA, SSO and IP restrictions.
 
-## Run locally
+## Run the shared application locally
 
-```powershell
-python3 -m http.server 8080 --directory dist
+Docker is the simplest way to run the UI, API, durable database and attachment service together:
+
+```bash
+docker compose up --build
 ```
 
-Open:
+Open `http://localhost:8000`. Data and uploaded files remain in the named `safimaint_data` volume.
+
+For backend development without Docker:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+SAFIMAINT_DEV_AUTH=true SAFIMAINT_DEV_USER_EMAIL=abena.sarpong@safisana.org \
+  uvicorn backend.app.main:app --reload --port 8000
+```
+
+API documentation is available at `http://localhost:8000/api/docs`.
+
+The old static-only preview still works with `python3 -m http.server 8080 --directory dist`, but it intentionally operates in **Device mode** because there is no API behind it.
+
+## Production controls now implemented
+
+- SQLite WAL persistence with automatic schema migration and durable Docker volume.
+- Microsoft Entra / Azure App Service Authentication header support; local development auth is disabled by default.
+- Server-enforced role permissions for every changed operational collection.
+- Optimistic concurrency: a stale device cannot silently overwrite a newer revision.
+- Validation of asset hierarchy cycles, references, IDs, stock floors and work-order relationships.
+- Append-only stock transaction and audit ledgers.
+- Cryptographically hashed, immutable revision history with admin restore capability.
+- Offline field cache and a persistent single-snapshot synchronization queue.
+- Conflict recovery copy when another device saves first.
+- Permission-checked PDF/image/text attachments with size, type and SHA-256 integrity metadata.
+- SMTP relay integration; messages become `Sent` only after relay acceptance.
+- Health endpoint, API documentation, Docker health checks and automated tests.
+
+## Production deployment
+
+Build `backend/Dockerfile` in Azure App Service for Containers (or another persistent container host), mount `/app/data` on durable encrypted storage, and configure:
 
 ```text
-http://localhost:8080
+SAFIMAINT_OWNER_EMAILS=operations.manager@company.com
+SAFIMAINT_DATABASE_PATH=/app/data/safimaint.db
+SAFIMAINT_ATTACHMENT_PATH=/app/data/attachments
+SMTP_HOST=your-relay
+SMTP_PORT=587
+SMTP_USERNAME=...
+SMTP_PASSWORD=...
+SMTP_FROM=SafiMaintain <maintenance@company.com>
 ```
 
-After pulling a new version, hard-refresh once so the service worker replaces the old cached shell.
+Enable Microsoft Entra authentication at the hosting layer and require authentication for every request. Do **not** enable `SAFIMAINT_DEV_AUTH` in production. The first signed-in owner listed in `SAFIMAINT_OWNER_EMAILS` can initialize the workspace; subsequent access is resolved from the People and Roles records inside SafiMaintain.
+
+Back up both the SQLite database and attachment directory together. For a large multi-site rollout, move the same API contract to a managed relational database and object store before high-concurrency use.
+
+## Verification
+
+```bash
+python -m pytest -q backend/tests
+for file in dist/assets/*.js dist/service-worker.js; do node --check "$file"; done
+```
 
 ## Recommended acceptance test
 
@@ -81,19 +132,6 @@ After pulling a new version, hard-refresh once so the service worker replaces th
 10. Open **People & groups**, **Roles & permissions**, **Audit trail**, and **Security** and verify configuration and audit events.
 11. Disconnect networking after the app has loaded once and confirm the application shell remains available.
 
-## Production boundary
+## Remaining deployment boundary
 
-This build is a strong single-device/offline prototype. Before organization-wide production use, add:
-
-- Shared API and relational database
-- Auth provider / server sessions
-- Server-enforced RBAC and tenant/site scopes
-- MFA and SSO enforcement
-- Secure attachment storage
-- Offline mutation queue and conflict resolution
-- Real email and push delivery
-- Server-side audit storage and retention
-- Backups, monitoring and disaster recovery
-- Device registration and data-at-rest protections
-
-The UI does not claim those controls are active before the backend exists.
+The repository contains the production foundation, but a GitHub commit by itself does not activate Microsoft Entra, SMTP, encrypted backups, monitoring, retention jobs or disaster-recovery drills. Those are infrastructure controls and must be configured in the actual hosting environment before SafiMaintain is approved for live operational records.

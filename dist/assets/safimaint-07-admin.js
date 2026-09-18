@@ -30,7 +30,7 @@ function renderPeople(){
   +`<section class="card">${table(['Person','Role','Groups','MFA','Email alerts','Status',''],state.users.map(u=>`<tr><td><span class="cell-title">${esc(u.name)}</span><span class="cell-sub">${esc(u.email)}</span></td><td>${esc(getRole(u.roleId)?.name||u.roleId)}</td><td>${esc(u.groupIds.map(id=>getGroup(id)?.name).filter(Boolean).join(', ')||'—')}</td><td>${u.mfa?status('Enabled'):status('Not enrolled')}</td><td>${u.emailAlerts?'On':'Off'}</td><td>${status(u.active?'Active':'Inactive')}</td><td class="right"><button class="button small" data-toggle-user="${u.id}">${u.active?'Deactivate':'Activate'}</button></td></tr>`),'No people')}</section>
     <div class="grid two" style="margin-top:14px">
       <section class="card"><div class="card-head"><div><h2>Groups</h2><p>Manager/team relationships</p></div></div>${table(['Group','Manager','Members'],state.groups.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td>${esc(getUser(g.managerId)?.name||'—')}</td><td>${state.users.filter(u=>u.groupIds.includes(g.id)).length}</td></tr>`),'No groups')}</section>
-      <section class="card pad"><h3 style="margin-top:0">Security posture</h3><div class="notice info">This static field build can show configuration and retain audit history on this device. Real authentication, MFA enforcement, SSO, IP restrictions and cross-user authorization require the shared backend milestone.</div></section>
+      <section class="card pad"><h3 style="margin-top:0">Security posture</h3><div class="notice info">When the shared service is connected, identity and role permissions are enforced by the API. Device mode keeps a field cache available but does not claim organization-wide authentication.</div></section>
     </div>`;
 }
 const permissionLabels=[
@@ -42,7 +42,7 @@ function renderRoles(){
   +`<section class="card pad"><div class="permission-grid">
     <div class="head">Permission</div>${roleIds.map(id=>`<div class="head">${esc(getRole(id)?.name||id)}</div>`).join('')}
     ${permissionLabels.map(([perm,label])=>`<div><b>${esc(label)}</b><br><small class="muted">${esc(perm)}</small></div>${roleIds.map(id=>`<div class="${getRole(id)?.permissions.includes(perm)?'yes':'no'}">${getRole(id)?.permissions.includes(perm)?'✓ Allowed':'—'}</div>`).join('')}`).join('')}
-  </div><div class="notice info" style="margin-top:14px">Permissions are modeled here so workflows and data ownership are explicit. Server-side enforcement is intentionally not claimed by this browser-only build.</div></section>`;
+  </div><div class="notice info" style="margin-top:14px">Permissions are enforced by the API when the shared service is active. They also guide the interface in Device mode.</div></section>`;
 }
 function renderSites(){
   return pageHead('Administration','Sites & stores','Physical structure for asset visibility and stock ownership.')

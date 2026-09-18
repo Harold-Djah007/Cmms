@@ -1,6 +1,6 @@
 'use strict';
 // SafiMaintain workflow hardening based on Fiix's public CMMS operating model.
-// This layer deliberately augments the static prototype without pretending browser-only controls are server security.
+// Client workflow checks provide immediate feedback; the shared API repeats authorization before accepting changes.
 
 function hasPermission(permission){
   const user=currentUser();
@@ -138,5 +138,5 @@ changeAssetState=function(assetId,nextState,reason,reasonCode,createWork){
 // Add an explicit permission boundary note to the admin screen so local controls are not mistaken for security.
 const _renderSecurity=renderSecurity;
 renderSecurity=function(){
-  return _renderSecurity()+`<section class="card pad" style="margin-top:14px"><h3 style="margin-top:0">Workflow authorization</h3><p class="muted">SafiMaintain now gates asset changes, stock movements, counts and purchasing actions by the signed-in user's modeled role. This reduces accidental actions in the prototype; production authorization still belongs on the server.</p></section>`;
+  return _renderSecurity()+`<section class="card pad" style="margin-top:14px"><h3 style="margin-top:0">Workflow authorization</h3><p class="muted">SafiMaintain gates asset changes, stock movements, counts and purchasing actions by the signed-in user's role. When connected, the API independently validates the same change before committing a new revision.</p></section>`;
 };

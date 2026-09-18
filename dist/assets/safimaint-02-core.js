@@ -8,7 +8,10 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return structuredClone(seed);
     const parsed = JSON.parse(raw);
-    if(parsed?.meta?.version !== APP_VERSION) return structuredClone(seed);
+    if(!parsed||typeof parsed!=='object') return structuredClone(seed);
+    // Preserve field records across compatible frontend releases instead of erasing a technician's device cache.
+    parsed.meta=parsed.meta||{};
+    parsed.meta.version=APP_VERSION;
     return parsed;
   }catch(err){
     console.warn('Could not load local SafiMaintain data',err);
