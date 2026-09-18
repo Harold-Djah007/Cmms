@@ -312,3 +312,27 @@ def test_inventory_issue_can_consume_fifo_lot_and_record_actual_cost():
         current=after,
         previous=before,
     )
+
+
+def test_failure_codes_must_follow_configured_problem_cause_action_hierarchy():
+    state = valid_state()
+    validate_state(state)
+    state["failureCodeDefinitions"] = [{
+        "id": "FC1",
+        "problem": "Leak",
+        "causes": [{"id": "C1", "name": "Seal failure", "actions": ["Replace seal"]}],
+    }]
+    state["workOrders"][0]["failureCodes"] = {
+        "problem": "Leak", "cause": "Seal failure", "action": "Replace seal"
+    }
+    validate_state(state)
+
+    bad_cause = copy.deepcopy(state)
+    bad_cause["workOrders"][0]["failureCodes"]["cause"] = "Overload"
+    with pytest.raises(HTTPException, match="cause is not valid"):
+        validate_state(bad_cause, state)
+
+    bad_action = copy.deepcopy(state)
+    bad_action["workOrders"][0]["failureCodes"]["action"] = "Calibrate"
+    with pytest.raises(HTTPException, match="action is not valid"):
+        validate_state(bad_action, state)
