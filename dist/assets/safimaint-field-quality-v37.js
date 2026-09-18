@@ -74,6 +74,7 @@
     if(assetList)await paintFileList('asset',assetList.dataset.localFileList,assetList);
     document.querySelectorAll('[data-work-file-list]').forEach(el=>paintFileList('work',el.dataset.workFileList,el));
   }
+  window.SafiFileUI={paint:paintFileList,refresh:refreshVisibleFiles};
 
   document.addEventListener('click',async e=>{
     const pick=e.target.closest('[data-local-file-pick]');
