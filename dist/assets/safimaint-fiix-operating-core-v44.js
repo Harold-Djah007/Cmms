@@ -23,6 +23,10 @@
     let changed=false;
     if(!Array.isArray(state.workStatusDefinitions)||!state.workStatusDefinitions.length){state.workStatusDefinitions=structuredClone(DEFAULT_STATUSES);changed=true}
     if(!Array.isArray(state.taskGroups)){state.taskGroups=[];changed=true}
+    if(!Array.isArray(state.notificationRules)){state.notificationRules=[];changed=true}
+    if(!Array.isArray(state.users)){state.users=[];changed=true}
+    if(!Array.isArray(state.scheduledMaintenance)){state.scheduledMaintenance=[];changed=true}
+    if(!Array.isArray(state.workOrders)){state.workOrders=[];changed=true}
     if(!state.workSettings){state.workSettings={requireAllTasksOnClose:true,requireLaborOnClose:true,requireCompletionNote:true,requireFailureCodesForCorrective:true};changed=true}
     state.users.forEach(u=>{if(u.hourlyRate===undefined){u.hourlyRate=0;changed=true}});
     state.scheduledMaintenance.forEach(pm=>{if(!pm.scheduleMode){pm.scheduleMode='Fixed';changed=true}if(!pm.assigneeGroupId){pm.assigneeGroupId=null}});
@@ -48,8 +52,11 @@
   }
   ensureModel();
 
-  function statusDef(name){return state.workStatusDefinitions.find(s=>s.name===name)||{name,control:['Completed','Cancelled'].includes(name)?'CLOSED':'ACTIVE'}}
-  function controlOf(w){return statusDef(w.status).control}
+  function statusDef(name){
+    const defs=Array.isArray(state.workStatusDefinitions)&&state.workStatusDefinitions.length?state.workStatusDefinitions:DEFAULT_STATUSES;
+    return defs.find(s=>s.name===name)||{name,control:['Completed','Closed','Cancelled'].includes(name)?'CLOSED':'ACTIVE'}
+  }
+  function controlOf(w){return statusDef(w?.status||'Open').control}
   function isClosed(w){return controlOf(w)==='CLOSED'}
   function activeWork(){return state.workOrders.filter(w=>controlOf(w)==='ACTIVE')}
   function pendingWork(){return state.workOrders.filter(w=>controlOf(w)==='PENDING')}
