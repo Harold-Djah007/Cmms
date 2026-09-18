@@ -1,0 +1,42 @@
+/* SafiMaintain platform states, reports, search and mobile home v55 */
+
+.v55-search-page{display:grid;gap:10px}
+.v55-search-box{display:flex;gap:7px;padding:10px;border:1px solid #d7e1dc;border-radius:9px;background:#fff}
+.v55-search-box input{flex:1;height:39px;border:1px solid #c8d5cf;border-radius:6px;padding:0 11px;font-size:10px}
+.v55-search-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v55-search-group{border:1px solid #d8e2dd;border-radius:9px;background:#fff;overflow:hidden}
+.v55-search-group h3{margin:0;padding:9px 11px;border-bottom:1px solid #e0e7e3;background:#fafcfb;font-size:9.5px}
+.v55-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;padding:9px 11px;border:0;border-bottom:1px solid #e6ebe8;background:#fff;text-align:left;cursor:pointer}
+.v55-search-row:last-child{border-bottom:0}.v55-search-row:hover{background:#f5faf7}
+.v55-search-row strong{display:block;font-size:9px}.v55-search-row small{display:block;margin-top:2px;font-size:7.7px;color:#76857e}
+.v55-search-kind{font-size:6.8px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;color:#0b7951;background:#e9f7f0;border-radius:99px;padding:3px 6px}
+.v55-search-footer{padding:8px;border-top:1px solid #dfe6e2;text-align:center}
+.v55-state-card{border:1px solid #d8e2dd;border-radius:9px;background:#fff;padding:12px}
+.v55-state-card h3{margin:0;font-size:10.5px}.v55-state-card p{margin:4px 0 0;font-size:8.5px;color:#74837c;line-height:1.5}
+.v55-state-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.v55-state-grid>div{border:1px solid #dce4e0;border-radius:8px;background:#fff;padding:10px}
+.v55-state-grid small{display:block;font-size:7.2px;text-transform:uppercase;font-weight:900;color:#74837c}.v55-state-grid strong{display:block;margin-top:4px;font-size:11px;word-break:break-word}
+.v55-offline-banner{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid #d8e2dd;border-radius:8px;background:#f8fbf9}
+.v55-offline-banner i{width:10px;height:10px;border-radius:50%;background:#18a96d;margin-top:2px;box-shadow:0 0 0 4px rgba(24,169,109,.08)}
+.v55-offline-banner.offline i{background:#d89b20;box-shadow:0 0 0 4px rgba(216,155,32,.1)}
+.v55-offline-banner.error i{background:#d94352;box-shadow:0 0 0 4px rgba(217,67,82,.1)}
+.v55-offline-banner strong{display:block;font-size:9.5px}.v55-offline-banner small{display:block;margin-top:2px;font-size:8px;color:#74837c}
+.v55-conflict{border:1px solid #e7c8cc;border-radius:8px;background:#fff6f7;padding:11px}.v55-conflict strong{font-size:9.5px;color:#a83342}.v55-conflict p{font-size:8.3px;color:#76535a;line-height:1.5;margin:4px 0 8px}
+.v55-mobile{max-width:760px;margin:auto;display:grid;gap:12px}
+.v55-mobile-hero{padding:18px;border-radius:13px;border:1px solid #d5e0da;background:linear-gradient(135deg,#17222d,#263943);color:#fff}
+.v55-mobile-hero small{font-size:8px;color:#9ab1a7;text-transform:uppercase;font-weight:900;letter-spacing:.55px}.v55-mobile-hero h1{font-size:22px;margin:4px 0 6px}.v55-mobile-hero p{font-size:9px;color:#c3d0ca;margin:0;line-height:1.5}
+.v55-mobile-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.v55-touch{min-height:92px;border:1px solid #d7e1dc;border-radius:11px;background:#fff;padding:13px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
+.v55-touch:hover{border-color:#acd4c0;background:#f6fbf8}.v55-touch b{font-size:11px}.v55-touch span{font-size:8px;color:#74837c;line-height:1.4}.v55-touch em{font-style:normal;font-size:19px}
+.v55-denied{max-width:720px;margin:50px auto;padding:24px;border:1px solid #e1d7c0;border-radius:12px;background:#fffdf8;text-align:center}
+.v55-denied .lock{width:44px;height:44px;margin:auto;border-radius:50%;display:grid;place-items:center;background:#fff3d9;font-size:20px}.v55-denied h2{font-size:18px;margin:10px 0 5px}.v55-denied p{font-size:9.5px;color:#756e60;line-height:1.6}.v55-denied code{font-size:8px;background:#f5efe2;padding:3px 5px;border-radius:4px}
+.v55-error{max-width:760px;margin:42px auto;border:1px solid #ecc7cb;border-radius:11px;background:#fff;padding:20px}.v55-error h2{margin:0 0 6px;font-size:17px}.v55-error p{font-size:9px;color:#735c61;line-height:1.6}.v55-error pre{white-space:pre-wrap;max-height:160px;overflow:auto;padding:9px;background:#17222d;color:#dbeae3;border-radius:6px;font-size:8px}
+.v55-report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.v55-report-card{border:1px solid #d8e2dd;border-radius:9px;background:#fff;padding:12px;text-align:left;cursor:pointer}.v55-report-card:hover{border-color:#b9dac9;background:#f7fbf9}.v55-report-card small{display:block;font-size:7px;text-transform:uppercase;color:#74837c;font-weight:900}.v55-report-card strong{display:block;margin-top:4px;font-size:10px}.v55-report-card p{font-size:8.2px;color:#74837c;line-height:1.45;margin:5px 0 0}
+.v55-report-controls{display:flex;gap:6px;flex-wrap:wrap;padding:9px;border:1px solid #d8e2dd;border-radius:8px;background:#fff}.v55-report-controls input,.v55-report-controls select{height:35px;border:1px solid #cbd6d1;border-radius:5px;background:#fff;padding:0 8px;font-size:8.8px}.v55-report-controls .grow{flex:1}
+.v55-locale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.v55-locale label{display:grid;gap:4px;font-size:8px;font-weight:900;color:#61726a}.v55-locale input,.v55-locale select{height:37px;border:1px solid #cbd6d1;border-radius:5px;background:#fff;padding:0 8px;font-size:9px}
+.v55-perm-note{display:inline-flex;align-items:center;gap:4px;font-size:7px;color:#8a6c22}
+.v55-action-locked{opacity:.55!important;cursor:not-allowed!important}
+@media(max-width:1000px){.v55-state-grid{grid-template-columns:repeat(2,1fr)}.v55-report-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.v55-search-groups,.v55-report-grid,.v55-locale{grid-template-columns:1fr}.v55-mobile-actions{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.v55-state-grid,.v55-mobile-actions{grid-template-columns:1fr}}
