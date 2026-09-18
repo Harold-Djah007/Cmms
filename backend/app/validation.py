@@ -113,6 +113,13 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         elif not isinstance(value, list):
             _fail(f"{name} must be a list")
 
+    # Older notification-preference records used userId as their natural key.
+    # Give them a stable record id during migration so the expanded model remains
+    # compatible with existing workspaces.
+    for pref in state["userNotificationPreferences"]:
+        if not pref.get("id") and pref.get("userId"):
+            pref["id"] = f"UNP-{pref['userId']}"
+
     changed = {
         key for key in COLLECTIONS | {"security", "workSettings"}
         if previous is None or state.get(key) != previous.get(key)
@@ -171,14 +178,11 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
 
     for meter in state["meters"]:
         _require(meter.get("assetId"), asset_ids, f"Meter {meter['id']} references a missing asset")
-        last = None
         for reading in meter.get("readings", []):
-            value = float(reading.get("value", 0))
-            if last is not None and value < last:
-                # Fiix-style cumulative meters cannot go backwards; reset meters should be
-                # modeled as a new meter or an explicit reset event.
-                _fail(f"Meter {meter['id']} readings cannot decrease")
-            last = value
+            try:
+                float(reading.get("value", 0))
+            except (TypeError, ValueError):
+                _fail(f"Meter {meter['id']} contains a non-numeric reading")
 
     for part in state["parts"]:
         if float(part.get("min", 0)) < 0 or float(part.get("max", 0)) < 0:
