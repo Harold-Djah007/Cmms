@@ -10,7 +10,7 @@
   const control=w=>typeof window.safiWorkStatusControl==='function'?window.safiWorkStatusControl(w):(['Completed','Cancelled'].includes(w.status)?'CLOSED':'ACTIVE');
   const site=()=>safiActiveSite?.();
   const siteAssets=()=>state.assets.filter(a=>a.type!=='Site'&&safiSiteAllowed(a));
-  const costOfWork=w=>(w.labor||[]).reduce((n,x)=>n+Number(x.hours||0)*Number(getUser(x.userId)?.hourlyRate||0),0)+(w.parts||[]).reduce((n,x)=>n+Number(x.actual||0)*Number(getPart(x.partId)?.unitCost||0),0)+(w.miscCosts||[]).reduce((n,x)=>n+Number(x.amount||0),0);
+  const costOfWork=w=>(w.labor||[]).reduce((n,x)=>n+Number(x.hours||0)*Number(getUser(x.userId)?.hourlyRate||0),0)+(w.parts||[]).reduce((n,x)=>n+(x.actualCost!==undefined?Number(x.actualCost||0):Number(x.actual||0)*Number(getPart(x.partId)?.lastPrice||getPart(x.partId)?.unitCost||0)),0)+(w.miscCosts||[]).reduce((n,x)=>n+Number(x.amount||0),0);
   const pill=(text,kind='')=>'<span class="v50-pill '+kind+'">'+esc(text)+'</span>';
   const empty=(a,b)=>'<div class="v50-empty"><strong>'+esc(a)+'</strong><span>'+esc(b)+'</span></div>';
   const genericAssetList=(title,subtitle,filter)=>()=>{
