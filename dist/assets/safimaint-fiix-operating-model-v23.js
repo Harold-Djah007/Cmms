@@ -64,18 +64,19 @@
       const shut=!q&&collapsed.has(String(a.id));
       const work=activeWork(a).length;
       const isLocation=['Facility','Department','Room','Area','Production area'].includes(a.type);
+      const kind=isLocation?'location':a.type==='Tool'?'tool':'equipment';
       const relation=isLocation?(a.parentId?'Part of location':'Top-level facility'):a.partOfAssetId?'Part of equipment':a.locationId?'Located at':'Unplaced';
       const desc=a.description||`${relation} · ${a.category||a.type||'Asset'}`;
-      return `<div class="fx23-row ${ui.selectedAsset===a.id?'selected':''}" draggable="true" data-fx23-drag="${a.id}" data-fx23-drop="${a.id}" style="--depth:${Math.min(depth,9)}">
+      return `<div class="fx23-row ${ui.selectedAsset===a.id?'selected':''}" draggable="true" data-kind="${kind}" data-fx23-drag="${a.id}" data-fx23-drop="${a.id}" style="--depth:${Math.min(depth,9)}">
         <div class="fx23-cell fx23-location">
           <input class="fx23-check" type="checkbox" data-fx23-select="${a.id}" ${selected.has(String(a.id))?'checked':''} aria-label="Select ${esc(a.name)}">
           <button class="fx23-expand ${kids.length?'':'empty'}" type="button" ${kids.length?`data-fx23-toggle="${a.id}"`:''} aria-label="${shut?'Expand':'Collapse'} ${esc(a.name)}">${kids.length?(shut?'＋':'−'):''}</button>
-          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small>${esc(a.type)} · ${relation}${kids.length?` · ${kids.length} directly below`:''}</small></span></button>
+          <button class="fx23-asset-name" type="button" data-fx23-open="${a.id}"><span class="fx23-asset-icon">${typeIcon(a)}</span><span><strong>${esc(a.name)}</strong><small><b>${esc(a.type)}</b><i>${esc(relation)}</i>${kids.length?`<i>${kids.length} directly below</i>`:''}</small></span></button>
         </div>
         <div class="fx23-cell fx23-desc">${esc(desc)}</div>
         <div class="fx23-cell fx23-code"><strong>${esc(a.code)}</strong></div>
         <div class="fx23-cell fx23-state"><span class="fx23-state-pill ${a.operatingState==='Offline'?'offline':''}"><i></i>${esc(a.operatingState||'Unknown')}</span>${work?`<button type="button" data-fx23-open="${a.id}" class="fx23-work-pill">${work} open work</button>`:''}</div>
-        <div class="fx23-cell fx23-more"><button type="button" data-fx23-rowmenu="${a.id}" aria-label="Asset actions">•••</button></div>
+        <div class="fx23-cell fx23-more"><button type="button" data-fx23-rowmenu="${a.id}" aria-label="Asset actions">⋯</button></div>
       </div>${kids.length&&!shut?`<div class="fx23-children">${kids.map(k=>row(k,depth+1)).join('')}</div>`:''}`;
     }
     const html=roots().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).map(a=>row(a,0)).join('');
@@ -90,16 +91,23 @@
 
   function hierarchyView(){
     const s=site();
+    const online=assets().filter(a=>a.operatingState==='Online').length;
+    const offline=assets().filter(a=>a.operatingState==='Offline').length;
+    const openWork=assets().reduce((total,a)=>total+activeWork(a).length,0);
     return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
       +`<section class="fx23-shell card">
-        <div class="fx23-model"><strong>Build the hierarchy as it exists in the field</strong><div><span>Facility</span><b>›</b><span>Department / room</span><b>›</b><span>Equipment</span><b>›</b><span>Sub-component / tool</span></div><small>Use categories to group similar assets. Never create fake locations just to group asset types.</small></div>
+        <div class="fx23-model">
+          <div class="fx31-model-title"><span>⌘</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
+          <div class="fx31-flow"><span><i>01</i><b>Facility</b></span><em>›</em><span><i>02</i><b>Department / room</b></span><em>›</em><span><i>03</i><b>Equipment</b></span><em>›</em><span><i>04</i><b>Component / tool</b></span></div>
+          <small>Categories help with filtering. The tree should show only real locations and equipment relationships.</small>
+        </div>
         <div class="fx23-titlebar">
-          <div class="fx23-title"><span class="fx23-title-icon">▦</span><strong>Assets</strong></div>
-          <div class="fx23-filter"><b>Filter by</b><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
-          <div class="fx23-site"><small>Current site</small><strong>${esc(s?.name||'Workspace')}</strong></div>
+          <div class="fx23-title"><span class="fx23-title-icon">▦</span><div><strong>Asset structure</strong><small>${esc(s?.name||'Current workspace')}</small></div></div>
+          <div class="fx31-summary"><span><b>${assets().length}</b> assets</span><span class="online"><i></i><b>${online}</b> online</span><span class="offline"><i></i><b>${offline}</b> offline</span><span><b>${openWork}</b> open work</span></div>
+          <div class="fx23-filter"><label for="fx23Scope">Show</label><select id="fx23Scope"><option value="all" ${ui.assetScope==='all'?'selected':''}>All assets</option><option value="facilities" ${ui.assetScope==='facilities'?'selected':''}>Facilities & areas</option><option value="equipment" ${ui.assetScope==='equipment'?'selected':''}>Equipment</option><option value="tools" ${ui.assetScope==='tools'?'selected':''}>Tools</option></select><span>⌄</span></div>
         </div>
         <div class="fx23-subbar">
-          <div class="fx23-guidance"><strong>Follow the tree from left to right.</strong><span>Use + to reveal what sits below an asset. Select its name to open the full record.</span></div>
+          <div class="fx23-guidance"><strong>Explore the structure</strong><span>Expand a row to see what belongs beneath it. Select a name to open its record.</span></div>
           <div class="fx23-search"><span>⌕</span><input data-filter="asset" value="${esc(ui.assetSearch||'')}" placeholder="Find an asset, location or code"><button type="button" data-fx23-expand-all>Expand all</button><button type="button" data-fx23-collapse-all>Collapse all</button></div>
         </div>
         <div class="fx23-table">
