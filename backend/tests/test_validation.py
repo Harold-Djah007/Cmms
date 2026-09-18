@@ -71,3 +71,54 @@ def test_ledger_and_audit_are_append_only():
     with pytest.raises(HTTPException, match="append-only"):
         validate_state(after, before)
 
+
+
+def test_extended_cmms_relationships_are_validated_and_legacy_state_migrates():
+    state = valid_state()
+    # Extended collections are optional for old workspaces and are created by validation.
+    validate_state(state)
+    assert "projects" in state
+    assert "taskGroups" in state
+    assert "rfqs" in state
+    assert "businesses" in state
+
+    state["projects"].append({"id": "PROJ1", "siteId": "S1", "name": "Overhaul"})
+    state["taskGroups"].append({"id": "TG1", "name": "Service SOP", "tasks": []})
+    state["scheduledMaintenance"].append({
+        "id": "PM1",
+        "assetIds": ["A2"],
+        "assigneeGroupId": None,
+        "taskGroupId": "TG1",
+        "includeTaskGroupIds": ["TG1"],
+        "projectId": "PROJ1",
+        "requiredParts": [{"partId": "P1", "qty": 1}],
+        "triggers": [{"id": "TR1", "type": "Time", "nextDue": "2030-01-01"}],
+    })
+    state["workOrders"][0]["projectId"] = "PROJ1"
+    state["workOrders"][0]["parts"] = [{"partId": "P1", "planned": 1, "actual": 0}]
+    validate_state(state)
+
+
+@pytest.mark.parametrize("mutation", ["bad_project", "bad_pm_asset", "bad_bom_part", "bad_rfq_business"])
+def test_extended_relationships_reject_missing_references(mutation):
+    state = valid_state()
+    validate_state(state)
+    if mutation == "bad_project":
+        state["projects"].append({"id": "PROJ1", "siteId": "MISSING"})
+    elif mutation == "bad_pm_asset":
+        state["scheduledMaintenance"].append({
+            "id": "PM1", "assetIds": ["MISSING"], "triggers": [], "requiredParts": []
+        })
+    elif mutation == "bad_bom_part":
+        state["bomGroups"].append({"id": "BG1", "parts": [{"partId": "MISSING", "qty": 1}], "assetIds": []})
+    else:
+        state["rfqs"].append({"id": "RFQ1", "partId": "P1", "businessId": "MISSING"})
+    with pytest.raises(HTTPException):
+        validate_state(state)
+
+
+def test_notification_preferences_get_stable_legacy_ids():
+    state = valid_state()
+    state["userNotificationPreferences"] = [{"userId": "U1", "inApp": True, "email": True}]
+    validate_state(state)
+    assert state["userNotificationPreferences"][0]["id"] == "UNP-U1"
