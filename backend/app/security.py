@@ -43,7 +43,10 @@ async def require_identity(
             return identity
     if x_ms_client_principal_id and x_ms_client_principal_name:
         return Identity(x_ms_client_principal_id, x_ms_client_principal_name.lower(), x_ms_client_principal_name, "microsoft-entra")
-    if settings.dev_auth and request.client and request.client.host in {"127.0.0.1", "::1", "testclient"}:
+    if settings.dev_auth:
+        # Development auth is enabled only by explicit configuration. This must
+        # work when the browser reaches FastAPI through Docker's bridge network,
+        # where request.client.host is not necessarily 127.0.0.1.
         return Identity("local-development", settings.dev_user_email.lower(), "Local developer", "development")
     raise HTTPException(status_code=401, detail="Sign-in is required")
 
