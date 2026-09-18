@@ -4,7 +4,7 @@
 // Local storage is always the field cache. The shared API is used only after a successful capability probe.
 const SAFI_SYNC_QUEUE='safimaint-sync-queue-v1';
 const SAFI_CONFLICT_BACKUP='safimaint-conflict-backup-v1';
-const safiSync={mode:'device',revision:0,pending:[],busy:false,lastError:'',identity:null,apiAvailable:false,probed:false};
+const safiSync={mode:'device',revision:0,pending:[],busy:false,lastError:'',identity:null,permissions:[],apiAvailable:false,probed:false};
 const localSaveState=saveState;
 
 function syncLabel(){
@@ -146,6 +146,7 @@ async function startSync(){
   try{
     const session=await apiJson('/api/v1/session');
     safiSync.identity=session.identity;
+    safiSync.permissions=Array.isArray(session.permissions)?session.permissions:[];
     safiSync.revision=session.revision;
     try{
       await pullServer();
