@@ -1,0 +1,48 @@
+/* SafiMaintain Fiix parity workflows v47
+   Work-order browser controls, asset business/custom data and batch meter reading. */
+
+.v47-toolbar{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:9px 10px;border:1px solid #cbd7d2;border-bottom:0;
+  background:linear-gradient(#f8faf9,#eaf0ed);
+}
+.v47-toolbar .button{min-height:34px;height:34px}
+.v47-toolbar .grow{flex:1}
+.v47-filterbar{
+  display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(4,minmax(130px,.55fr));
+  gap:7px;padding:8px 10px;border:1px solid #cbd7d2;border-bottom:0;background:#f8faf9;
+}
+.v47-filterbar input,.v47-filterbar select{
+  min-width:0;height:36px;border:1px solid #cbd7d2;border-radius:5px;background:#fff;padding:0 9px;font-size:10px;
+}
+.v47-wo-head,.v47-wo-row{
+  display:grid;
+  grid-template-columns:34px minmax(250px,1.7fr) minmax(145px,.9fr) minmax(130px,.8fr) 95px 92px 112px 115px 105px;
+  align-items:center;min-width:1100px;
+}
+.v47-wo-head{min-height:34px;background:#e4ece8;border:1px solid #c9d5cf;color:#53645c;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+.v47-wo-head>div,.v47-wo-row>span{padding:7px 8px;min-width:0}
+.v47-wo-row{width:100%;border:0;border-left:1px solid #dfe6e2;border-right:1px solid #dfe6e2;border-bottom:1px solid #dfe6e2;background:#fff;text-align:left;color:#24332d;cursor:pointer;min-height:52px}
+.v47-wo-row:hover{background:#f4faf7}.v47-wo-row.selected{background:#eaf7f1;box-shadow:inset 3px 0 0 #16a36a}
+.v47-wo-row strong{display:block;font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v47-wo-row small{display:block;margin-top:2px;font-size:8px;color:#75847e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v47-select{width:15px;height:15px;accent-color:#16a36a}
+.v47-count{font-size:8.5px;color:#74837d;font-weight:800}
+.v47-business-list{overflow:auto}
+.v47-business-table{width:100%;border-collapse:collapse;min-width:720px}
+.v47-business-table th,.v47-business-table td{padding:8px 9px;border-bottom:1px solid #e0e6e3;border-right:1px solid #e4e9e7;text-align:left;font-size:8.8px}
+.v47-business-table th{background:#eef3f0;font-size:7.5px;text-transform:uppercase;letter-spacing:.4px;color:#687871}
+.v47-business-table strong{font-size:9px}.v47-business-table small{display:block;margin-top:2px;font-size:7.8px;color:#788780}
+.v47-primary{display:inline-flex;padding:3px 6px;border-radius:999px;background:#e8f7ef;color:#0b7951;font-size:7px;font-weight:900;text-transform:uppercase}
+.v47-custom-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.v47-custom-grid>div{padding:11px;border-right:1px solid #e0e6e3;border-bottom:1px solid #e0e6e3}
+.v47-custom-grid>div:nth-child(3n){border-right:0}.v47-custom-grid small{display:block;font-size:7.8px;color:#788780;text-transform:uppercase;font-weight:900;letter-spacing:.4px}.v47-custom-grid strong{display:block;margin-top:4px;font-size:10px;overflow-wrap:anywhere}
+.v47-batch-grid{display:grid;gap:7px}
+.v47-batch-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(90px,.5fr) minmax(120px,.65fr) minmax(160px,1fr);gap:8px;align-items:center;padding:8px;border:1px solid #dde5e1;border-radius:6px;background:#fff}
+.v47-batch-row strong{font-size:9.5px}.v47-batch-row small{display:block;font-size:7.8px;color:#788780}
+.v47-batch-row input{height:36px;border:1px solid #cad6d1;border-radius:5px;padding:0 8px;font-size:10px}
+.v47-meter-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.v47-meter-head .grow{flex:1}
+.v47-import-help{padding:9px 10px;border:1px solid #d7e3dd;background:#f3f8f5;border-radius:6px;font-size:9.5px;color:#607169;line-height:1.5}
+@media(max-width:950px){.v47-filterbar{grid-template-columns:repeat(2,minmax(0,1fr))}.v47-filterbar input{grid-column:1/-1}.v47-custom-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v47-custom-grid>div:nth-child(3n){border-right:1px solid #e0e6e3}.v47-custom-grid>div:nth-child(2n){border-right:0}}
+@media(max-width:650px){.v47-filterbar{grid-template-columns:1fr}.v47-filterbar input{grid-column:auto}.v47-toolbar{align-items:stretch}.v47-toolbar .button{flex:1}.v47-custom-grid{grid-template-columns:1fr}.v47-custom-grid>div{border-right:0!important}.v47-batch-row{grid-template-columns:1fr 1fr}.v47-batch-row>div:first-child{grid-column:1/-1}}
