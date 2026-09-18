@@ -158,6 +158,8 @@
     const pick=e.target.closest('[data-work-file-pick]');if(pick){e.preventDefault();e.stopImmediatePropagation();document.querySelector('[data-work-file-input="'+CSS.escape(pick.dataset.workFilePick)+'"]')?.click();return}
   },true);
 
+  document.getElementById('modal')?.addEventListener('close',()=>document.getElementById('modal')?.classList.remove('w38-modal','fx24-modal'));
+
   document.addEventListener('change',async e=>{
     const input=e.target.closest('[data-work-file-input]');if(!input||!input.files?.length)return;
     const files=[...input.files];input.disabled=true;
