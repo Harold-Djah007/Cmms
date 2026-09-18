@@ -18,7 +18,7 @@ OPTIONAL_COLLECTIONS = {
     "failureCodeDefinitions", "assetCategories", "priorityDefinitions", "maintenanceTypeDefinitions",
     "meterUnits", "workCustomFieldDefinitions", "assetCustomFieldDefinitions", "workflowRules",
     "integrationConnections", "savedReports", "importJobs", "exportJobs", "workSavedFilters",
-    "assetEventTypes", "userNotificationPreferences", "workStatusDefinitions",
+    "assetEventTypes", "userNotificationPreferences", "workStatusDefinitions", "inventoryLots",
 }
 
 COLLECTIONS = CORE_COLLECTIONS | OPTIONAL_COLLECTIONS
@@ -34,12 +34,13 @@ PERMISSIONS = {
     "vendors": {"vendor.manage", "purchase.manage"},
     "businesses": {"vendor.manage", "purchase.manage"},
     "parts": {"inventory.manage", "inventory.issue", "purchase.manage"},
+    "inventoryLots": {"inventory.manage", "inventory.issue", "purchase.manage"},
     "stockTransactions": {"inventory.manage", "inventory.issue", "purchase.manage"},
     "cycleCounts": {"inventory.count"},
     "bomGroups": {"inventory.manage"},
     "purchaseRequests": {"purchase.manage", "inventory.manage", "work.execute"},
     "rfqs": {"purchase.manage"},
-    "purchaseOrders": {"purchase.manage"},
+    "purchaseOrders": {"purchase.manage", "purchase.approve"},
     "receipts": {"purchase.manage", "inventory.manage"},
     "toolCrib": {"inventory.manage"},
     "workOrders": {"work.manage", "work.execute", "asset.state"},
@@ -70,6 +71,7 @@ PERMISSIONS = {
     "importJobs": {"admin.people"},
     "exportJobs": {"report.view"},
     "security": {"admin.people"},
+    "purchasingSettings": {"purchase.manage", "purchase.approve"},
 }
 
 APPEND_ONLY = {"stockTransactions", "audit"}
@@ -121,7 +123,7 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             pref["id"] = f"UNP-{pref['userId']}"
 
     changed = {
-        key for key in COLLECTIONS | {"security", "workSettings"}
+        key for key in COLLECTIONS | {"security", "workSettings", "purchasingSettings"}
         if previous is None or state.get(key) != previous.get(key)
     }
     ids = {name: _ids(state[name], name) for name in COLLECTIONS}
@@ -200,6 +202,17 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         _require(tx.get("partId"), part_ids, f"Stock transaction {tx['id']} references a missing part")
         _require(tx.get("storeId"), store_ids, f"Stock transaction {tx['id']} references a missing store")
         _require(tx.get("workOrderId"), work_ids, f"Stock transaction {tx['id']} references a missing work order")
+
+    for lot in state["inventoryLots"]:
+        _require(lot.get("partId"), part_ids, f"Inventory lot {lot['id']} references a missing part")
+        _require(lot.get("storeId"), store_ids, f"Inventory lot {lot['id']} references a missing store")
+        original = float(lot.get("qtyOriginal", 0) or 0)
+        remaining = float(lot.get("qtyRemaining", 0) or 0)
+        cost = float(lot.get("unitCost", 0) or 0)
+        if original < 0 or remaining < 0 or remaining > original:
+            _fail(f"Inventory lot {lot['id']} has invalid FIFO quantities")
+        if cost < 0:
+            _fail(f"Inventory lot {lot['id']} has a negative unit cost")
 
     for count in state["cycleCounts"]:
         _require(count.get("partId"), part_ids, f"Cycle count {count['id']} references a missing part")
@@ -450,6 +463,35 @@ def _work_execution_only(current: list, previous: list) -> bool:
     return True
 
 
+def _inventory_lot_issue_only(current: list, previous: list) -> bool:
+    if not _same_ids(current, previous):
+        return False
+    old = _record_map(previous)
+    for lot in current:
+        before = old[lot["id"]]
+        allowed = {"qtyRemaining"}
+        if any(lot.get(key) != before.get(key) for key in set(lot) | set(before) if key not in allowed):
+            return False
+        if float(lot.get("qtyRemaining", 0) or 0) > float(before.get("qtyRemaining", 0) or 0):
+            return False
+    return True
+
+
+def _po_approval_only(current: list, previous: list) -> bool:
+    if not _same_ids(current, previous):
+        return False
+    old = _record_map(previous)
+    allowed = {"status", "approvalStatus", "approvedBy", "approvedAt"}
+    for po in current:
+        before = old[po["id"]]
+        if any(po.get(key) != before.get(key) for key in set(po) | set(before) if key not in allowed):
+            return False
+        if before.get("status") != "Awaiting Approval" or po.get("status") != "Approved":
+            if po != before:
+                return False
+    return True
+
+
 def _new_purchase_requests_only(current: list, previous: list) -> bool:
     old = _record_map(previous)
     now = _record_map(current)
@@ -495,6 +537,21 @@ def authorize_changes(
     if "parts" in changed and not (permissions & {"inventory.manage", "purchase.manage"}):
         if "inventory.issue" not in permissions or not _part_issue_only(current["parts"], previous.get("parts", [])):
             raise HTTPException(status_code=403, detail="Inventory issue permission may only change on-hand quantity")
+
+    if "inventoryLots" in changed and not (permissions & {"inventory.manage", "purchase.manage"}):
+        if "inventory.issue" not in permissions or not _inventory_lot_issue_only(
+            current["inventoryLots"], previous.get("inventoryLots", [])
+        ):
+            raise HTTPException(status_code=403, detail="Inventory issue permission may only consume existing FIFO lots")
+
+    if "purchaseOrders" in changed and "purchase.manage" not in permissions:
+        if "purchase.approve" not in permissions or not _po_approval_only(
+            current["purchaseOrders"], previous.get("purchaseOrders", [])
+        ):
+            raise HTTPException(status_code=403, detail="Purchase approval permission may only approve awaiting purchase orders")
+
+    if "purchasingSettings" in changed and "purchase.manage" not in permissions:
+        raise HTTPException(status_code=403, detail="Only purchasing managers can change purchasing policy")
 
     if "workOrders" in changed and "work.manage" not in permissions:
         if "work.execute" not in permissions or not _work_execution_only(current["workOrders"], previous.get("workOrders", [])):
