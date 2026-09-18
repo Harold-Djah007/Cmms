@@ -259,7 +259,12 @@
   function awardRFQ(id){
     const r=state.rfqs.find(x=>x.id===id),p=r&&getPart(r.partId),b=r&&state.businesses.find(x=>x.id===r.businessId);if(!r||!p)return;
     const legacyVendor=(b?.sourceVendorId&&getVendor(b.sourceVendorId))||state.vendors.find(v=>v.name===b?.name)||state.vendors[0];
-    const po={id:uid('PO'),vendorId:legacyVendor?.id||null,businessId:b?.id||null,status:'Ordered',createdAt:iso(),expectedDate:day(Number(r.leadDays||7)),lines:[{partId:p.id,qty:Number(r.qty||0),unitCost:Number(r.quoteAmount||0)/Math.max(1,Number(r.qty||1)),receivedQty:0}],sourceRequestIds:[],sourceRfqId:r.id};state.purchaseOrders.unshift(po);r.status='Awarded';r.purchaseOrderId=po.id;addAudit('RFQ_AWARDED',r.id,po.id);saveState();render();toast(po.id+' created')
+    const lines=[{partId:p.id,qty:Number(r.qty||0),unitCost:Number(r.quoteAmount||0)/Math.max(1,Number(r.qty||1)),receivedQty:0}];
+    const po=typeof window.safiCreatePurchaseOrder==='function'
+      ?window.safiCreatePurchaseOrder({businessId:b?.id||null,vendorId:legacyVendor?.id||null,lines,sourceRfqId:r.id,expectedDate:day(Number(r.leadDays||7))})
+      :{id:uid('PO'),vendorId:legacyVendor?.id||null,businessId:b?.id||null,status:'Ordered',createdAt:iso(),expectedDate:day(Number(r.leadDays||7)),lines,sourceRequestIds:[],sourceRfqId:r.id};
+    if(!state.purchaseOrders.includes(po))state.purchaseOrders.unshift(po);
+    r.status='Awarded';r.purchaseOrderId=po.id;addAudit('RFQ_AWARDED',r.id,po.id);saveState();render();toast(po.id+' created'+(po.status==='Awaiting Approval'?' · approval required':''))
   }
   function showGroup(){
     openModal({eyebrow:'People & access',title:'Create group',submitText:'Create group',body:'<div class="form-grid">'+field('name','Group name','',{required:true})+field('managerId','Manager','',{type:'select',options:[{value:'',label:'No manager'},...state.users.filter(u=>u.active).map(u=>({value:u.id,label:u.name}))]})+'</div>',onSubmit:fd=>{const g={id:uid('GRP'),name:String(fd.get('name')),managerId:String(fd.get('managerId')||'')||null,siteIds:state.sites.map(s=>s.id)};state.groups.push(g);addAudit('GROUP_CREATED',g.id,g.name);saveState();closeModal();render();toast('Group created')}})
