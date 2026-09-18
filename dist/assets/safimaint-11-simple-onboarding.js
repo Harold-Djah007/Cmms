@@ -7,7 +7,7 @@ function freshWorkspace(){
     meta:{version:APP_VERSION,createdAt:iso(),freshWorkspace:true,onboardingComplete:false},
     sites:[],stores:[],
     roles:[
-      {id:'ROLE-OPS',name:'Operations manager',permissions:['asset.view','asset.edit','asset.state','work.view','work.manage','work.execute','pm.manage','inventory.view','inventory.manage','inventory.count','inventory.issue','purchase.view','purchase.manage','vendor.manage','admin.people','admin.notifications','report.view']},
+      {id:'ROLE-OPS',name:'Operations manager',permissions:['asset.view','asset.edit','asset.state','work.view','work.manage','work.execute','pm.manage','inventory.view','inventory.manage','inventory.count','inventory.issue','purchase.view','purchase.manage','purchase.approve','vendor.manage','admin.people','admin.notifications','report.view']},
       {id:'ROLE-PLANNER',name:'Maintenance planner',permissions:['asset.view','asset.edit','asset.state','work.view','work.manage','work.execute','pm.manage','inventory.view','inventory.count','purchase.view','purchase.manage','report.view']},
       {id:'ROLE-TECH',name:'Technician',permissions:['asset.view','asset.state','work.view','work.execute','inventory.view','inventory.issue']},
       {id:'ROLE-STORE',name:'Storekeeper',permissions:['asset.view','work.view','inventory.view','inventory.manage','inventory.count','purchase.view']},
