@@ -91,7 +91,7 @@
     const q=ui.v55SearchQuery||'';
     return '<div class="v55-search-page">'+pageHead('Global','Search','Search operational records across the connected maintenance system.')+
       '<div class="v55-search-box"><input id="v55FullSearch" value="'+esc(q)+'" placeholder="Search codes, names, work orders, suppliers, users…"><button class="button" data-v55-clear-search>Clear</button></div>'+
-      (q.trim().length>=2?groupedSearchHtml(q,50):'<div class="v50-empty"><strong>Start with any record identifier</strong><span>Examples: pump, WO-12, bearing, contractor, purchase order or technician name.</span></div>')+'</div>';
+      '<div data-v55-full-results>'+(q.trim().length>=2?groupedSearchHtml(q,50):'<div class="v50-empty"><strong>Start with any record identifier</strong><span>Examples: pump, WO-12, bearing, contractor, purchase order or technician name.</span></div>')+'</div></div>';
   }
 
   const reportDefs={
@@ -218,7 +218,7 @@
   }
 
   document.addEventListener('input',e=>{
-    if(e.target.id==='v55FullSearch'){ui.v55SearchQuery=e.target.value;render()}
+    if(e.target.id==='v55FullSearch'){ui.v55SearchQuery=e.target.value;const box=document.querySelector('[data-v55-full-results]');if(box)box.innerHTML=ui.v55SearchQuery.trim().length>=2?groupedSearchHtml(ui.v55SearchQuery,50):'<div class="v50-empty"><strong>Start with any record identifier</strong><span>Examples: pump, WO-12, bearing, contractor, purchase order or technician name.</span></div>'}
   },true);
   document.addEventListener('change',e=>{
     if(e.target.matches('[data-v55-report-from]')){ui.v55ReportFrom=e.target.value;render()}
