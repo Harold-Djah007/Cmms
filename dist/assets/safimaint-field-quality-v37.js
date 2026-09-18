@@ -144,10 +144,18 @@
       if(!live.querySelector('.sm37-instrument-foot')){const foot=document.createElement('span');foot.className='sm37-instrument-foot';live.appendChild(foot)}
     });
   }
+  let lastAnimatedRoute=null;
   function animatePage(){
     const view=document.getElementById('appView');if(!view)return;
-    view.classList.remove('sm37-page-enter');void view.offsetWidth;view.classList.add('sm37-page-enter');
-    clearTimeout(pageTimer);pageTimer=setTimeout(()=>view.classList.remove('sm37-page-enter'),420);
+    const route=String(ui?.route||'');
+    if(route===lastAnimatedRoute)return;
+    lastAnimatedRoute=route;
+    view.classList.remove('sm37-page-enter');
+    requestAnimationFrame(()=>{
+      view.classList.add('sm37-page-enter');
+      clearTimeout(pageTimer);
+      pageTimer=setTimeout(()=>view.classList.remove('sm37-page-enter'),260);
+    });
   }
   let scheduled=false;
   function decorate(){
