@@ -85,13 +85,30 @@
     const triggers=(pm.triggers||[]).filter(t=>t.active);if(!triggers.length)return false;
     const checks=triggers.map(t=>triggerSatisfied(pm,t));return pm.triggerLogic==='ALL'?checks.every(Boolean):checks.some(Boolean);
   }
+  window.safiPmReady=pmReady;
   function pmOpenWork(pm){return state.workOrders.filter(w=>w.source===pm.id&&control(w)!=='CLOSED')}
-  function taskSources(pm){
-    const groups=[...(pm.includeTaskGroupIds||[])];if(pm.taskGroupId&&!groups.includes(pm.taskGroupId))groups.push(pm.taskGroupId);
+  function nestedPlans(pm){return (pm.nestedPlanIds||[]).map(id=>state.scheduledMaintenance.find(x=>x.id===id)).filter(Boolean)}
+  function nestedWouldCycle(parentId,childIds){
+    const visit=(id,seen=new Set())=>{if(id===parentId)return true;if(seen.has(id))return false;seen.add(id);const p=state.scheduledMaintenance.find(x=>x.id===id);return (p?.nestedPlanIds||[]).some(cid=>visit(cid,seen))};
+    return childIds.some(id=>visit(id));
+  }
+  function taskSources(pm,seen=new Set()){
+    if(seen.has(pm.id))return[];seen.add(pm.id);
+    const groups=new Set(pm.includeTaskGroupIds||[]);if(pm.taskGroupId)groups.add(pm.taskGroupId);
     const tasks=[];
-    groups.forEach(gid=>{const g=state.taskGroups.find(x=>x.id===gid);(g?.tasks||[]).forEach(t=>tasks.push({...structuredClone(t),id:uid('T'),status:'Todo',result:null,resultNote:'',completedAt:null}))});
-    (pm.taskTemplate||[]).forEach(text=>tasks.push({id:uid('T'),text,type:'General',status:'Todo',assigneeId:null,assigneeGroupId:null,estimateHours:0,suggestedStart:null,result:null,resultNote:'',completedAt:null}));
+    groups.forEach(gid=>{const g=state.taskGroups.find(x=>x.id===gid);(g?.tasks||[]).forEach(t=>tasks.push({...structuredClone(t),id:uid('T'),status:'Todo',result:null,resultNote:'',completedAt:null,sourcePlanId:pm.id}))});
+    (pm.taskTemplate||[]).forEach(text=>tasks.push({id:uid('T'),text,type:'General',status:'Todo',assigneeId:null,assigneeGroupId:null,estimateHours:0,suggestedStart:null,result:null,resultNote:'',completedAt:null,sourcePlanId:pm.id}));
+    nestedPlans(pm).forEach(child=>tasks.push(...taskSources(child,seen)));
     return tasks;
+  }
+  function requiredPartsForPlan(pm,seen=new Set(),totals=new Map()){
+    if(seen.has(pm.id))return totals;seen.add(pm.id);
+    (pm.requiredParts||[]).forEach(x=>totals.set(x.partId,(totals.get(x.partId)||0)+Number(x.qty||0)));
+    nestedPlans(pm).forEach(child=>requiredPartsForPlan(child,seen,totals));
+    return [...totals.entries()].map(([partId,qty])=>({partId,qty}));
+  }
+  function coveredByReadyParent(pm){
+    return state.scheduledMaintenance.some(parent=>(parent.nestedPlanIds||[]).includes(pm.id)&&!parent.paused&&parent.status!=='Paused'&&parent.status!=='Archived'&&pmReady(parent));
   }
   function generatePMV52(id,manual=true){
     const pm=state.scheduledMaintenance.find(x=>x.id===id);if(!pm||pm.paused||pm.status==='Paused'||pm.status==='Archived'){toast('This maintenance plan is paused or inactive');return null}
@@ -100,14 +117,15 @@
     const assetIds=(pm.assetIds||[pm.assetId]).filter(Boolean),assets=assetIds.map(getAsset).filter(Boolean);if(!assets.length){toast('This plan has no valid assets');return null}
     const tasks=taskSources(pm),users=pm.assigneeGroupId?state.users.filter(u=>u.active&&(u.groupIds||[]).includes(pm.assigneeGroupId)).map(u=>u.id):[...new Set(assets.map(a=>a.ownerUserId).filter(Boolean))];
     const timeTrigger=(pm.triggers||[]).find(t=>t.type==='Time'&&t.active),due=timeTrigger?.nextDue&&/^\d{4}-\d{2}-\d{2}$/.test(timeTrigger.nextDue)?timeTrigger.nextDue:day(2);
-    const w={id:uid('WO'),title:pm.name,assetIds,type:'Preventive',priority:assets.some(a=>a.criticality==='A')?'High':'Medium',status:users.length?'Assigned':'Open',assigneeIds:users,assigneeGroupId:pm.assigneeGroupId||null,due,suggestedStart:day(0),actualStart:null,estimateHours:tasks.reduce((n,t)=>n+Number(t.estimateHours||0),0)||2,actualHours:0,source:pm.id,instructions:'Generated from scheduled maintenance '+pm.id+'.',tasks,parts:(pm.requiredParts||[]).map(x=>({partId:x.partId,planned:Number(x.qty||0),actual:0})),labor:[],miscCosts:[],failureCodes:{problem:'Not selected',cause:'Not selected',action:'Not selected'},failureNote:'',completionNote:'',customFields:{},projectId:pm.projectId||null,createdAt:iso(),completedAt:null,closedAt:null,closedBy:null,history:[{at:iso(),text:'Generated from '+pm.id+' using '+pm.triggerLogic+' trigger logic'}]};
+    const w={id:uid('WO'),title:pm.name,assetIds,type:'Preventive',priority:assets.some(a=>a.criticality==='A')?'High':'Medium',status:users.length?'Assigned':'Open',assigneeIds:users,assigneeGroupId:pm.assigneeGroupId||null,due,suggestedStart:day(0),actualStart:null,estimateHours:tasks.reduce((n,t)=>n+Number(t.estimateHours||0),0)||2,actualHours:0,source:pm.id,instructions:'Generated from scheduled maintenance '+pm.id+'.',tasks,parts:requiredPartsForPlan(pm).map(x=>({partId:x.partId,planned:Number(x.qty||0),actual:0})),labor:[],miscCosts:[],failureCodes:{problem:'Not selected',cause:'Not selected',action:'Not selected'},failureNote:'',completionNote:'',customFields:{},projectId:pm.projectId||null,createdAt:iso(),completedAt:null,closedAt:null,closedBy:null,history:[{at:iso(),text:'Generated from '+pm.id+' using '+pm.triggerLogic+' trigger logic'+((pm.nestedPlanIds||[]).length?' with '+pm.nestedPlanIds.length+' nested plan'+(pm.nestedPlanIds.length===1?'':'s'):'')}]};
     state.workOrders.unshift(w);pm.lastGenerated=iso();pm.generatedHistory=pm.generatedHistory||[];pm.generatedHistory.unshift({at:iso(),workOrderId:w.id,triggerSnapshot:(pm.triggers||[]).map(t=>({type:t.type,description:t.description||'',satisfied:triggerSatisfied(pm,t)}))});
     advanceTriggers(pm,w);
     dispatchEvent('Work order assigned',w.id+' assigned',w.title+' was generated from '+pm.id,{assetId:assetIds[0],assigneeIds:w.assigneeIds,relatedId:w.id});addAudit('PM_WORK_GENERATED',pm.id,w.id+' · '+assetIds.length+' assets · '+pm.triggerLogic);saveState();render();toast(w.id+' generated');return w;
   }
   function intervalDays(text){const m=String(text||'').match(/(\d+(?:\.\d+)?)\s*(?:day|days|d)\b/i);if(m)return Number(m[1]);const wk=String(text||'').match(/(\d+(?:\.\d+)?)\s*(?:week|weeks|w)\b/i);if(wk)return Number(wk[1])*7;const mo=String(text||'').match(/(\d+(?:\.\d+)?)\s*(?:month|months)\b/i);if(mo)return Number(mo[1])*30;return null}
   function plusDays(dateLike,n){const d=new Date(dateLike||iso());if(Number.isNaN(d.getTime()))return day(Number(n||0));d.setDate(d.getDate()+Number(n||0));return d.toISOString().slice(0,10)}
-  function advanceTriggers(pm,w){
+  function advanceTriggers(pm,w,seen=new Set()){
+    if(seen.has(pm.id))return;seen.add(pm.id);
     (pm.triggers||[]).forEach(t=>{
       if(!t.active)return;
       if(t.type==='Time'&&triggerSatisfied(pm,t)&&pm.scheduleMode!=='Floating'){const d=intervalDays(t.interval||t.description||pm.trigger);if(d)t.nextDue=plusDays(t.nextDue||day(0),d)}
@@ -115,6 +133,7 @@
       if(t.type==='Event')t.satisfied=false;
     });
     if(pm.scheduleMode==='Floating')pm.awaitingCompletionWorkOrderId=w.id;
+    nestedPlans(pm).filter(pmReady).forEach(child=>advanceTriggers(child,w,seen));
   }
   generatePM=generatePMV52;window.generatePM=generatePMV52;
 
@@ -127,14 +146,14 @@
         const assets=(pm.assetIds||[pm.assetId]).filter(Boolean),triggers=pm.triggers||[],groups=[...(pm.includeTaskGroupIds||[])];if(pm.taskGroupId&&!groups.includes(pm.taskGroupId))groups.push(pm.taskGroupId);
         return '<article class="v52-pm"><div class="v52-pm-head"><div><strong>'+esc(pm.id)+' · '+esc(pm.name)+'</strong><small>'+esc(pm.scheduleMode||'Fixed')+' cadence · '+esc(pm.triggerLogic||'ANY')+' trigger logic</small></div><div class="v52-asset-tags">'+assets.map(id=>'<span class="v52-asset-tag">'+esc(getAsset(id)?.code||id)+'</span>').join('')+'</div><div>'+status(pm.paused||pm.status==='Paused'?'Paused':'Active')+'<small>'+(pmReady(pm)?'Trigger condition met':'Waiting for trigger')+'</small></div><div class="v52-actions"><button class="button small" data-v52-edit-pm="'+esc(pm.id)+'">Edit</button><button class="button small" data-v52-toggle-pm="'+esc(pm.id)+'">'+(pm.paused||pm.status==='Paused'?'Resume':'Pause')+'</button><button class="button small primary" data-generate-pm="'+esc(pm.id)+'">Generate</button></div></div>'+
           '<div class="v52-pm-body"><div><h4>Triggers</h4>'+triggers.map(t=>'<div class="v52-trigger"><b>'+triggerLabel(t)+'</b><span><strong>'+esc(t.description||t.type)+'</strong><small>'+esc(t.type==='Time'?(t.nextDue||'No due date'):t.type==='Meter'?('threshold '+(t.threshold??t.nextDue??'—')):(t.eventType||'Any configured event'))+'</small></span><span>'+(triggerSatisfied(pm,t)?'READY':'WAIT')+'</span></div>').join('')+'<small>Logic: '+esc(pm.triggerLogic||'ANY')+'</small></div>'+
-          '<div><h4>Procedure & materials</h4><div class="v50-list-row"><span><strong>'+groups.length+' task group'+(groups.length===1?'':'s')+'</strong><small>'+esc(groups.map(id=>state.taskGroups.find(g=>g.id===id)?.name).filter(Boolean).join(', ')||'Inline tasks')+'</small></span></div><div class="v50-list-row"><span><strong>'+(pm.requiredParts||[]).length+' required parts</strong><small>'+esc((pm.requiredParts||[]).map(x=>(getPart(x.partId)?.code||x.partId)+' × '+x.qty).join(', ')||'None')+'</small></span></div></div>'+
+          '<div><h4>Procedure & materials</h4><div class="v50-list-row"><span><strong>'+groups.length+' task group'+(groups.length===1?'':'s')+'</strong><small>'+esc(groups.map(id=>state.taskGroups.find(g=>g.id===id)?.name).filter(Boolean).join(', ')||'Inline tasks')+'</small></span></div><div class="v50-list-row"><span><strong>'+(pm.requiredParts||[]).length+' direct required parts</strong><small>'+esc((pm.requiredParts||[]).map(x=>(getPart(x.partId)?.code||x.partId)+' × '+x.qty).join(', ')||'None')+'</small></span></div><div class="v50-list-row"><span><strong>'+(pm.nestedPlanIds||[]).length+' nested plan'+((pm.nestedPlanIds||[]).length===1?'':'s')+'</strong><small>'+esc(nestedPlans(pm).map(x=>x.name).join(' → ')||'None')+'</small></span></div></div>'+
           '<div><h4>Generation history</h4><div class="v52-pm-log">'+((pm.generatedHistory||[]).length?(pm.generatedHistory||[]).slice(0,6).map(h=>'<div><strong>'+esc(h.workOrderId)+'</strong><small>'+dateTimeFmt(h.at)+'</small></div>').join(''):'<small>No generated work yet.</small>')+'</div></div></div></article>';
       }).join(''):'<div class="v50-empty"><strong>No scheduled maintenance</strong><span>Create a plan with time, meter or event triggers.</span></div>')+'</div></div>';
   }
   renderPM=renderPMV52;window.renderPM=renderPMV52;
 
   function pmForm(existing){
-    const pm=existing||{assetIds:[],triggers:[],includeTaskGroupIds:[],requiredParts:[],triggerLogic:'ANY',scheduleMode:'Fixed',name:'',assigneeGroupId:null};
+    const pm=existing||{assetIds:[],triggers:[],includeTaskGroupIds:[],nestedPlanIds:[],requiredParts:[],triggerLogic:'ANY',scheduleMode:'Fixed',name:'',assigneeGroupId:null};
     const assets=state.assets.filter(a=>a.type!=='Site'&&safiSiteAllowed(a));
     openModal({eyebrow:'Scheduled maintenance',title:existing?'Edit '+pm.name:'Create scheduled maintenance',submitText:existing?'Save plan':'Create plan',body:'<div class="form-grid">'+
       field('name','Plan name',pm.name,{required:true,span:true})+
@@ -143,13 +162,14 @@
       field('assigneeGroupId','Default assigned group',pm.assigneeGroupId||'',{type:'select',options:[{value:'',label:'No default group'},...state.groups.map(g=>({value:g.id,label:g.name}))]})+
       '<div class="span-2"><label>Assets</label><div class="v52-check-grid">'+assets.map(a=>'<label class="v52-check"><input type="checkbox" name="assetIds" value="'+esc(a.id)+'" '+((pm.assetIds||[]).includes(a.id)?'checked':'')+'> '+esc(a.code)+' · '+esc(a.name)+'</label>').join('')+'</div></div>'+
       '<div class="span-2"><label>Task groups / SOPs</label><div class="v52-check-grid">'+state.taskGroups.filter(g=>g.status!=='Archived').map(g=>'<label class="v52-check"><input type="checkbox" name="taskGroupIds" value="'+esc(g.id)+'" '+((pm.includeTaskGroupIds||[]).includes(g.id)?'checked':'')+'> '+esc(g.name)+'</label>').join('')+'</div></div>'+
+      '<div class="span-2"><label>Nested maintenance plans</label><div class="v52-check-grid">'+state.scheduledMaintenance.filter(x=>x.status!=='Archived'&&x.id!==pm.id).map(x=>'<label class="v52-check"><input type="checkbox" name="nestedPlanIds" value="'+esc(x.id)+'" '+((pm.nestedPlanIds||[]).includes(x.id)?'checked':'')+'> '+esc(x.id)+' · '+esc(x.name)+'</label>').join('')+'</div><small class="muted">When this plan generates, nested plan tasks and required parts are folded into the same work order. A due nested plan will not generate a duplicate job at the same time.</small></div>'+
       field('inlineTasks','Additional tasks — one per line',(pm.taskTemplate||[]).join('\n'),{type:'textarea',span:true})+
       '<div class="span-2"><label>Triggers</label><div class="v52-builder" id="v52TriggerBuilder">'+triggerRows(pm.triggers)+'</div><button class="button small" type="button" data-v52-add-trigger>＋ Add trigger</button></div>'+
       '</div>',onSubmit:fd=>{
         const assets=fd.getAll('assetIds').map(String);if(!assets.length){toast('Select at least one asset');return}
         const triggers=readTriggerRows();if(!triggers.length){toast('Add at least one trigger');return}
         const rec=existing?pm:{id:uid('PM'),status:'Active',paused:false,lastGenerated:null,requiredParts:[],generatedHistory:[]};
-        rec.name=String(fd.get('name'));rec.assetIds=assets;rec.assetId=assets[0];rec.scheduleMode=String(fd.get('scheduleMode'));rec.triggerLogic=String(fd.get('triggerLogic'));rec.assigneeGroupId=String(fd.get('assigneeGroupId')||'')||null;rec.includeTaskGroupIds=fd.getAll('taskGroupIds').map(String);rec.taskGroupId=rec.includeTaskGroupIds[0]||null;rec.taskTemplate=String(fd.get('inlineTasks')||'').split('\n').map(x=>x.trim()).filter(Boolean);rec.triggers=triggers;const first=triggers[0];rec.triggerType=first.type;rec.trigger=first.description;rec.nextDue=first.nextDue||String(first.threshold??'');
+        rec.name=String(fd.get('name'));rec.assetIds=assets;rec.assetId=assets[0];rec.scheduleMode=String(fd.get('scheduleMode'));rec.triggerLogic=String(fd.get('triggerLogic'));rec.assigneeGroupId=String(fd.get('assigneeGroupId')||'')||null;rec.includeTaskGroupIds=fd.getAll('taskGroupIds').map(String);rec.taskGroupId=rec.includeTaskGroupIds[0]||null;rec.nestedPlanIds=fd.getAll('nestedPlanIds').map(String).filter(id=>id!==rec.id);if(nestedWouldCycle(rec.id,rec.nestedPlanIds)){toast('Nested maintenance would create a circular plan relationship');return}rec.taskTemplate=String(fd.get('inlineTasks')||'').split('\n').map(x=>x.trim()).filter(Boolean);rec.triggers=triggers;const first=triggers[0];rec.triggerType=first.type;rec.trigger=first.description;rec.nextDue=first.nextDue||String(first.threshold??'');
         if(!existing)state.scheduledMaintenance.unshift(rec);addAudit(existing?'PM_PLAN_UPDATED':'PM_PLAN_CREATED',rec.id,rec.name+' · '+rec.assetIds.length+' assets · '+rec.triggerLogic);saveState();closeModal();render();toast(existing?'Plan updated':'Plan created');
       }});
   }
@@ -162,7 +182,7 @@
   }
 
   function evaluateDuePlans(){
-    let generated=0;state.scheduledMaintenance.filter(pm=>!pm.paused&&pm.status!=='Paused'&&pm.status!=='Archived').forEach(pm=>{if(pmReady(pm)&&!pmOpenWork(pm).length){if(generatePMV52(pm.id,false))generated++}});return generated
+    let generated=0;state.scheduledMaintenance.filter(pm=>!pm.paused&&pm.status!=='Paused'&&pm.status!=='Archived').forEach(pm=>{if(pmReady(pm)&&!pmOpenWork(pm).length&&!coveredByReadyParent(pm)){if(generatePMV52(pm.id,false))generated++}});return generated
   }
 
   const previousDispatch=dispatchEvent;
@@ -171,7 +191,7 @@
     if(event==='Asset event recorded'&&context.assetId){
       state.scheduledMaintenance.filter(pm=>!pm.paused&&pm.status!=='Paused'&&(pm.assetIds||[pm.assetId]).includes(context.assetId)).forEach(pm=>{
         (pm.triggers||[]).filter(t=>t.active&&t.type==='Event').forEach(t=>{const needle=String(t.eventType||t.description||'').toLowerCase();if(!needle||[title,message].join(' ').toLowerCase().includes(needle))t.satisfied=true});
-        if(pmReady(pm)&&!pmOpenWork(pm).length)generatePMV52(pm.id,false);
+        if(pmReady(pm)&&!pmOpenWork(pm).length&&!coveredByReadyParent(pm))generatePMV52(pm.id,false);
       });
     }
   };
