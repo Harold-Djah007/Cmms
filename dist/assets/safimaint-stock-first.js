@@ -37,18 +37,16 @@
   function isCritical(p){return onHand(p)===0&&Number(p.min||0)>0}
   function can(permission){return !permission||typeof safiCan!=='function'||safiCan(permission)}
   function currentRoute(route){
-    if(route==='dashboard')return ui.route==='dashboard';
-    if(route==='inventory')return ['inventory','transactions','counts','planning','stock-locations','inventory-costing','bom-groups','parts-forecaster'].includes(ui.route);
-    if(route==='assets')return ['assets','asset-register','facilities','equipment','tools','meters','downtime','asset-events'].includes(ui.route);
-    if(route==='work-orders')return ['work-orders','requests','calendar','pm','task-groups','projects','field-home'].includes(ui.route);
-    if(route==='reports')return ['reports','analytics','reliability','maintenance-outlook','failure-analysis','work-insights'].includes(ui.route);
-    if(route==='security')return ['security','sites','roles','permissions','notifications','workflows','import','export','audit','localization','sync-center','people','groups'].includes(ui.route);
+    // This is a flat task navigation, not an expandable parent/child menu.
+    // Highlight only the exact page so Stockroom and Stock movements can never
+    // both look selected at the same time.
     return ui.route===route
   }
 
   function navItem(route,label,icon,badge='',permission=''){
     if(!can(permission))return'';
-    return '<button class="sf-nav-item '+(currentRoute(route)?'active':'')+'" data-route="'+route+'"><span class="nav-icon">'+sfIcon(icon)+'</span><span>'+label+'</span>'+(badge?'<b id="'+badge+'"></b>':'')+'</button>'
+    const active=currentRoute(route);
+    return '<button class="sf-nav-item '+(active?'active':'')+'" data-route="'+route+'"'+(active?' aria-current="page"':'')+'><span class="nav-icon">'+sfIcon(icon)+'</span><span>'+label+'</span>'+(badge?'<b id="'+badge+'"></b>':'')+'</button>'
   }
   function stockNavigation(){
     const nav=document.getElementById('navigation');if(!nav)return;

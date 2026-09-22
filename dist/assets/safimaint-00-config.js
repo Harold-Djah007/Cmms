@@ -1,7 +1,7 @@
 'use strict';
 const STORAGE_KEY = 'safimaint-simple-v7';
 let CURRENT_USER = 'U-1';
-const APP_VERSION = '9.1.0-flux';
+const APP_VERSION = '9.2.1-asset-command-centre';
 
 const iso = () => new Date().toISOString();
 const day = offset => {

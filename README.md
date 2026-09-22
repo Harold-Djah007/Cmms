@@ -131,6 +131,8 @@ for file in dist/assets/*.js dist/service-worker.js; do node --check "$file"; do
 node tests/demo_inventory_regression.js
 node tests/stock_first_redesign_regression.js
 node tests/shared_bootstrap_regression.js
+node tests/asset_record_v72_regression.js
+node tests/asset_record_v72_smoke.js
 ```
 
 ## Recommended acceptance test

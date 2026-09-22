@@ -15,7 +15,7 @@ assert.ok(!indexSource.includes('safimaint-demo-workspace-v67.js'));
 assert.ok(!serviceWorkerSource.includes("'./assets/safimaint-demo-workspace-v67.js'"));
 assert.match(serviceWorkerSource,/safimaint-flux-v71/);
 assert.match(indexSource,/safimaint-stock-first\.css\?v=70/);
-assert.match(indexSource,/safimaint-stock-first\.js\?v=70/);
+assert.match(indexSource,/safimaint-stock-first\.js\?v=73/);
 assert.match(indexSource,/safimaint-flux-v71\.css\?v=71/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.css/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.js/);

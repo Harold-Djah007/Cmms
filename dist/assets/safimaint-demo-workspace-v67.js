@@ -94,7 +94,7 @@
     state=demoState();
     ui.selectedAsset='CHP-01';
     ui.selectedPart='PRT-4';
-    ui.assetRecordTab='details';
+    ui.assetRecordTab='general';
     ui.v66PartTab='stock';
     localStorage.setItem(DEMO_FLAG,'1');
     saveState();
