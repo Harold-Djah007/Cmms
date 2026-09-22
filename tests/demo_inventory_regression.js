@@ -13,7 +13,11 @@ const assetHierarchySource=fs.readFileSync('dist/assets/safimaint-fiix-operating
 assert.equal((indexSource.match(/safimaint-demo-v67\.js/g)||[]).length,1);
 assert.ok(!indexSource.includes('safimaint-demo-workspace-v67.js'));
 assert.ok(!serviceWorkerSource.includes("'./assets/safimaint-demo-workspace-v67.js'"));
-assert.match(serviceWorkerSource,/safimaint-demo-workspace-v68/);
+assert.match(serviceWorkerSource,/safimaint-stock-first-v69/);
+assert.match(indexSource,/safimaint-stock-first\.css\?v=69/);
+assert.match(indexSource,/safimaint-stock-first\.js\?v=69/);
+assert.match(serviceWorkerSource,/safimaint-stock-first\.css/);
+assert.match(serviceWorkerSource,/safimaint-stock-first\.js/);
 assert.match(assetHierarchySource,/class="safi-hierarchy-svg"/);
 assert.match(assetHierarchySource,/assetTypeIcon\('Facility'\)/);
 assert.match(assetHierarchySource,/assetTypeIcon\('Equipment'\)/);

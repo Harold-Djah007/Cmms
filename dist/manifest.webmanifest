@@ -1,13 +1,13 @@
 {
   "name": "SafiMaintain CMMS",
   "short_name": "SafiMaintain",
-  "description": "Field-first maintenance operations for work orders, assets, PM, meters, requests and spare parts.",
+  "description": "Stock-first maintenance operations for cycle counts, parts, assets, work orders and preventive maintenance.",
   "start_url": "./#/dashboard",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f1f5f8",
-  "theme_color": "#111b26",
+  "background_color": "#f2f5f7",
+  "theme_color": "#0b1726",
   "categories": [
     "business",
     "productivity",
@@ -23,10 +23,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Work orders",
-      "short_name": "Work",
-      "description": "Open the maintenance work board",
-      "url": "./#/work-orders"
+      "name": "Stockroom",
+      "short_name": "Stock",
+      "description": "Open parts and stock levels",
+      "url": "./#/inventory"
     },
     {
       "name": "Asset register",
@@ -35,10 +35,10 @@
       "url": "./#/assets"
     },
     {
-      "name": "Maintenance requests",
-      "short_name": "Requests",
-      "description": "Review maintenance requests",
-      "url": "./#/requests"
+      "name": "Cycle counts",
+      "short_name": "Counts",
+      "description": "Count physical stock",
+      "url": "./#/counts"
     }
   ]
 }

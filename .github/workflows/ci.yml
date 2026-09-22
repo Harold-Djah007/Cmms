@@ -30,4 +30,6 @@ jobs:
             node --check "$file"
           done
       - name: Demo and stock workflow regression tests
-        run: node tests/demo_inventory_regression.js
+        run: |
+          node tests/demo_inventory_regression.js
+          node tests/stock_first_redesign_regression.js

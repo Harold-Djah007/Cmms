@@ -1,8 +1,19 @@
 # SafiMaintain CMMS
 
-SafiMaintain is Safisana Ghana's field-first maintenance management application.
+SafiMaintain is Safisana Ghana's stock-first maintenance management application.
 
-The current build has been reorganized around the **public operating model documented by Fiix CMMS** rather than around a dashboard template. It remains SafiMaintain-branded and does not copy Fiix source code, private architecture, or visual assets.
+The current build uses the **public operating model documented by Fiix CMMS** while giving daily priority to stock taking. It remains SafiMaintain-branded and does not copy Fiix source code, private architecture, or visual assets.
+
+## SafiMaintain 9 stock-first experience
+
+- Fiix-familiar dark navigation, information density, master-detail records, hierarchy and audit patterns.
+- A live stockroom control centre replaces the generic maintenance dashboard.
+- Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
+- Subtle animated shelves, stock scanner and conveyor background communicate live inventory activity.
+- The main part record has four clear areas: Stock levels, Cycle counts, Used on assets and Movement history.
+- Replenishment stops at a simple **Reorder list** for handoff to Safisana's external purchasing process.
+- SafiMaintain does **not** create purchase orders, RFQs or supplier orders.
+- Motion is disabled automatically for users who prefer reduced motion.
 
 ## Implemented operating model
 
@@ -23,17 +34,16 @@ The current build has been reorganized around the **public operating model docum
 - Asset log, work history, BOM, meter history and downtime history.
 - QR/barcode lookup with camera scanning where the browser supports `BarcodeDetector`, plus a manual code fallback.
 
-### Parts, stock taking and purchasing
+### Parts and stock taking
 - Parts master with category, UOM, unit cost, barcode, preferred vendor, min/max and reorder quantity.
 - Multiple store/bin locations per part.
 - Receipts, issues, transfers and adjustments.
 - Issues can be posted directly against a work order and update actual parts consumption on that work order.
 - Cycle counts retain expected, counted, variance, person and time.
 - Posting a variance creates the corresponding auditable stock adjustment.
-- Low-stock detection automatically creates a purchase request when no open request already exists.
-- Purchase planning board with approval.
-- Purchase-order creation from an approved request or manually.
-- PO receiving updates stock and closes linked demand.
+- Low-stock detection maintains an internal reorder signal when no open signal already exists.
+- A simple reorder list shows on-hand, min/max, suggested quantity, priority and preferred supplier.
+- Purchasing is completed outside SafiMaintain; there is no purchase-order creation workflow.
 - Separate durable-tool crib with check-in/check-out.
 
 ### Notifications and mail
@@ -124,12 +134,12 @@ for file in dist/assets/*.js dist/service-worker.js; do node --check "$file"; do
 2. Return it online with a completion note and verify the downtime record closes, the asset log updates, and alerts are created.
 3. Take it offline again with a reason and keep **Create a corrective work order** enabled.
 4. Open **Work orders** and verify the new corrective WO exists.
-5. Open **Parts & supplies**, select `MS-40-SS`, and issue one unit against the new WO.
-6. Confirm the WO's actual parts consumption increases and the part stays on the purchase-planning board when below minimum.
+5. Open **Stockroom**, select `MS-40-SS`, and issue one unit against the new WO.
+6. Confirm the WO's actual parts consumption increases and the part appears on the **Reorder list** when below minimum.
 7. Post a **Cycle count** with a variance and verify both count history and the stock transaction ledger.
-8. Approve a request on **Purchase planning**, create a PO, then receive it from **Purchase orders** and confirm on-hand stock rises.
-9. Open **Mail & alerts** and verify in-app messages, recipient resolution and the local email queue.
-10. Open **People & groups**, **Roles & permissions**, **Audit trail**, and **Security** and verify configuration and audit events.
+8. Open **Reorder list** and verify that no purchase-order action is available.
+9. Open **Alerts & mail** and verify in-app messages, recipient resolution and the local email queue.
+10. Open **People & teams**, **Administration**, **Audit trail**, and **Security** and verify configuration and audit events.
 11. Disconnect networking after the app has loaded once and confirm the application shell remains available.
 
 ## Remaining deployment boundary

@@ -11,8 +11,8 @@ SafiMaintain should behave as one connected maintenance system rather than separ
 3. Work orders contain tasks, assignees, instructions, notes, parts usage, failure data, files and history.
 4. Taking an asset offline creates downtime context and can create corrective work.
 5. Parts issued to work reduce stock and contribute to maintenance cost/history.
-6. Low stock creates purchasing demand.
-7. Purchase requests become purchase orders and receipts replenish inventory.
+6. Low stock creates a reorder signal for stock staff.
+7. Stock staff verify the quantity and hand the reorder list to the external purchasing process.
 8. Meter readings and scheduled maintenance generate preventive work.
 9. Notifications surface assignments, asset state and inventory events.
 10. Audit/history records who changed what and when.
@@ -106,7 +106,7 @@ Operators can submit requests with:
 
 Maintenance can triage and convert a request into a work order while retaining source history.
 
-## 6. Inventory, parts and purchasing
+## 6. Inventory and parts
 
 Parts records include:
 
@@ -129,11 +129,13 @@ Stock workflows include:
 - cycle counts
 - issue-to-work-order
 - low-stock alerts
-- automatic purchase demand
+- automatic reorder signals
 
-Purchasing follows:
+SafiMaintain deliberately ends at:
 
-Purchase request -> approval -> purchase order -> partial/full receipt -> stock update -> closed demand.
+Low stock -> physical count -> reorder list -> external purchasing process.
+
+Purchase orders, RFQs and supplier-order creation are outside SafiMaintain. This keeps storekeeping and maintenance familiar without recreating Fiix's procurement complexity.
 
 ## 7. Downtime and reliability
 
@@ -204,8 +206,8 @@ Implemented in the current SafiMaintain prototype:
 - meters
 - parts/stores/transactions/transfers
 - cycle counts
-- low-stock purchase demand
-- purchase requests / POs / receiving
+- low-stock reorder signals
+- stock-first control centre and external reorder list
 - vendors and tool crib
 - notification rules / in-app alerts / queued mail
 - per-person alert channels and relevant-asset scope
