@@ -29,3 +29,5 @@ jobs:
           for file in dist/assets/*.js dist/service-worker.js; do
             node --check "$file"
           done
+      - name: Demo and stock workflow regression tests
+        run: node tests/demo_inventory_regression.js
