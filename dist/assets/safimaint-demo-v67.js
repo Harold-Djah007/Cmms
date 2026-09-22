@@ -1,6 +1,17 @@
 'use strict';
 (function(){
-  const DEMO_VERSION=67;
+  const DEMO_VERSION=68;
+  const DEMO_FLAG='safimaint-demo-workspace-v68';
+  const DEMO_BACKUP='safimaint-pre-demo-backup-v68';
+  const LEGACY_BACKUPS=['safimaint-pre-demo-backup-v67'];
+  const DEFAULT_STATUSES=[
+    {id:'WST-REQUESTED',name:'Requested',control:'PENDING',color:'neutral',order:10},
+    {id:'WST-OPEN',name:'Open',control:'ACTIVE',color:'info',order:20},
+    {id:'WST-IP',name:'Work In Progress',control:'ACTIVE',color:'warn',order:30},
+    {id:'WST-PARTS',name:'Awaiting Parts',control:'ACTIVE',color:'warn',order:40},
+    {id:'WST-COMP',name:'Completed',control:'CLOSED',color:'good',order:90},
+    {id:'WST-CANCEL',name:'Cancelled',control:'CLOSED',color:'bad',order:100}
+  ];
 
   function clone(v){return typeof structuredClone==='function'?structuredClone(v):JSON.parse(JSON.stringify(v))}
   function currentIdentity(){
@@ -10,7 +21,7 @@
   function demoState(){
     const identity=currentIdentity(),base=freshWorkspace(),today=day(0);
     const s=base;
-    s.meta={version:APP_VERSION,createdAt:iso(),freshWorkspace:true,onboardingComplete:true,demoData:true,demoDataVersion:DEMO_VERSION,demoLoadedAt:iso()};
+    s.meta={version:APP_VERSION,createdAt:iso(),freshWorkspace:false,onboardingComplete:true,demo:true,demoVersion:DEMO_VERSION,demoData:true,demoDataVersion:DEMO_VERSION,demoLoadedAt:iso()};
     s.sites=[{id:'SITE-GH',name:'Safisana Ghana — Demo',code:'SSGH',region:'Greater Accra',timezone:'Africa/Accra',active:true}];
     s.stores=[
       {id:'STORE-MAIN',siteId:'SITE-GH',name:'Main Maintenance Store',code:'MAIN',location:'Operations block'},
@@ -83,7 +94,7 @@
       {id:'FC-BELT',problem:'Belt tracking',causes:[{id:'FC-BELT-ALIGN',name:'Pulley misalignment',actions:['Realign pulley','Replace pulley']}]}
     ];
     s.workOrders=[
-      {id:'WO-2502',title:'Replace feed pump mechanical seal',assetIds:['P-201'],type:'Corrective',priority:'Critical',status:'In Progress',assigneeIds:['U-3'],assigneeGroupId:'GRP-MAINT',due:today,estimateHours:3,actualHours:1.2,source:'Asset downtime',instructions:'Apply LOTO, replace mechanical seal, inspect coupling and complete operational test.',tasks:[{id:'T-21',text:'Apply isolation and verify zero energy',type:'General',status:'Done',assigneeId:'U-3'},{id:'T-22',text:'Replace mechanical seal',type:'General',status:'In Progress',assigneeId:'U-3'},{id:'T-23',text:'Operational test and leak check',type:'Inspection',status:'Todo',assigneeId:'U-3'}],parts:[{partId:'PRT-2',planned:1,actual:0}],labor:[{id:'LAB-1',userId:'U-3',hours:1.2,at:iso()}],createdAt:day(-1),completedAt:null,completionNote:'',failureCodes:{problem:'Leak',cause:'Seal failure',action:'Replace seal'},history:[{at:day(-1),text:'Created from asset downtime event'},{at:iso(),text:'Started by Kojo Arthur'}]},
+      {id:'WO-2502',title:'Replace feed pump mechanical seal',assetIds:['P-201'],type:'Corrective',priority:'Critical',status:'Work In Progress',assigneeIds:['U-3'],assigneeGroupId:'GRP-MAINT',due:today,estimateHours:3,actualHours:1.2,source:'Asset downtime',instructions:'Apply LOTO, replace mechanical seal, inspect coupling and complete operational test.',tasks:[{id:'T-21',text:'Apply isolation and verify zero energy',type:'General',status:'Done',assigneeId:'U-3'},{id:'T-22',text:'Replace mechanical seal',type:'General',status:'In Progress',assigneeId:'U-3'},{id:'T-23',text:'Operational test and leak check',type:'Inspection',status:'Todo',assigneeId:'U-3'}],parts:[{partId:'PRT-2',planned:1,actual:0}],labor:[{id:'LAB-1',userId:'U-3',hours:1.2,at:iso()}],createdAt:day(-1),completedAt:null,completionNote:'',failureCodes:{problem:'Leak',cause:'Seal failure',action:'Replace seal'},history:[{at:day(-1),text:'Created from asset downtime event'},{at:iso(),text:'Started by Kojo Arthur'}]},
       {id:'WO-2501',title:'CHP 10,000-hour service',assetIds:['CHP-01'],type:'Preventive',priority:'High',status:'Open',assigneeIds:['U-2','U-3'],assigneeGroupId:'GRP-MAINT',due:day(2),estimateHours:5,actualHours:0,source:'PM-CHP',instructions:'Complete 10,000-hour inspection, ignition checks and cabinet filter replacement.',tasks:[{id:'T-11',text:'Record engine hours',type:'Meter',status:'Todo',assigneeId:'U-3',meterId:'MTR-2'},{id:'T-12',text:'Inspect ignition system',type:'Inspection',status:'Todo',assigneeId:'U-3'},{id:'T-13',text:'Replace cabinet filter mats',type:'General',status:'Todo',assigneeId:'U-3'}],parts:[{partId:'PRT-4',planned:2,actual:0},{partId:'PRT-5',planned:4,actual:0}],labor:[],createdAt:day(-3),completedAt:null,history:[]},
       {id:'WO-2499',title:'Inspect dewatering belt tracking',assetIds:['DEW-01'],type:'Corrective',priority:'Medium',status:'Open',assigneeIds:['U-3'],assigneeGroupId:'GRP-MAINT',due:day(4),estimateHours:2,actualHours:0,source:'REQ-81',instructions:'Inspect belt tracking, rollers and pulley alignment.',tasks:[{id:'T-31',text:'Inspect belt tracking',type:'Inspection',status:'Todo',assigneeId:'U-3'}],parts:[{partId:'PRT-6',planned:1,actual:0}],labor:[],createdAt:day(-1),completedAt:null,history:[]},
       {id:'WO-2498',title:'Correct dewatering pulley alignment',assetIds:['DEW-01'],type:'Corrective',priority:'Medium',status:'Completed',assigneeIds:['U-3'],assigneeGroupId:'GRP-MAINT',due:day(-8),estimateHours:2,actualHours:1.7,source:'Inspection',instructions:'Realign drive pulley and verify belt tracking.',tasks:[{id:'T-41',text:'Realign drive pulley',type:'General',status:'Done',assigneeId:'U-3'}],parts:[{partId:'PRT-6',planned:1,actual:1}],labor:[{id:'LAB-2',userId:'U-3',hours:1.7,at:day(-8)}],createdAt:day(-10),completedAt:day(-8),completionNote:'Pulley alignment corrected and belt tracking verified.',failureCodes:{problem:'Belt tracking',cause:'Pulley misalignment',action:'Realign pulley'},history:[{at:day(-8),text:'Completed by Kojo Arthur'}]}
@@ -142,12 +153,7 @@
     s.exportJobs=[];
     s.workSavedFilters=[];
     s.assetEventTypes=[];
-    s.workStatusDefinitions=[
-      {id:'WST-OPEN',name:'Open',control:'ACTIVE'},
-      {id:'WST-IP',name:'In Progress',control:'ACTIVE'},
-      {id:'WST-COMP',name:'Completed',control:'CLOSED'},
-      {id:'WST-CANCEL',name:'Cancelled',control:'CLOSED'}
-    ];
+    s.workStatusDefinitions=clone(DEFAULT_STATUSES);
     s.notificationRules=[
       {id:'NR-1',event:'Asset taken offline',audiences:['Operations manager','Maintenance planner','Asset owner','Active WO assignees'],inApp:true,email:true},
       {id:'NR-2',event:'Stock below minimum',audiences:['Storekeeper','Procurement'],inApp:true,email:true},
@@ -171,41 +177,118 @@
     return s
   }
 
-  function loadDemo(){
-    if(!confirm('Load the SafiMaintain demo workspace? This replaces the current local test records with demo assets, work orders, parts, stock locations and purchasing data.'))return;
+  function isDemo(s=state){return Boolean(s?.meta?.demo||s?.meta?.demoData)}
+  function sparseWorkspace(s=state){
+    return (s?.assets?.length||0)<3&&(s?.workOrders?.length||0)<2&&(s?.parts?.length||0)<2
+  }
+  function repairDemoState(){
+    if(!isDemo())return false;
+    let changed=false;
+    state.meta=state.meta||{};
+    const metaPatch={freshWorkspace:false,onboardingComplete:true,demo:true,demoVersion:DEMO_VERSION,demoData:true,demoDataVersion:DEMO_VERSION};
+    Object.entries(metaPatch).forEach(([key,value])=>{if(state.meta[key]!==value){state.meta[key]=value;changed=true}});
+    ['sites','stores','groups','users','vendors','businesses','parts','assets','workOrders','pmSchedules','meters','meterReadings','stockTransactions','cycleCounts','purchaseRequests','purchaseOrders','rfqs','receipts','notifications','mailOutbox','audit','roles'].forEach(key=>{
+      if(!Array.isArray(state[key])){state[key]=[];changed=true}
+    });
+    if(!Array.isArray(state.workStatusDefinitions)||!state.workStatusDefinitions.length){
+      state.workStatusDefinitions=clone(DEFAULT_STATUSES);changed=true
+    }else{
+      state.workStatusDefinitions=state.workStatusDefinitions.map((item,index)=>{
+        const next={...item};
+        if(!next.id){next.id='WST-'+String(next.name||index).toUpperCase().replace(/[^A-Z0-9]+/g,'-');changed=true}
+        if(next.name==='In Progress'){next.name='Work In Progress';changed=true}
+        return next
+      });
+      DEFAULT_STATUSES.forEach(def=>{if(!state.workStatusDefinitions.some(x=>x.name===def.name)){state.workStatusDefinitions.push(clone(def));changed=true}})
+    }
+    state.workOrders.forEach(work=>{
+      if(work.status==='In Progress'){work.status='Work In Progress';changed=true}
+      work.assetIds=Array.isArray(work.assetIds)?work.assetIds:[];
+      work.tasks=Array.isArray(work.tasks)?work.tasks:[];
+      work.parts=Array.isArray(work.parts)?work.parts:[];
+      work.labor=Array.isArray(work.labor)?work.labor:[]
+    });
+    state.parts.forEach(part=>{
+      if(!Array.isArray(part.locations)){part.locations=[];changed=true}
+      part.locations.forEach(loc=>{
+        ['onHand','min','max'].forEach(key=>{const value=Number(loc[key]||0);if(loc[key]!==value){loc[key]=value;changed=true}})
+        if(loc.active===undefined){loc.active=true;changed=true}
+      })
+    });
+    if(!state.workSettings){state.workSettings={requireAllTasksOnClose:true,requireLaborOnClose:true,requireCompletionNote:true,requireFailureCodesForCorrective:true};changed=true}
+    if(!state.purchasingSettings){state.purchasingSettings={requirePoApproval:true,poApprovalThreshold:1000,autoRfqOnLowStock:true,costingMethod:'FIFO',defaultCurrency:'GHS'};changed=true}
+    localStorage.setItem(DEMO_FLAG,String(DEMO_VERSION));
+    if(changed)saveState();
+    return changed
+  }
+
+  function saveBackup(){
+    if(isDemo())return;
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw&&!localStorage.getItem(DEMO_BACKUP))localStorage.setItem(DEMO_BACKUP,raw)
+  }
+  function loadDemo(options={}){
+    const automatic=Boolean(options.automatic);
+    if(!automatic&&!confirm('Load the SafiMaintain demo workspace? Your current local workspace will be backed up first.'))return;
+    saveBackup();
     state=demoState();
     ui.selectedAsset='CHP-01';
-    ui.selectedPart='PRT-1';
+    ui.selectedPart='PRT-4';
     ui.assetView='hierarchy';
     ui.assetRecordTab='general';
     ui.v66PartTab='stock';
     ui.route='dashboard';
+    localStorage.setItem(DEMO_FLAG,String(DEMO_VERSION));
     saveState();
     document.body.classList.remove('first-run');
     simpleNavigation();
     if(typeof syncSimpleShell==='function')syncSimpleShell();
     render();
-    toast('Demo data loaded — start with Assets or Stock & parts')
+    if(!automatic)toast('Demo data loaded — start with Assets or Stock & parts')
+  }
+  function restorePrevious(){
+    const key=[DEMO_BACKUP,...LEGACY_BACKUPS].find(k=>localStorage.getItem(k));
+    if(!key){toast('No pre-demo workspace backup is available');return}
+    if(!confirm('Restore the workspace you had before loading demo data?'))return;
+    try{
+      const restored=JSON.parse(localStorage.getItem(key));
+      if(!restored||typeof restored!=='object')throw new Error('Invalid backup');
+      state=restored;
+      state.meta=state.meta||{};
+      state.meta.version=APP_VERSION;
+      localStorage.removeItem(DEMO_FLAG);
+      saveState();
+      ui.route='dashboard';
+      document.body.classList.toggle('first-run',!state.meta.onboardingComplete);
+      simpleNavigation();
+      if(typeof syncSimpleShell==='function')syncSimpleShell();
+      render();
+      toast('Your previous workspace was restored')
+    }catch(error){console.error('Could not restore demo backup',error);toast('The workspace backup could not be restored')}
   }
 
   const previousDashboard=renderDashboard;
   renderDashboard=function(){
     let html=previousDashboard();
-    const label=state.meta?.demoData?'Reload demo data':'Load demo data';
-    const button='<button class="button v67-demo-button" type="button" data-v67-load-demo>'+label+'</button>';
+    const demo=isDemo(),label=demo?'Reload demo data':'Load demo data';
+    const restore=demo?'<button class="button v67-demo-button" type="button" data-v67-restore-demo>Restore my data</button>':'';
+    const button='<button class="button v67-demo-button" type="button" data-v67-load-demo>'+label+'</button>'+restore;
     if(html.includes('v65-dashboard-actions'))html=html.replace('<div class="v65-dashboard-actions">','<div class="v65-dashboard-actions">'+button);
-    else html='<div class="v67-demo-note">Want realistic records for testing? <button class="button small v67-demo-button" data-v67-load-demo>'+label+'</button></div>'+html;
-    if(state.meta?.demoData)html='<div class="v67-demo-badge"><i></i>Demo workspace · v'+DEMO_VERSION+'</div>'+html;
+    else html='<div class="v67-demo-note">Use realistic maintenance records for testing. '+button+'</div>'+html;
+    if(demo)html='<div class="v67-demo-badge"><i></i>Demo workspace · v'+DEMO_VERSION+'</div>'+html;
     return html
   };
   window.renderDashboard=renderDashboard;
 
   document.addEventListener('click',e=>{
-    const b=e.target.closest('[data-v67-load-demo]');
-    if(!b)return;
-    e.preventDefault();e.stopImmediatePropagation();loadDemo()
+    const load=e.target.closest('[data-v67-load-demo]');
+    if(load){e.preventDefault();e.stopImmediatePropagation();loadDemo();return}
+    const restore=e.target.closest('[data-v67-restore-demo]');
+    if(restore){e.preventDefault();e.stopImmediatePropagation();restorePrevious()}
   },true);
 
-  window.SafiMaintainDemo={load:loadDemo,build:demoState};
+  window.SafiMaintainDemo={load:loadDemo,restore:restorePrevious,repair:repairDemoState,build:demoState};
+  if(isDemo())repairDemoState();
+  else if(sparseWorkspace()&&!localStorage.getItem(DEMO_FLAG))loadDemo({automatic:true});
   if(ui.route==='dashboard')render()
 })();
