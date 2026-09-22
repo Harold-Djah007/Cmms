@@ -6,6 +6,18 @@ const vm=require('node:vm');
 
 const demoSource=fs.readFileSync('dist/assets/safimaint-demo-v67.js','utf8');
 const stockSource=fs.readFileSync('dist/assets/safimaint-familiar-stock-v66.js','utf8');
+const indexSource=fs.readFileSync('dist/index.html','utf8');
+const serviceWorkerSource=fs.readFileSync('dist/service-worker.js','utf8');
+const assetHierarchySource=fs.readFileSync('dist/assets/safimaint-fiix-operating-model-v23.js','utf8');
+
+assert.equal((indexSource.match(/safimaint-demo-v67\.js/g)||[]).length,1);
+assert.ok(!indexSource.includes('safimaint-demo-workspace-v67.js'));
+assert.ok(!serviceWorkerSource.includes("'./assets/safimaint-demo-workspace-v67.js'"));
+assert.match(serviceWorkerSource,/safimaint-demo-workspace-v68/);
+assert.match(assetHierarchySource,/class="safi-hierarchy-svg"/);
+assert.match(assetHierarchySource,/assetTypeIcon\('Facility'\)/);
+assert.match(assetHierarchySource,/assetTypeIcon\('Equipment'\)/);
+assert.match(assetHierarchySource,/assetTypeIcon\('Tool'\)/);
 
 function demoContext(initialState){
   const memory=new Map();
