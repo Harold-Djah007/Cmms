@@ -65,7 +65,8 @@
     return '<div class="sf-warehouse" aria-hidden="true"><div class="sf-warehouse-head"><span>MAIN MAINTENANCE STORE</span><span><i></i> LIVE</span></div><div class="sf-shelf"><i class="sf-box a"></i><i class="sf-box b"></i><i class="sf-box c"></i><i class="sf-box d"></i></div><i class="sf-scan-beam"></i><i class="sf-conveyor"></i></div>'
   }
   function kpi(label,value,hint,route,icon,tone='',percent=70){
-    return '<button class="sf-kpi '+tone+'" data-route="'+route+'"><div class="sf-kpi-top"><span class="sf-kpi-icon">'+sfIcon(icon)+'</span></div><small>'+label+'</small><strong>'+value+'</strong><em>'+hint+'</em><span class="sf-kpi-bar"><i style="width:'+Math.max(3,Math.min(100,percent))+'%"></i></span></button>'
+    const motion={stock:'stock',alert:'alert',count:'count',work:'work',assets:'work'}[icon]||'stock',level=Math.max(3,Math.min(100,percent));
+    return '<button class="sf-kpi '+tone+'" data-motion="'+motion+'" data-route="'+route+'" style="--sf-kpi-level:'+level+'%"><div class="sf-kpi-top"><span class="sf-kpi-icon">'+sfIcon(icon)+'</span><span class="sf-kpi-live"><i></i>Live</span></div><span class="sf-kpi-copy"><small>'+label+'</small><strong>'+value+'</strong><em>'+hint+'</em></span><span class="sf-kpi-motion" aria-hidden="true"><i></i><b></b><u></u><s></s></span><span class="sf-kpi-bar"><i></i></span></button>'
   }
   function recentMovementDays(){
     const labels=[],values=[],today=new Date();

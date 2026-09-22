@@ -1,4 +1,4 @@
-const CACHE='safimaint-stock-first-v70';
+const CACHE='safimaint-flux-v71';
 const APP_SHELL=[
   './',
   './index.html',
@@ -43,6 +43,7 @@ const APP_SHELL=[
   './assets/safimaint-demo-workspace-v67.css',
   './assets/safimaint-demo-v67.css',
   './assets/safimaint-stock-first.css',
+  './assets/safimaint-flux-v71.css',
   './assets/safimaint-field-planner-v53.css',
   './assets/safimaint-lifecycle-v52.css',
   './assets/safimaint-spec-modules-v51.css',

@@ -6,6 +6,8 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 
 ## SafiMaintain 9 stock-first experience
 
+- The Flux visual system replaces the original flat shell with a floating navigation rail, glass command bar, animated ambient grid, larger variable-style typography and fluid page transitions.
+- Dashboard instruments use meaningful live motion: moving stock parcels, a low-stock beacon, a cycle-count scanner and a rotating maintenance mechanism.
 - Fiix-familiar dark navigation, information density, master-detail records, hierarchy and audit patterns.
 - A live stockroom control centre replaces the generic maintenance dashboard.
 - Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
