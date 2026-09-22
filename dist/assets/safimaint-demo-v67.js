@@ -288,7 +288,11 @@
   },true);
 
   window.SafiMaintainDemo={load:loadDemo,restore:restorePrevious,repair:repairDemoState,build:demoState};
-  if(isDemo())repairDemoState();
-  else if(sparseWorkspace()&&!localStorage.getItem(DEMO_FLAG))loadDemo({automatic:true});
+  // A previous failed sync could leave the demo marker behind while replacing
+  // its operational arrays with an empty/fresh workspace. Rebuild that state;
+  // repairing array shapes alone would still leave a dashboard full of zeros.
+  if(isDemo()&&sparseWorkspace())loadDemo({automatic:true});
+  else if(isDemo())repairDemoState();
+  else if(sparseWorkspace())loadDemo({automatic:true});
   if(ui.route==='dashboard')render()
 })();

@@ -71,7 +71,7 @@ Docker is the simplest way to run the UI, API, durable database and attachment s
 docker compose up --build
 ```
 
-Open `http://localhost:8000`. Data and uploaded files remain in the named `safimaint_data` volume.
+Open `http://localhost:8080`. Data and uploaded files remain in the named `safimaint_data` volume. The browser probes `/api/health`, so Docker on port 8080 enters Shared mode while a plain static server on the same port safely remains in Device mode.
 
 For backend development without Docker:
 
@@ -126,6 +126,9 @@ Back up both the SQLite database and attachment directory together. For a large 
 ```bash
 python -m pytest -q backend/tests
 for file in dist/assets/*.js dist/service-worker.js; do node --check "$file"; done
+node tests/demo_inventory_regression.js
+node tests/stock_first_redesign_regression.js
+node tests/shared_bootstrap_regression.js
 ```
 
 ## Recommended acceptance test

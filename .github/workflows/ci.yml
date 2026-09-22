@@ -33,3 +33,4 @@ jobs:
         run: |
           node tests/demo_inventory_regression.js
           node tests/stock_first_redesign_regression.js
+          node tests/shared_bootstrap_regression.js

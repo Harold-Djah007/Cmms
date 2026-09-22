@@ -1,4 +1,4 @@
-const CACHE='safimaint-stock-first-v69';
+const CACHE='safimaint-stock-first-v70';
 const APP_SHELL=[
   './',
   './index.html',

@@ -54,9 +54,10 @@ async function apiJson(path,options={}){
   return body;
 }
 function staticTestMode(){
-  const local=['localhost','127.0.0.1','::1'].includes(location.hostname);
-  const explicitShared=new URLSearchParams(location.search).get('shared')==='1'||localStorage.getItem('safimaint-shared-service')==='1';
-  return local&&location.port==='8080'&&!explicitShared;
+  // Never infer device mode from localhost:8080: Docker exposes the real API
+  // on that exact address. Plain static servers are detected by the health
+  // probe returning a non-JSON/404 response.
+  return new URLSearchParams(location.search).get('device')==='1'||localStorage.getItem('safimaint-force-device')==='1';
 }
 async function probeSharedService(){
   if(staticTestMode()||!navigator.onLine){safiSync.apiAvailable=false;safiSync.probed=true;return false}
@@ -87,8 +88,22 @@ function applyServerState(payload){
   const email=safiSync.identity?.email?.toLowerCase();
   const user=email&&state.users.find(u=>String(u.email||'').toLowerCase()===email);
   if(user)CURRENT_USER=user.id;
+  else if(safiSync.identity?.provider==='development')CURRENT_USER=state.users.find(u=>u.active)?.id||CURRENT_USER;
   localSaveState();
   render();
+}
+function sparseOperationalState(candidate){
+  return !candidate||((candidate.assets?.length||0)<3&&(candidate.parts?.length||0)<2&&(candidate.workOrders?.length||0)<2);
+}
+function shouldBootstrapDemo(payload){
+  // Development mode is the repository's acceptance-test workspace. It must
+  // stay populated even when an older volume contains a sparse/broken state.
+  return safiSync.identity?.provider==='development'&&sparseOperationalState(payload?.state);
+}
+function developmentDemoState(localCandidate){
+  if(localCandidate?.meta?.demo&&!sparseOperationalState(localCandidate))return structuredClone(localCandidate);
+  if(window.SafiMaintainDemo?.build)return window.SafiMaintainDemo.build();
+  return localCandidate;
 }
 async function pullServer(){
   const payload=await apiJson('/api/v1/state');
@@ -149,7 +164,22 @@ async function startSync(){
     safiSync.permissions=Array.isArray(session.permissions)?session.permissions:[];
     safiSync.revision=session.revision;
     try{
-      await pullServer();
+      const localCandidate=structuredClone(state);
+      const payload=await apiJson('/api/v1/state');
+      if(shouldBootstrapDemo(payload)){
+        const demo=developmentDemoState(localCandidate);
+        if(!demo||sparseOperationalState(demo))throw new Error('Demo workspace could not be prepared');
+        state=demo;
+        safiSync.revision=payload.revision;
+        const email=safiSync.identity?.email?.toLowerCase();
+        const user=email&&state.users.find(u=>String(u.email||'').toLowerCase()===email);
+        CURRENT_USER=user?.id||state.users.find(u=>u.active)?.id||CURRENT_USER;
+        localSaveState();
+        safiSync.pending=[{state:structuredClone(state),reason:'Initialize SafiMaintain demo workspace',queuedAt:iso()}];
+        localStorage.setItem(SAFI_SYNC_QUEUE,JSON.stringify(safiSync.pending));
+        await flushSync();
+        render();
+      }else applyServerState(payload);
     }catch(error){
       if(error.status!==404)throw error;
       safiSync.pending=[{state:structuredClone(state),reason:'Initialize SafiMaintain workspace',queuedAt:iso()}];

@@ -19,6 +19,9 @@
     const user=currentUser(),role=user&&getRole(user.roleId),local=new Set(role?.permissions||[]);
     if(typeof safiSync!=='undefined'&&safiSync.identity&&Array.isArray(safiSync.permissions)){
       const remote=new Set(safiSync.permissions);
+      // Docker development is explicitly trusted by the API. Keep the first
+      // shared render usable while the session permission list is refreshing.
+      if(safiSync.identity.provider==='development'&&remote.size===0)return new Set(['*']);
       if(remote.has('*'))return remote;
       // In device/fresh-workspace mode keep the locally configured role usable
       // until the shared identity maps to the same persisted user.

@@ -13,9 +13,9 @@ const assetHierarchySource=fs.readFileSync('dist/assets/safimaint-fiix-operating
 assert.equal((indexSource.match(/safimaint-demo-v67\.js/g)||[]).length,1);
 assert.ok(!indexSource.includes('safimaint-demo-workspace-v67.js'));
 assert.ok(!serviceWorkerSource.includes("'./assets/safimaint-demo-workspace-v67.js'"));
-assert.match(serviceWorkerSource,/safimaint-stock-first-v69/);
-assert.match(indexSource,/safimaint-stock-first\.css\?v=69/);
-assert.match(indexSource,/safimaint-stock-first\.js\?v=69/);
+assert.match(serviceWorkerSource,/safimaint-stock-first-v70/);
+assert.match(indexSource,/safimaint-stock-first\.css\?v=70/);
+assert.match(indexSource,/safimaint-stock-first\.js\?v=70/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.css/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.js/);
 assert.match(assetHierarchySource,/class="safi-hierarchy-svg"/);
@@ -77,6 +77,11 @@ assert.equal(legacy.state.workOrders[0].status,'Work In Progress');
 assert.ok(Array.isArray(legacy.state.stockTransactions));
 assert.ok(Array.isArray(legacy.state.parts[0].locations));
 assert.equal(typeof legacy.window.SafiMaintainDemo.restore,'function');
+
+const brokenDemo=demoContext({meta:{demo:true},assets:[],workOrders:[],parts:[],users:[]});
+assert.ok(brokenDemo.state.assets.length>=10);
+assert.ok(brokenDemo.state.parts.length>=6);
+assert.equal(brokenDemo.state.meta.demoVersion,68);
 
 function stockContext(){
   const context={
