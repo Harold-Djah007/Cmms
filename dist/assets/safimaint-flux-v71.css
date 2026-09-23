@@ -99,10 +99,10 @@ body:after{
   transition:transform .25s,border-color .25s,background .25s;
 }
 .site-card:hover{transform:translateY(-2px);border-color:rgba(80,224,196,.32);background:rgba(255,255,255,.1)}
-.site-card strong{font-size:12px}.site-card small{font-size:9px;color:#8da8b8}.site-mark{width:8px;height:8px;background:#29e0bd;box-shadow:0 0 0 5px rgba(41,224,189,.12),0 0 20px rgba(41,224,189,.7);animation:sfBeacon 2.1s ease-in-out infinite}
+.site-card strong{font-size:13px}.site-card small{font-size:10.5px;color:#9ab1c0}.site-mark{width:8px;height:8px;background:#29e0bd;box-shadow:0 0 0 5px rgba(41,224,189,.12),0 0 20px rgba(41,224,189,.7);animation:sfBeacon 2.1s ease-in-out infinite}
 #navigation{position:relative;flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:1px 2px 10px}
 #navigation::-webkit-scrollbar{display:none}
-.sf-nav{gap:3px}.sf-nav-label{padding:14px 13px 7px;color:#58758b;font-size:9px;letter-spacing:1.65px}
+.sf-nav{gap:3px}.sf-nav-label{padding:14px 13px 7px;color:#6e8799;font-size:10.5px;letter-spacing:1.45px}
 .sf-nav-item{
   position:relative;
   min-height:46px;
@@ -112,7 +112,7 @@ body:after{
   border:1px solid transparent;
   border-radius:14px;
   color:#9db0bf;
-  font-size:12px;
+  font-size:14px;
   font-weight:680;
   overflow:hidden;
   transition:color .22s,transform .22s,background .22s,border-color .22s;
@@ -125,11 +125,11 @@ body:after{
 .sf-nav-item .nav-icon{position:relative;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#7892a5;background:rgba(255,255,255,.045);transition:transform .3s,color .25s,background .25s}
 .sf-nav-item:hover .nav-icon{transform:rotate(-5deg) scale(1.08);color:#b9f4e7}
 .sf-nav-item.active .nav-icon{color:#4ce3c2;background:rgba(44,224,188,.13);box-shadow:inset 0 0 0 1px rgba(74,227,195,.12)}
-.sf-nav-item svg{width:18px;height:18px}.sf-nav-item>span:nth-child(2){position:relative}
+.sf-nav-item svg{width:20px;height:20px}.sf-nav-item>span:nth-child(2){position:relative}
 .sf-nav-note{margin:15px 5px 0;padding:13px 14px;border-radius:15px;background:linear-gradient(135deg,rgba(38,218,181,.1),rgba(78,111,255,.07));border-color:rgba(77,222,194,.15)}
-.sf-nav-note strong{font-size:10px;color:#cbfff3}.sf-nav-note span{font-size:9px;color:#7893a5}
+.sf-nav-note strong{font-size:11.5px;color:#cbfff3}.sf-nav-note span{font-size:10.5px;color:#8ba3b3}
 .sidebar-foot{position:relative;bottom:auto;margin:0 -13px -12px;padding:14px 18px 15px;background:rgba(3,13,23,.62);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.06)}
-.sidebar-foot strong{font-size:10px}.sidebar-foot small{font-size:9px;color:#6e8a9e}
+.sidebar-foot strong{font-size:11.5px}.sidebar-foot small{font-size:10.5px;color:#829cad}
 
 /* Floating command bar */
 .topbar{

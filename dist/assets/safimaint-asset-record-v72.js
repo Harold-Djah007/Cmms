@@ -42,14 +42,8 @@
     return '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="16" width="48" height="34" rx="6"/><path d="M18 16V9m28 7V9M18 50v7m28-7v7M17 28h30M17 38h20"/><circle class="accent" cx="46" cy="39" r="4"/></svg>';
   }
   function qr(code){
-    let seed=2166136261,n=17,out='';for(const c of String(code||'ASSET'))seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;
-    for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-      const zone=(x<5&&y<5)||(x>11&&y<5)||(x<5&&y>11);let on=false;
-      if(zone){const xx=x>11?x-12:x,yy=y>11?y-12:y;on=xx===0||xx===4||yy===0||yy===4||(xx>1&&xx<4&&yy>1&&yy<4)}
-      else{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;on=Boolean(seed&1)}
-      out+='<i'+(on?' class="on"':'')+'></i>';
-    }
-    return out;
+    if(!window.SafiQR)throw new Error('SafiMaintain QR encoder is not loaded');
+    return window.SafiQR.svg(String(code||'ASSET'),String(code||'ASSET'));
   }
   function empty(icon,title,text,action=''){
     return '<div class="ar72-empty"><span>'+icon+'</span><strong>'+esc(title)+'</strong><p>'+esc(text)+'</p>'+action+'</div>';
@@ -67,9 +61,12 @@
   function currentLocation(a){return getAsset(a.locationId)||(/facility|site|room|area/i.test(a.type||'')?parentOf(a):null)||parentOf(a)}
   function coordinates(a){return {lat:Number(a.latitude??5.7041),lng:Number(a.longitude??-0.0312)}}
   function plantMap(a){
-    const c=coordinates(a),location=currentLocation(a);
-    return '<div class="ar72-map" role="img" aria-label="Plant location map for '+esc(a.name)+'">'+
-      '<div class="ar72-map-grid"></div><div class="ar72-map-road r1"></div><div class="ar72-map-road r2"></div><div class="ar72-map-block b1">OPERATIONS</div><div class="ar72-map-block b2">STORES</div><div class="ar72-map-block b3">CHP</div><div class="ar72-map-marker"><i></i><span>'+esc(a.code)+'</span></div><div class="ar72-map-legend"><strong>'+esc(location?.name||a.location||'Location not assigned')+'</strong><span>'+c.lat.toFixed(5)+', '+c.lng.toFixed(5)+'</span></div><a href="https://www.google.com/maps?q='+c.lat+','+c.lng+'" target="_blank" rel="noopener">Open map ↗</a></div>';
+    const c=coordinates(a),location=currentLocation(a),expanded=ui.assetMapExpanded===a.id,online=typeof navigator==='undefined'||navigator.onLine!==false;
+    const pad=0.0022,bbox=[c.lng-pad,c.lat-pad,c.lng+pad,c.lat+pad].join('%2C');
+    const live=expanded&&online?'<iframe class="ar72-map-live" title="Live OpenStreetMap location for '+esc(a.name)+'" loading="lazy" referrerpolicy="no-referrer" src="https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&amp;layer=mapnik&amp;marker='+c.lat+'%2C'+c.lng+'"></iframe>':'';
+    return '<div class="ar72-map '+(expanded?'expanded':'compact')+'" aria-label="Location map for '+esc(a.name)+'">'+
+      '<div class="ar72-map-grid"></div><div class="ar72-map-road r1"></div><div class="ar72-map-road r2"></div><div class="ar72-map-block b1">OPERATIONS</div><div class="ar72-map-block b2">STORES</div><div class="ar72-map-block b3">CHP</div><div class="ar72-map-marker"><i></i><span>'+esc(a.code)+'</span></div>'+live+
+      '<div class="ar72-map-status"><i></i><span>'+(online?'Online map available':'Offline location preview')+'</span></div><div class="ar72-map-legend"><strong>'+esc(location?.name||a.location||'Location not assigned')+'</strong><span>'+c.lat.toFixed(5)+', '+c.lng.toFixed(5)+'</span></div><div class="ar72-map-actions"><button type="button" data-v72-map-toggle="'+esc(a.id)+'" aria-expanded="'+expanded+'">'+(expanded?'Collapse map':'Show live map')+'</button><a href="https://www.openstreetmap.org/?mlat='+c.lat+'&mlon='+c.lng+'#map=18/'+c.lat+'/'+c.lng+'" target="_blank" rel="noopener">Open full map ↗</a></div></div>';
   }
 
   function toolbar(a){
@@ -187,11 +184,12 @@
   }
   function printTag(a){
     const popup=window.open('','_blank','width=520,height=680');if(!popup){toast('Allow pop-ups to print the asset tag');return}
-    popup.document.write('<!doctype html><html><head><title>'+esc(a.code)+' asset tag</title><style>body{font-family:Arial;display:grid;place-items:center;min-height:90vh}.tag{width:320px;border:3px solid #0a1d31;border-radius:18px;padding:28px;text-align:center}.tag h1{font-size:38px;margin:12px}.tag p{font-size:18px}.qr{display:grid;grid-template-columns:repeat(17,1fr);width:210px;height:210px;margin:22px auto;background:#fff;padding:10px;border:1px solid #aaa}.qr i.on{background:#071522}.tag small{display:block;color:#567}</style></head><body><div class="tag"><b>SAFIMAINTAIN</b><h1>'+esc(a.code)+'</h1><p>'+esc(a.name)+'</p><div class="qr">'+qr(a.code)+'</div><small>Scan to open the asset record</small></div><script>window.onload=()=>window.print()<\/script></body></html>');popup.document.close();
+    popup.document.write('<!doctype html><html><head><title>'+esc(a.code)+' asset tag</title><style>body{font-family:Arial;display:grid;place-items:center;min-height:90vh}.tag{width:320px;border:3px solid #0a1d31;border-radius:18px;padding:28px;text-align:center}.tag h1{font-size:38px;margin:12px}.tag p{font-size:18px}.qr{width:230px;height:230px;margin:22px auto;background:#fff;border:1px solid #aaa}.qr svg{display:block;width:100%;height:100%}.tag small{display:block;color:#567}</style></head><body><div class="tag"><b>SAFIMAINTAIN</b><h1>'+esc(a.code)+'</h1><p>'+esc(a.name)+'</p><div class="qr">'+qr(a.code)+'</div><small>Scan with SafiMaintain to open this asset</small></div><script>window.onload=()=>window.print()<\/script></body></html>');popup.document.close();
   }
 
   document.addEventListener('click',e=>{
     const tab=e.target.closest('[data-v72-tab]');if(tab){e.preventDefault();e.stopImmediatePropagation();ui.assetRecordTab=tab.dataset.v72Tab;refresh();return}
+    const mapToggle=e.target.closest('[data-v72-map-toggle]');if(mapToggle){e.preventDefault();e.stopImmediatePropagation();const id=mapToggle.dataset.v72MapToggle;ui.assetMapExpanded=ui.assetMapExpanded===id?null:id;refresh();return}
     const location=e.target.closest('[data-v72-location]');if(location){e.preventDefault();e.stopImmediatePropagation();const a=getAsset(location.dataset.v72Location);if(a)editLocation(a);return}
     const warranty=e.target.closest('[data-v72-add-warranty]');if(warranty){e.preventDefault();e.stopImmediatePropagation();const a=getAsset(warranty.dataset.v72AddWarranty);if(a)addWarranty(a);return}
     const business=e.target.closest('[data-v72-businesses]');if(business){e.preventDefault();e.stopImmediatePropagation();const a=getAsset(business.dataset.v72Businesses);if(a)manageBusinesses(a);return}

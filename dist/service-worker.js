@@ -1,4 +1,4 @@
-const CACHE='safimaint-nav-exact-v73';
+const CACHE='safimaint-functional-qr-v75';
 const APP_SHELL=[
   './',
   './index.html',
@@ -45,6 +45,7 @@ const APP_SHELL=[
   './assets/safimaint-stock-first.css',
   './assets/safimaint-flux-v71.css',
   './assets/safimaint-asset-record-v72.css',
+  './assets/safimaint-qr-v75.js',
   './assets/safimaint-field-planner-v53.css',
   './assets/safimaint-lifecycle-v52.css',
   './assets/safimaint-spec-modules-v51.css',

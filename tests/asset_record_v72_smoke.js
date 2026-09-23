@@ -20,6 +20,7 @@ const context={
 };
 context.window.window=context.window;
 vm.createContext(context);
+vm.runInContext(fs.readFileSync('dist/assets/safimaint-qr-v75.js','utf8'),context);
 vm.runInContext(fs.readFileSync('dist/assets/safimaint-asset-record-v72.js','utf8'),context);
 
 for(const tab of ['general','bom','meter','personnel','warranties','businesses','purchasing','files','custom','financials','log']){
@@ -34,8 +35,18 @@ for(const tab of ['general','bom','meter','personnel','warranties','businesses',
 context.ui.assetRecordTab='general';
 const general=context.window.renderAssets();
 assert.match(general,/ar72-map/);
+assert.match(general,/class="ar72-map compact"/);
+assert.match(general,/Show live map/);
+assert.doesNotMatch(general,/class="ar72-map-live"/);
 assert.match(general,/ar72-qr/);
+assert.match(general,/<svg[^>]+QR code for P-201/);
 assert.match(general,/data-toggle-asset="A-1"/);
 assert.match(general,/Change location/);
+
+context.ui.assetMapExpanded='A-1';
+const expandedMap=context.window.renderAssets();
+assert.match(expandedMap,/class="ar72-map expanded"/);
+assert.match(expandedMap,/class="ar72-map-live"/);
+assert.match(expandedMap,/Collapse map/);
 
 console.log('Asset record v72 DOM smoke checks passed.');

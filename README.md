@@ -9,6 +9,7 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 - The Flux visual system replaces the original flat shell with a floating navigation rail, glass command bar, animated ambient grid, larger variable-style typography and fluid page transitions.
 - Dashboard instruments use meaningful live motion: moving stock parcels, a low-stock beacon, a cycle-count scanner and a rotating maintenance mechanism.
 - Fiix-familiar dark navigation, information density, master-detail records, hierarchy and audit patterns.
+- Larger navigation and asset-record typography for operators working on desktop and field tablets.
 - A live stockroom control centre replaces the generic maintenance dashboard.
 - Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
 - Subtle animated shelves, stock scanner and conveyor background communicate live inventory activity.
@@ -34,7 +35,8 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 - Offline transitions create a downtime event and can automatically create corrective work.
 - Returning an asset online closes the active downtime event.
 - Asset log, work history, BOM, meter history and downtime history.
-- QR/barcode lookup with camera scanning where the browser supports `BarcodeDetector`, plus a manual code fallback.
+- Standards-compliant offline QR asset tags with camera scanning where the browser supports `BarcodeDetector`, plus a manual code fallback.
+- Compact asset-location preview with an on-demand OpenStreetMap view; the external map loads only after the user selects **Show live map**, while the plant preview remains available offline.
 
 ### Parts and stock taking
 - Parts master with category, UOM, unit cost, barcode, preferred vendor, min/max and reorder quantity.

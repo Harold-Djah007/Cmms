@@ -36,3 +36,4 @@ jobs:
           node tests/shared_bootstrap_regression.js
           node tests/asset_record_v72_regression.js
           node tests/asset_record_v72_smoke.js
+          node tests/qr_v75_regression.js
