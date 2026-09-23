@@ -39,3 +39,4 @@ jobs:
           node tests/qr_v75_regression.js
           node tests/assets_v77_regression.js
           node tests/assets_v78_regression.js
+          node tests/supplies_v79_regression.js

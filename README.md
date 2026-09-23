@@ -1,5 +1,9 @@
 # SafiMaintain CMMS
 
+## Supplies Workspace v79
+
+Supplies is now a first-class expandable module with **Parts & supplies**, **Current stock**, **Batch stock adjustment**, **Cycle counts**, **Stock history**, **BOM groups**, and **Businesses**. The part record follows a familiar CMMS structure—Stock, Cycle count, BOMs, Businesses, Files, Custom, and History—while keeping stock taking as SafiMaintain's primary workflow. Batch adjustments create auditable variance transactions, part tags contain real offline QR codes, and purchase-order creation remains excluded.
+
 ## Asset Atlas v78
 
 The Assets workspace now uses a split plant navigator and live asset-intelligence layout. Hierarchy branches expand and collapse in place without rebuilding the page, eliminating the visible blank-frame blink. On desktop, the application sidebar is fixed to the viewport while only its navigation list scrolls. Detailed asset records use a two-column operating workspace with a vertical section navigator.
@@ -18,7 +22,7 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 - A live stockroom control centre replaces the generic maintenance dashboard.
 - Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
 - Subtle animated shelves, stock scanner and conveyor background communicate live inventory activity.
-- The main part record has four clear areas: Stock levels, Cycle counts, Used on assets and Movement history.
+- The main part record has seven connected areas: Stock, Cycle count, BOMs, Businesses, Files, Custom and History.
 - Replenishment stops at a simple **Reorder list** for handoff to Safisana's external purchasing process.
 - SafiMaintain does **not** create purchase orders, RFQs or supplier orders.
 - Motion is disabled automatically for users who prefer reduced motion.
@@ -48,6 +52,10 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 ### Parts and stock taking
 - Parts master with category, UOM, unit cost, barcode, preferred vendor, min/max and reorder quantity.
 - Multiple store/bin locations per part.
+- Dedicated Current Stock and Batch Stock Adjustment pages.
+- Store, aisle, row and bin-level quantities with per-location minimum and maximum controls.
+- Reusable BOM groups and a connected supplier/business directory.
+- Offline part attachments and scannable/printable part QR tags.
 - Receipts, issues, transfers and adjustments.
 - Issues can be posted directly against a work order and update actual parts consumption on that work order.
 - Cycle counts retain expected, counted, variance, person and time.
@@ -144,6 +152,8 @@ node tests/asset_record_v72_regression.js
 node tests/asset_record_v72_smoke.js
 node tests/qr_v75_regression.js
 node tests/assets_v77_regression.js
+node tests/assets_v78_regression.js
+node tests/supplies_v79_regression.js
 ```
 
 ## Recommended acceptance test
@@ -152,13 +162,14 @@ node tests/assets_v77_regression.js
 2. Return it online with a completion note and verify the downtime record closes, the asset log updates, and alerts are created.
 3. Take it offline again with a reason and keep **Create a corrective work order** enabled.
 4. Open **Work orders** and verify the new corrective WO exists.
-5. Open **Stockroom**, select `MS-40-SS`, and issue one unit against the new WO.
+5. Open **Supplies → Parts & supplies**, select `MS-40-SS`, and issue one unit against the new WO.
 6. Confirm the WO's actual parts consumption increases and the part appears on the **Reorder list** when below minimum.
 7. Post a **Cycle count** with a variance and verify both count history and the stock transaction ledger.
-8. Open **Reorder list** and verify that no purchase-order action is available.
-9. Open **Alerts & mail** and verify in-app messages, recipient resolution and the local email queue.
-10. Open **People & teams**, **Administration**, **Audit trail**, and **Security** and verify configuration and audit events.
-11. Disconnect networking after the app has loaded once and confirm the application shell remains available.
+8. Open **Supplies → Batch stock adjustment**, change one location quantity, post it, and verify the before/after values in **Stock history**.
+9. Open **Reorder list** and verify that no purchase-order action is available.
+10. Open **Alerts & mail** and verify in-app messages, recipient resolution and the local email queue.
+11. Open **People & teams**, **Administration**, **Audit trail**, and **Security** and verify configuration and audit events.
+12. Disconnect networking after the app has loaded once and confirm the application shell remains available.
 
 ## Remaining deployment boundary
 
