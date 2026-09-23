@@ -1,5 +1,9 @@
 # SafiMaintain CMMS
 
+## Asset Atlas v78
+
+The Assets workspace now uses a split plant navigator and live asset-intelligence layout. Hierarchy branches expand and collapse in place without rebuilding the page, eliminating the visible blank-frame blink. On desktop, the application sidebar is fixed to the viewport while only its navigation list scrolls. Detailed asset records use a two-column operating workspace with a vertical section navigator.
+
 SafiMaintain is Safisana Ghana's stock-first maintenance management application.
 
 The current build uses the **public operating model documented by Fiix CMMS** while giving daily priority to stock taking. It remains SafiMaintain-branded and does not copy Fiix source code, private architecture, or visual assets.

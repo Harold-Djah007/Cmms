@@ -28,7 +28,7 @@ assert.match(css,/\[data-action="manual-po"\]/);
 assert.match(index,/safimaint-stock-first\.css\?v=74/);
 assert.match(index,/safimaint-stock-first\.js\?v=76/);
 assert.match(index,/safimaint-flux-v71\.css\?v=76/);
-assert.match(worker,/const CACHE='safimaint-asset-command-centre-v77'/);
+assert.match(worker,/const CACHE='safimaint-asset-atlas-v78'/);
 assert.match(worker,/safimaint-flux-v71\.css/);
 assert.match(worker,/safimaint-asset-record-v72\.(css|js)/);
 assert.match(flux,/\.sf-kpi\[data-motion="stock"\]/);
