@@ -21,7 +21,7 @@
   const descendants=(id,out=[],seen=new Set())=>{children(id).forEach(c=>{const k=String(c.id);if(seen.has(k))return;seen.add(k);out.push(c);descendants(c.id,out,seen)});return out};
   const roots=()=>{const ids=new Set(assets().map(a=>String(a.id)));return assets().filter(a=>isBlank(a.parentId)||!ids.has(String(a.parentId)))};
   const workFor=a=>state.workOrders.filter(w=>(w.assetIds||[]).some(x=>String(x)===String(a.id)));
-  const activeWork=a=>workFor(a).filter(w=>!['Completed','Cancelled'].includes(w.status));
+  const activeWork=a=>workFor(a).filter(w=>!['Completed','Closed','Cancelled'].includes(w.status));
   const metersFor=a=>state.meters.filter(m=>String(m.assetId)===String(a.id));
   const downtimeFor=a=>state.downtime.filter(d=>String(d.assetId)===String(a.id));
   const eventsFor=a=>state.assetEvents.filter(e=>String(e.assetId)===String(a.id));
@@ -95,8 +95,14 @@
     const online=assets().filter(a=>a.operatingState==='Online').length;
     const offline=assets().filter(a=>a.operatingState==='Offline').length;
     const openWork=assets().reduce((total,a)=>total+activeWork(a).length,0);
-    return pageHead('Asset management','Asset hierarchy','See exactly where every facility, area, machine and component belongs.',`<button class="button" data-fx23-import>Import CSV</button><button class="button primary" data-action="add-asset">＋ Add asset</button>`)
-      +`<section class="fx23-shell card">
+    const healthy=assets().filter(a=>a.condition==='Healthy'&&a.operatingState!=='Offline').length;
+    return `<div class="ax77-page">
+      <header class="ax77-hero">
+        <div class="ax77-hero-copy"><span class="ax77-live"><i></i> Live asset register</span><p>${esc(s?.name||'Current workspace')} · Asset intelligence</p><h1>Asset command centre</h1><p class="ax77-lead">Navigate the plant as it exists in the field—from facilities and rooms to equipment, components and tools.</p><div class="ax77-hero-actions"><button class="button primary" data-action="add-asset">＋ Add asset</button><button class="button" data-fx23-import>⇧ Import CSV</button></div></div>
+        <div class="ax77-pulse" aria-hidden="true"><span class="ax77-orbit one"></span><span class="ax77-orbit two"></span><span class="ax77-core">${hierarchyIcon()}</span><i class="ax77-node n1"></i><i class="ax77-node n2"></i><i class="ax77-node n3"></i></div>
+        <div class="ax77-metrics"><button data-fx23-scope="all"><span>Registered</span><strong>${assets().length}</strong><small>All assets</small></button><button data-fx23-scope="all"><span>Available</span><strong>${online}</strong><small>${healthy} healthy</small></button><button data-fx23-scope="all" class="${offline?'attention':''}"><span>Offline</span><strong>${offline}</strong><small>Needs attention</small></button><button data-route="work-orders"><span>Open work</span><strong>${openWork}</strong><small>Connected jobs</small></button></div>
+      </header>
+      <section class="fx23-shell card">
         <div class="fx23-model">
           <div class="fx31-model-title"><span>${hierarchyIcon()}</span><div><strong>Your asset map</strong><small>Build it the way the site exists in the field</small></div></div>
           <div class="fx31-flow">
@@ -122,7 +128,8 @@
         </div>
         <div class="fx23-footer"><span>${selected.size?`${selected.size} selected · `:''}Drag an asset onto another asset to move it in the hierarchy.</span><span>${assets().length} total asset${assets().length===1?'':'s'}</span></div>
       </section>
-      <input id="fx23CsvInput" type="file" accept=".csv,text/csv" hidden>`;
+      <input id="fx23CsvInput" type="file" accept=".csv,text/csv" hidden>
+    </div>`;
   }
 
   function qrPattern(code){
@@ -222,14 +229,14 @@
     const toggle=e.target.closest('[data-fx23-toggle]');if(toggle){
       e.preventDefault();e.stopImmediatePropagation();const id=String(toggle.dataset.fx23Toggle),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
       if(collapsed.has(id)){
-        collapsed.delete(id);saveCollapsed();render();
-        if(!reduce){const fresh=document.querySelector(`[data-fx23-drag="${CSS.escape(id)}"]`),branch=fresh?.nextElementSibling;if(branch?.classList.contains('fx23-children'))branch.classList.add('is-expanding')}
+        const y=window.scrollY;collapsed.delete(id);saveCollapsed();document.documentElement.classList.add('fx23-updating');render();
+        requestAnimationFrame(()=>{window.scrollTo(0,y);const fresh=document.querySelector(`[data-fx23-drag="${CSS.escape(id)}"]`),branch=fresh?.nextElementSibling;if(!reduce&&branch?.classList.contains('fx23-children'))branch.classList.add('is-expanding');fresh?.querySelector('[data-fx23-toggle]')?.focus({preventScroll:true});document.documentElement.classList.remove('fx23-updating')})
       }else{
         const row=toggle.closest('.fx23-row'),branch=row?.nextElementSibling;
-        if(reduce||!branch?.classList.contains('fx23-children')){collapsed.add(id);saveCollapsed();render();return}
+        if(reduce||!branch?.classList.contains('fx23-children')){const y=window.scrollY;collapsed.add(id);saveCollapsed();document.documentElement.classList.add('fx23-updating');render();requestAnimationFrame(()=>{window.scrollTo(0,y);document.querySelector(`[data-fx23-drag="${CSS.escape(id)}"] [data-fx23-toggle]`)?.focus({preventScroll:true});document.documentElement.classList.remove('fx23-updating')});return}
         branch.style.setProperty('--branch-height',`${branch.scrollHeight}px`);branch.classList.add('is-collapsing');
         requestAnimationFrame(()=>branch.classList.add('animate-out'));
-        setTimeout(()=>{collapsed.add(id);saveCollapsed();render()},220);
+        const y=window.scrollY;setTimeout(()=>{collapsed.add(id);saveCollapsed();document.documentElement.classList.add('fx23-updating');render();requestAnimationFrame(()=>{window.scrollTo(0,y);document.querySelector(`[data-fx23-drag="${CSS.escape(id)}"] [data-fx23-toggle]`)?.focus({preventScroll:true});document.documentElement.classList.remove('fx23-updating')})},220);
       }
       return;
     }

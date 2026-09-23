@@ -50,12 +50,19 @@
   }
   function stockNavigation(){
     const nav=document.getElementById('navigation');if(!nav)return;
+    const previousRoute=nav.dataset.activeRoute||'';
     nav.innerHTML='<div class="sf-nav">'+
       '<div class="sf-nav-label">Daily operations</div>'+navItem('dashboard','Overview','home')+navItem('inventory','Stockroom','stock','stockBadge','inventory.view')+navItem('counts','Cycle counts','count','','inventory.view')+navItem('transactions','Stock movements','move','','inventory.view')+navItem('assets','Assets','assets','offlineBadge','asset.view')+navItem('work-orders','Work orders','work','workBadge','work.view')+navItem('pm','Preventive maintenance','pm','','pm.manage')+
       '<div class="sf-nav-label">Visibility</div>'+navItem('planning','Reorder list','alert','purchaseBadge','inventory.view')+navItem('reports','Reports & insights','reports','','report.view')+navItem('notifications','Alerts & mail','bell','alertBadge','admin.notifications')+
       '<div class="sf-nav-label">Manage</div>'+navItem('people','People & teams','team','','admin.people')+navItem('security','Administration','settings','','admin.people')+
       '<div class="sf-nav-note"><strong>Stock-first workspace</strong><span>Count, receive, issue and locate parts without a purchasing maze.</span></div></div>';
+    nav.setAttribute('aria-label','Primary navigation');
+    nav.dataset.activeRoute=ui.route||'';
     if(typeof updateBadges==='function')updateBadges()
+    const active=nav.querySelector('.sf-nav-item.active');
+    if(active&&previousRoute!==(ui.route||''))requestAnimationFrame(()=>{
+      active.scrollIntoView({block:'nearest',inline:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})
+    })
   }
   simpleNavigation=stockNavigation;window.simpleNavigation=stockNavigation;
 

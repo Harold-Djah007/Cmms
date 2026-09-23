@@ -57,8 +57,11 @@ body:after{
 
 /* Floating navigation rail */
 .sidebar{
+  position:sticky;
+  align-self:start;
   top:10px;
-  height:calc(100vh - 20px);
+  height:calc(100dvh - 20px);
+  max-height:calc(100dvh - 20px);
   margin:0 0 0 10px;
   padding:18px 13px 12px;
   border:1px solid rgba(123,194,208,.12);
@@ -71,6 +74,7 @@ body:after{
     radial-gradient(circle at 92% 58%,rgba(75,111,255,.14),transparent 32%),
     linear-gradient(165deg,#091b2b 0%,#071522 62%,#0b1d2d 100%);
   box-shadow:18px 22px 62px rgba(7,21,34,.24),inset 0 1px rgba(255,255,255,.06);
+  isolation:isolate;
 }
 .sidebar:before{
   content:"";
@@ -82,13 +86,15 @@ body:after{
   transform:translateX(-100%);
   animation:sfRailSheen 11s ease-in-out infinite;
 }
-.brand{position:relative;padding:2px 9px 20px;gap:12px}
+.brand{position:relative;z-index:1;flex:0 0 auto;padding:2px 9px 20px;gap:12px}
 .brand img{width:43px;height:43px;filter:drop-shadow(0 8px 15px rgba(30,214,179,.22));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
 .brand:hover img{transform:rotate(-6deg) scale(1.08)}
 .brand strong{font-size:17px;font-weight:760;letter-spacing:-.35px}
 .brand span{color:#65ddc4;font-size:9px;font-weight:850;letter-spacing:1.8px}
 .site-card{
   position:relative;
+  z-index:1;
+  flex:0 0 auto;
   margin:0 2px 14px;
   min-height:61px;
   padding:11px 12px;
@@ -100,8 +106,24 @@ body:after{
 }
 .site-card:hover{transform:translateY(-2px);border-color:rgba(80,224,196,.32);background:rgba(255,255,255,.1)}
 .site-card strong{font-size:13px}.site-card small{font-size:10.5px;color:#9ab1c0}.site-mark{width:8px;height:8px;background:#29e0bd;box-shadow:0 0 0 5px rgba(41,224,189,.12),0 0 20px rgba(41,224,189,.7);animation:sfBeacon 2.1s ease-in-out infinite}
-#navigation{position:relative;flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:1px 2px 10px}
-#navigation::-webkit-scrollbar{display:none}
+#navigation{
+  position:relative;
+  z-index:1;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(103,224,200,.28) transparent;
+  scroll-behavior:smooth;
+  padding:1px 5px 12px 2px;
+}
+#navigation::-webkit-scrollbar{display:block;width:5px}
+#navigation::-webkit-scrollbar-track{background:transparent}
+#navigation::-webkit-scrollbar-thumb{border-radius:99px;background:rgba(103,224,200,.26)}
+#navigation::-webkit-scrollbar-thumb:hover{background:rgba(103,224,200,.48)}
 .sf-nav{gap:3px}.sf-nav-label{padding:14px 13px 7px;color:#6e8799;font-size:10.5px;letter-spacing:1.45px}
 .sf-nav-item{
   position:relative;
@@ -128,8 +150,8 @@ body:after{
 .sf-nav-item svg{width:20px;height:20px}.sf-nav-item>span:nth-child(2){position:relative}
 .sf-nav-note{margin:15px 5px 0;padding:13px 14px;border-radius:15px;background:linear-gradient(135deg,rgba(38,218,181,.1),rgba(78,111,255,.07));border-color:rgba(77,222,194,.15)}
 .sf-nav-note strong{font-size:11.5px;color:#cbfff3}.sf-nav-note span{font-size:10.5px;color:#8ba3b3}
-.sidebar-foot{position:relative;bottom:auto;margin:0 -13px -12px;padding:14px 18px 15px;background:rgba(3,13,23,.62);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.06)}
-.sidebar-foot strong{font-size:11.5px}.sidebar-foot small{font-size:10.5px;color:#829cad}
+.sidebar-foot{position:relative;z-index:2;bottom:auto;flex:0 0 auto;margin:0 -13px -12px;padding:14px 18px 15px;background:rgba(3,13,23,.88);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.06);box-shadow:0 -12px 28px rgba(2,12,20,.18)}
+.sidebar-foot strong{font-size:13px;line-height:1.35}.sidebar-foot small{font-size:11.5px;line-height:1.4;color:#91a8b8}
 
 /* Floating command bar */
 .topbar{

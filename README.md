@@ -10,6 +10,7 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 - Dashboard instruments use meaningful live motion: moving stock parcels, a low-stock beacon, a cycle-count scanner and a rotating maintenance mechanism.
 - Fiix-familiar dark navigation, information density, master-detail records, hierarchy and audit patterns.
 - Larger navigation and asset-record typography for operators working on desktop and field tablets.
+- A pinned full-height navigation rail keeps the brand, site and connection state visible while only the menu scrolls; route changes automatically reveal the single active page.
 - A live stockroom control centre replaces the generic maintenance dashboard.
 - Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
 - Subtle animated shelves, stock scanner and conveyor background communicate live inventory activity.
@@ -28,7 +29,9 @@ The current build uses the **public operating model documented by Fiix CMMS** wh
 - Maintenance calendar for upcoming work.
 
 ### Asset management
+- Unified Asset Command Centre with live availability/work indicators, a responsive hierarchy workspace and a consistent detailed-record design.
 - Parent/child asset hierarchy: site → facility → production area → equipment/subassembly/tool.
+- Stable expand/collapse behavior preserves page position and keyboard focus while animating only the affected branch.
 - Central asset profile with criticality, condition, manufacturer, model, serial, location, warranty, responsible person/group and commissioning date.
 - Independent **condition** and **Online/Offline operating state**.
 - Taking an asset offline requires a reason code and note.
@@ -135,6 +138,8 @@ node tests/stock_first_redesign_regression.js
 node tests/shared_bootstrap_regression.js
 node tests/asset_record_v72_regression.js
 node tests/asset_record_v72_smoke.js
+node tests/qr_v75_regression.js
+node tests/assets_v77_regression.js
 ```
 
 ## Recommended acceptance test
