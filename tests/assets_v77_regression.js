@@ -29,7 +29,7 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
 assert.match(index,/safimaint-assets-v77\.css\?v=77/);
 assert.match(index,/safimaint-fiix-operating-model-v23\.js\?v=77/);
-assert.match(worker,/const CACHE='safimaint-supplies-v80'/);
+assert.match(worker,/const CACHE='safimaint-supplies-v81'/);
 assert.match(worker,/safimaint-assets-v77\.css/);
 
 console.log('Assets v77 design and stable hierarchy regression checks passed.');

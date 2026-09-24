@@ -1,5 +1,11 @@
 # SafiMaintain CMMS
 
+## Current Fiix-informed Supplies v81
+
+Fiix's official 2026 help content still identifies **Parts & Supplies as a v5 area**, while the newer v6 interface is being released in phases across areas such as Equipment and Work Orders. SafiMaintain therefore keeps the proven part/stock relationships without copying the old v5 chrome, and applies the verified v6 interaction patterns: a searchable and sortable list, filters, customizable columns, page-size controls, pagination, clear record summaries and responsive detail cards.
+
+The result remains stock-first: locations, quantity on hand, min/max controls, cycle counts, receipts, movements, BOM links and audit history are central. Purchase-order creation is intentionally excluded.
+
 ## Supplies Workspace v79
 
 Supplies is now a first-class expandable module with **Parts & supplies**, **Current stock**, **Batch stock adjustment**, **Cycle counts**, **Stock history**, **BOM groups**, and **Businesses**. The part record follows a familiar CMMS structure—Stock, Cycle count, BOMs, Businesses, Files, Custom, and History—while keeping stock taking as SafiMaintain's primary workflow. Batch adjustments create auditable variance transactions, part tags contain real offline QR codes, and purchase-order creation remains excluded.
@@ -155,6 +161,7 @@ node tests/assets_v77_regression.js
 node tests/assets_v78_regression.js
 node tests/supplies_v79_regression.js
 node tests/supplies_v80_regression.js
+node tests/supplies_v81_regression.js
 ```
 
 ## Recommended acceptance test

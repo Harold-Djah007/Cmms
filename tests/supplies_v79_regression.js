@@ -47,9 +47,9 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
 assert.match(index,/safimaint-supplies-v79\.css\?v=79/);
 assert.match(index,/safimaint-supplies-v79\.js\?v=79/);
-assert.match(worker,/const CACHE='safimaint-supplies-v80'/);
+assert.match(worker,/const CACHE='safimaint-supplies-v81'/);
 assert.match(worker,/safimaint-supplies-v79\.css/);
 assert.match(worker,/safimaint-supplies-v79\.js/);
-assert.match(config,/9\.6\.0-fiix-supplies-records/);
+assert.match(config,/9\.7\.0-current-fiix-supplies/);
 
 console.log('Supplies v79 navigation, records and stock-taking checks passed.');
