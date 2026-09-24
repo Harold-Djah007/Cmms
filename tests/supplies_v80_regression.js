@@ -1,1 +1,52 @@
-¹…µ”èM…™¥5…¥¹Ñ…¥¸$()½¸è(€ÁÕÍ è(€€€‰É…¹¡•Ìèmµ…¥¹t(€ÁÕ±±}É•ÅÕ•ÍĞè(€€€‰É…¹¡•Ìèmµ…¥¹t(€İ½É­™±½İ}‘¥ÍÁ…Ñ è()©½‰Ìè(€Ù•É¥™äè(€€€ÉÕ¹Ìµ½¸èÕ‰Õ¹ÑÔµ±…Ñ•ÍĞ(€€€ÍÑ•ÁÌè(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½¡•­½ÕÑØĞ(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½Í•ÑÕÀµÁåÑ¡½¹ØÔ(€€€€€€€İ¥Ñ è(€€€€€€€€€ÁåÑ¡½¸µÙ•ÉÍ¥½¸è€œÌ¸ÄÈœ(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½Í•ÑÕÀµ¹½‘•ØĞ(€€€€€€€İ¥Ñ è(€€€€€€€€€¹½‘”µÙ•ÉÍ¥½¸è€œÈÈœ(€€€€€€´¹…µ”è%¹ÍÑ…±°‰…­•¹Ñ•ÍĞ‘•Á•¹‘•¹¥•Ì(€€€€€€€ÉÕ¸èÁ¥À¥¹ÍÑ…±°€µÈ‰…­•¹½É•ÅÕ¥É•µ•¹ÑÌµ‘•Ø¹ÑáĞ(€€€€€€´¹…µ”èAåÑ¡½¸½µÁ¥±”¡•¬(€€€€€€€ÉÕ¸èÁåÑ¡½¸€µ´½µÁ¥±•…±°€µÄ‰…­•¹(€€€€€€´¹…µ”è	…­•¹Ñ•ÍÑÌ(€€€€€€€ÉÕ¸èÁåÑ¡½¸€µ´ÁåÑ•ÍĞ€µÄ‰…­•¹½Ñ•ÍÑÌ(€€€€€€´¹…µ”è)…Ù…MÉ¥ÁĞÍå¹Ñ…à¡•¬(€€€€€€€ÉÕ¸èğ(€€€€€€€€€™½È™¥±”¥¸‘¥ÍĞ½…ÍÍ•ÑÌ¼¨¹©Ì‘¥ÍĞ½Í•ÉÙ¥”µİ½É­•È¹©Ìì‘¼(€€€€€€€€€€€¹½‘”€´µ¡•¬€ˆ‘™¥±”ˆ(€€€€€€€€€‘½¹”(€€€€€€´¹…µ”è•µ¼…¹ÍÑ½¬İ½É­™±½ÜÉ•É•ÍÍ¥½¸Ñ•ÍÑÌ(€€€€€€€ÉÕ¸èğ(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½‘•µ½}¥¹Ù•¹Ñ½Éå}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÑ½­}™¥ÉÍÑ}É•‘•Í¥¹}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½Í¡…É•‘}‰½½ÑÍÑÉ…Á}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•Ñ}É•½É‘}ØÜÉ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•Ñ}É•½É‘}ØÜÉ}Íµ½­”¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÅÉ}ØÜÕ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•ÑÍ}ØÜİ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•ÑÍ}ØÜá}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÕÁÁ±¥•Í}ØÜå}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÕÁÁ±¥•Í}ØàÁ}É•É•ÍÍ¥½¸¹©Ì(
+'use strict';
+
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+
+const source=fs.readFileSync('dist/assets/safimaint-supplies-v80.js','utf8');
+const css=fs.readFileSync('dist/assets/safimaint-supplies-v80.css','utf8');
+const index=fs.readFileSync('dist/index.html','utf8');
+const worker=fs.readFileSync('dist/service-worker.js','utf8');
+const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
+
+// The default is a compact Fiix-familiar list, not the old split-pane dashboard.
+assert.match(source,/s80-list-table/);
+assert.match(source,/Parts and supplies/);
+assert.match(source,/data-s80-open-part/);
+assert.match(source,/Back to parts/);
+assert.doesNotMatch(source,/s80-overview/);
+
+// A selected item becomes one full editable record with familiar sections.
+for(const section of ['Stock','Cycle Count','BOMs','Businesses','Receipts','Files','Custom','Log'])assert.match(source,new RegExp("'"+section+"'"));
+for(const field of ['Account','Charge department','Inventory code','UNSPSC code','Barcode','Make','Model','Last price','Preferred supplier','Notes'])assert.match(source,new RegExp(field));
+assert.match(source,/data-s80-save/);
+assert.match(source,/PART_UPDATED/);
+assert.match(source,/data-s80-duplicate/);
+
+// Stock taking remains the primary workflow and purchasing creation is absent.
+assert.match(source,/Stock levels per location/);
+assert.match(source,/Qty on hand/);
+assert.match(source,/Min qty/);
+assert.match(source,/Max qty/);
+assert.match(source,/data-v66-add-location/);
+assert.match(source,/data-v66-open-location/);
+assert.match(source,/data-count-part/);
+assert.match(source,/data-stock-move/);
+assert.doesNotMatch(source,/Create purchase order/i);
+assert.doesNotMatch(source,/New purchase order/i);
+
+// QR, files, responsive behavior and cache activation stay wired.
+assert.match(source,/SafiQR\.svg/);
+assert.match(source,/SafiFiles\.add\('part'/);
+assert.match(css,/\.s80-record-actions/);
+assert.match(css,/\.s80-tabs/);
+assert.match(css,/@media\(max-width:720px\)/);
+assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+assert.match(index,/safimaint-supplies-v80\.css\?v=80/);
+assert.match(index,/safimaint-supplies-v80\.js\?v=80/);
+assert.match(worker,/const CACHE='safimaint-supplies-v80'/);
+assert.match(worker,/safimaint-supplies-v80\.css/);
+assert.match(worker,/safimaint-supplies-v80\.js/);
+assert.match(config,/9\.6\.0-fiix-supplies-records/);
+
+console.log('Supplies v80 Fiix-familiar list, record and stock controls passed.');

@@ -1,1 +1,52 @@
-¹…µ”èM…™¥5…¥¹Ñ…¥¸$()½¸è(€ÁÕÍ è(€€€‰É…¹¡•Ìèmµ…¥¹t(€ÁÕ±±}É•ÅÕ•ÍĞè(€€€‰É…¹¡•Ìèmµ…¥¹t(€İ½É­™±½İ}‘¥ÍÁ…Ñ è()©½‰Ìè(€Ù•É¥™äè(€€€ÉÕ¹Ìµ½¸èÕ‰Õ¹ÑÔµ±…Ñ•ÍĞ(€€€ÍÑ•ÁÌè(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½¡•­½ÕÑØĞ(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½Í•ÑÕÀµÁåÑ¡½¹ØÔ(€€€€€€€İ¥Ñ è(€€€€€€€€€ÁåÑ¡½¸µÙ•ÉÍ¥½¸è€œÌ¸ÄÈœ(€€€€€€´ÕÍ•Ìè…Ñ¥½¹Ì½Í•ÑÕÀµ¹½‘•ØĞ(€€€€€€€İ¥Ñ è(€€€€€€€€€¹½‘”µÙ•ÉÍ¥½¸è€œÈÈœ(€€€€€€´¹…µ”è%¹ÍÑ…±°‰…­•¹Ñ•ÍĞ‘•Á•¹‘•¹¥•Ì(€€€€€€€ÉÕ¸èÁ¥À¥¹ÍÑ…±°€µÈ‰…­•¹½É•ÅÕ¥É•µ•¹ÑÌµ‘•Ø¹ÑáĞ(€€€€€€´¹…µ”èAåÑ¡½¸½µÁ¥±”¡•¬(€€€€€€€ÉÕ¸èÁåÑ¡½¸€µ´½µÁ¥±•…±°€µÄ‰…­•¹(€€€€€€´¹…µ”è	…­•¹Ñ•ÍÑÌ(€€€€€€€ÉÕ¸èÁåÑ¡½¸€µ´ÁåÑ•ÍĞ€µÄ‰…­•¹½Ñ•ÍÑÌ(€€€€€€´¹…µ”è)…Ù…MÉ¥ÁĞÍå¹Ñ…à¡•¬(€€€€€€€ÉÕ¸èğ(€€€€€€€€€™½È™¥±”¥¸‘¥ÍĞ½…ÍÍ•ÑÌ¼¨¹©Ì‘¥ÍĞ½Í•ÉÙ¥”µİ½É­•È¹©Ìì‘¼(€€€€€€€€€€€¹½‘”€´µ¡•¬€ˆ‘™¥±”ˆ(€€€€€€€€€‘½¹”(€€€€€€´¹…µ”è•µ¼…¹ÍÑ½¬İ½É­™±½ÜÉ•É•ÍÍ¥½¸Ñ•ÍÑÌ(€€€€€€€ÉÕ¸èğ(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½‘•µ½}¥¹Ù•¹Ñ½Éå}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÑ½­}™¥ÉÍÑ}É•‘•Í¥¹}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½Í¡…É•‘}‰½½ÑÍÑÉ…Á}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•Ñ}É•½É‘}ØÜÉ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•Ñ}É•½É‘}ØÜÉ}Íµ½­”¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÅÉ}ØÜÕ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•ÑÍ}ØÜİ}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½…ÍÍ•ÑÍ}ØÜá}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÕÁÁ±¥•Í}ØÜå}É•É•ÍÍ¥½¸¹©Ì(€€€€€€€€€¹½‘”Ñ•ÍÑÌ½ÍÕÁÁ±¥•Í}ØàÁ}É•É•ÍÍ¥½¸¹©Ì(
+'use strict';
+
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+
+const source=fs.readFileSync('dist/assets/safimaint-assets-v78.js','utf8');
+const css=fs.readFileSync('dist/assets/safimaint-assets-v78.css','utf8');
+const index=fs.readFileSync('dist/index.html','utf8');
+const worker=fs.readFileSync('dist/service-worker.js','utf8');
+const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
+
+// The hierarchy is a new asset atlas, not the previous table with another skin.
+assert.match(source,/Live plant register/);
+assert.match(source,/Plant navigator/);
+assert.match(source,/Structure at a glance/);
+assert.match(source,/Operational focus/);
+assert.match(source,/Traceable history/);
+assert.match(source,/Facility â†’ area â†’ equipment â†’ component/);
+
+// Expansion owns only the branch. It must never invoke the global render path.
+const toggleBody=source.match(/function toggleBranch\(button\)\{([\s\S]*?)\n  \}/)?.[1]||'';
+assert.ok(toggleBody,'toggleBranch must exist');
+assert.doesNotMatch(toggleBody,/render\s*\(/);
+assert.doesNotMatch(toggleBody,/innerHTML/);
+assert.match(toggleBody,/animateBranch\(branch,expanding\)/);
+assert.match(source,/branch\.animate\(/);
+assert.match(source,/branch\.hidden=!expand/);
+assert.match(source,/focus\(\{preventScroll:true\}\)/);
+
+// Desktop shell is fixed; only its navigation body scrolls.
+assert.match(css,/@media\(min-width:901px\)/);
+assert.match(css,/\.sidebar\{position:fixed!important/);
+assert.match(css,/\.workspace\{[^}]*margin-left:296px!important/);
+assert.match(css,/\.sidebar #navigation\{[^}]*overflow-y:auto!important/);
+
+// Asset hierarchy and detailed record have distinct, responsive workspaces.
+assert.match(css,/\.ax78-workspace\{display:grid/);
+assert.match(css,/\.ax78-explorer/);
+assert.match(css,/\.ax78-side/);
+assert.match(css,/\.ar72-record\{display:grid!important;grid-template-columns:205px/);
+assert.match(css,/\.ar72-tabs\{position:sticky!important/);
+assert.match(css,/@media\(max-width:700px\)/);
+assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+
+assert.match(index,/safimaint-assets-v78\.css\?v=78/);
+assert.match(index,/safimaint-assets-v78\.js\?v=78/);
+assert.match(worker,/const CACHE='safimaint-supplies-v80'/);
+assert.match(worker,/safimaint-assets-v78\.css/);
+assert.match(worker,/safimaint-assets-v78\.js/);
+assert.match(config,/9\.6\.0-fiix-supplies-records/);
+
+console.log('Assets v78 atlas, stable expansion and fixed navigation checks passed.');
