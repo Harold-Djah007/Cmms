@@ -129,8 +129,6 @@
     const key=toggle.dataset.v87Toggle;
     ui.v87Open=ui.v87Open===key?null:key;
     navigation();
-    const section=document.querySelector('[data-v87-group="'+CSS.escape(key)+'"]');
-    if(section&&ui.v87Open===key)section.scrollIntoView({block:'nearest'});
   },true);
 
   const previousRender=window.render;
