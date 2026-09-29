@@ -59,10 +59,7 @@
     nav.setAttribute('aria-label','Primary navigation');
     nav.dataset.activeRoute=ui.route||'';
     if(typeof updateBadges==='function')updateBadges()
-    const active=nav.querySelector('.sf-nav-item.active');
-    if(active&&previousRoute!==(ui.route||''))requestAnimationFrame(()=>{
-      active.scrollIntoView({block:'nearest',inline:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})
-    })
+    /* Keep the sidebar viewport fixed. Expanded groups should never auto-scroll the rail. */
   }
   simpleNavigation=stockNavigation;window.simpleNavigation=stockNavigation;
 
