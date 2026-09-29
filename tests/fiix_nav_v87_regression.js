@@ -18,9 +18,11 @@ assert.match(source,/aria-expanded/);\nassert.match(source,/ui\.v87Open=current\
 assert.match(source,/s79-nav-parent/);
 assert.match(source,/s79-nav-children/);
 assert.match(css,/Fiix navigation behavior with SafiMaintain visual language/);
+assert.match(css,/height:100vh!important/);
+assert.match(css,/overflow-y:auto!important/);
 assert.match(index,/safimaint-fiix-nav-v87\.css\?v=87/);
 assert.match(index,/safimaint-fiix-nav-v87\.js\?v=87/);
-assert.match(worker,/const CACHE='safimaint-fiix-supplies-v89'/);
+assert.match(worker,/const CACHE='safimaint-fiix-supplies-v90'/);
 assert.match(worker,/safimaint-fiix-nav-v87\.css/);
 assert.match(worker,/safimaint-fiix-nav-v87\.js/);
 assert.match(config,/9\.9\.3-fiix-nav-safimaint/);
