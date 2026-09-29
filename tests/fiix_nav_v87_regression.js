@@ -13,13 +13,13 @@ for(const label of ['All assets','Facilities','Equipment','Tools','Meters','Down
 for(const label of ['Parts & supplies','Current stock','Batch stock adjustment','Cycle counts','Stock history','BOM groups','Businesses']) assert.match(source,new RegExp(label));
 for(const label of ['Work orders','Work requests','Scheduled maintenance','Maintenance calendar']) assert.match(source,new RegExp(label));
 assert.match(source,/data-v87-toggle/);
-assert.match(source,/aria-expanded/);
+assert.match(source,/aria-expanded/);\nassert.match(source,/ui\.v87Open=current\|\|null/);\nassert.match(source,/ui\.v87Open===key\?null:key/);
 assert.match(source,/s79-nav-parent/);
 assert.match(source,/s79-nav-children/);
 assert.match(css,/Fiix navigation behavior with SafiMaintain visual language/);
 assert.match(index,/safimaint-fiix-nav-v87\.css\?v=87/);
 assert.match(index,/safimaint-fiix-nav-v87\.js\?v=87/);
-assert.match(worker,/const CACHE='safimaint-nav-v87'/);
+assert.match(worker,/const CACHE='safimaint-nav-v88'/);
 assert.match(worker,/safimaint-fiix-nav-v87\.css/);
 assert.match(worker,/safimaint-fiix-nav-v87\.js/);
 assert.match(config,/9\.9\.3-fiix-nav-safimaint/);
