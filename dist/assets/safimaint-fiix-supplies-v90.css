@@ -1,0 +1,88 @@
+/* SafiMaintain v90 — Fiix-familiar Parts & Supplies, SafiMaintain visual identity */
+.safimaint-supplies-v81 .s80-list-page,
+.safimaint-supplies-v81 .s80-record-page{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.safimaint-supplies-v81 .s80-titlebar{padding-bottom:2px}
+.safimaint-supplies-v81 .s80-commandbar{
+  position:relative;
+  gap:4px;
+  border-color:#c9d4df;
+  background:linear-gradient(180deg,#fbfcfd,#eef3f6);
+}
+.safimaint-supplies-v81 .s80-commandbar .v90-primary{
+  background:linear-gradient(135deg,#2d6cdf,#3989e9);
+  border-color:#2d6cdf;
+  color:#fff;
+}
+.v90-command-separator{width:1px;height:24px;margin:0 3px;background:#d4dde5}
+.safimaint-supplies-v81 .s80-list-tools{
+  display:grid;
+  grid-template-columns:minmax(180px,.55fr) minmax(280px,1.2fr) auto auto;
+  align-items:end;
+}
+.v90-list-caption{align-self:center;min-width:0}
+.v90-list-caption strong,.v90-list-caption small{display:block}
+.v90-list-caption strong{font-size:12px;color:#2d3d4e}
+.v90-list-caption small{margin-top:2px;font-size:9px;color:#78899a}
+.safimaint-supplies-v81 .s80-list-search{max-width:none!important;width:100%!important}
+.safimaint-supplies-v81 .s80-list-table{border-collapse:collapse}
+.safimaint-supplies-v81 .s80-list-table th{
+  background:#edf2f6!important;
+  border-right:1px solid #dce4eb!important;
+}
+.safimaint-supplies-v81 .s80-list-table td{
+  border-right:1px solid #edf1f4!important;
+}
+.safimaint-supplies-v81 .s80-list-table tbody tr:nth-child(even) td{background:#fbfcfd}
+.safimaint-supplies-v81 .s80-list-table tbody tr:hover td{background:#eef6ff!important}
+.safimaint-supplies-v81 .s80-record-actions{
+  border-color:#c9d4df!important;
+  background:linear-gradient(180deg,#fbfcfd,#eef3f6)!important;
+}
+.v90-record-kicker{
+  margin-bottom:5px;
+  color:#2d6cdf;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.v90-record-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  margin:0 auto 8px;
+  padding:4px 8px;
+  border-radius:14px;
+  background:#e8f7ef;
+  color:#147a54;
+  font-size:9px;
+  font-weight:800;
+}
+.v90-record-state i{width:6px;height:6px;border-radius:50%;background:#18a66f}
+.safimaint-supplies-v81 .s80-record-heading{
+  border-color:#c9d4df!important;
+  background:#fff!important;
+}
+.safimaint-supplies-v81 .s80-tabs{
+  border-color:#c9d4df!important;
+  background:linear-gradient(180deg,#f7f9fb,#eef2f5)!important;
+}
+.safimaint-supplies-v81 .s80-tabs button{
+  color:#53677b!important;
+}
+.safimaint-supplies-v81 .s80-tabs button.active{
+  color:#245fc1!important;
+  background:#fff!important;
+}
+.safimaint-supplies-v81 .s80-record-section>header{
+  background:linear-gradient(180deg,#fafcfd,#f1f5f7)!important;
+}
+@media(max-width:1100px){
+  .safimaint-supplies-v81 .s80-list-tools{grid-template-columns:1fr 1fr}
+  .v90-list-caption{grid-column:1/-1}
+}
+@media(max-width:720px){
+  .safimaint-supplies-v81 .s80-list-tools{display:flex;align-items:stretch}
+  .v90-list-caption{width:100%}
+}
