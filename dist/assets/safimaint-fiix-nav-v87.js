@@ -38,10 +38,17 @@
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.stock)+'</svg>';
   }
-  function openDefault(){
-    const current=Object.entries(routeGroups).find(([,routes])=>routes.has(ui.route))?.[0]||null;
-    if(current)ui.v87Open=current;
-    if(typeof ui.v87Open==='undefined')ui.v87Open='assets';
+  let lastRoute=ui.route;
+  function groupForRoute(route){
+    return Object.entries(routeGroups).find(([,routes])=>routes.has(route))?.[0]||null;
+  }
+  function syncOpenGroup(){
+    if(typeof ui.v87Open==='undefined')ui.v87Open=groupForRoute(ui.route)||'assets';
+    if(ui.route!==lastRoute){
+      const current=groupForRoute(ui.route);
+      if(current)ui.v87Open=current;
+      lastRoute=ui.route;
+    }
     return ui.v87Open;
   }
   function child(route,label,glyph,permission=''){
@@ -66,7 +73,7 @@
   }
   function navigation(){
     const nav=document.getElementById('navigation');if(!nav)return;
-    openDefault();
+    syncOpenGroup();
     nav.innerHTML='<div class="s79-nav">'+
       direct('dashboard','Dashboard','dashboard')+
       group('maintenance','Maintenance','maintenance','work-orders','workBadge','work.view',[
@@ -96,8 +103,7 @@
       group('purchasing','Purchasing','purchasing','planning','purchaseBadge','inventory.view',[
         ['planning','Purchase planning','business','inventory.view'],
         ['purchase-requests','Purchase requests','requests','purchase.view'],
-        ['receipts','Receipts','stock','purchase.view'],
-        ['businesses','Suppliers / businesses','business','inventory.view']
+        ['receipts','Receipts','stock','purchase.view']
       ])+
       direct('reports','Reports','reports','report.view')+
       group('settings','Settings','settings','security','','admin.people',[
@@ -123,6 +129,8 @@
     const key=toggle.dataset.v87Toggle;
     ui.v87Open=ui.v87Open===key?null:key;
     navigation();
+    const section=document.querySelector('[data-v87-group="'+CSS.escape(key)+'"]');
+    if(section&&ui.v87Open===key)section.scrollIntoView({block:'nearest'});
   },true);
 
   const previousRender=window.render;
