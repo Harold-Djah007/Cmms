@@ -45,3 +45,4 @@ jobs:
           node tests/supplies_v86_restore_regression.js
           node tests/fiix_nav_v87_regression.js
           node tests/supplies_v89_regression.js
+          node tests/supplies_v90_regression.js
