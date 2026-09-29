@@ -1,5 +1,9 @@
 # SafiMaintain CMMS
 
+## Compact Fiix-style Supplies v82
+
+The application shell and Parts / Supplies register now follow the compact operating rhythm shown in Fiix: a narrow module rail, an expandable Supplies group, a small action toolbar and a location-grouped stock register. Promotional navigation cards, oversized route rows and dashboard-style inventory tiles were removed. Stock taking, locations, cycle counts, BOM groups, businesses, part records and QR tags remain functional, while purchase-order creation remains excluded.
+
 ## Current Fiix-informed Supplies v81
 
 Fiix's official 2026 help content still identifies **Parts & Supplies as a v5 area**, while the newer v6 interface is being released in phases across areas such as Equipment and Work Orders. SafiMaintain therefore keeps the proven part/stock relationships without copying the old v5 chrome, and applies the verified v6 interaction patterns: a searchable and sortable list, filters, customizable columns, page-size controls, pagination, clear record summaries and responsive detail cards.
@@ -162,6 +166,7 @@ node tests/assets_v78_regression.js
 node tests/supplies_v79_regression.js
 node tests/supplies_v80_regression.js
 node tests/supplies_v81_regression.js
+node tests/supplies_v82_regression.js
 ```
 
 ## Recommended acceptance test
