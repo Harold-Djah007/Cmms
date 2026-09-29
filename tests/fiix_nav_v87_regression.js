@@ -7,6 +7,7 @@ const css=fs.readFileSync('dist/assets/safimaint-fiix-nav-v87.css','utf8');
 const index=fs.readFileSync('dist/index.html','utf8');
 const worker=fs.readFileSync('dist/service-worker.js','utf8');
 const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
+const stockFirst=fs.readFileSync('dist/assets/safimaint-stock-first.js','utf8');
 
 for(const label of ['Dashboard','Maintenance','Notifications','Assets','Supplies','Purchasing','Reports','Settings']) assert.match(source,new RegExp(label));
 for(const label of ['All assets','Facilities','Equipment','Tools','Meters','Downtime']) assert.match(source,new RegExp(label));
@@ -19,7 +20,7 @@ assert.match(source,/s79-nav-children/);
 assert.match(css,/Fiix navigation behavior with SafiMaintain visual language/);
 assert.match(index,/safimaint-fiix-nav-v87\.css\?v=87/);
 assert.match(index,/safimaint-fiix-nav-v87\.js\?v=87/);
-assert.match(worker,/const CACHE='safimaint-nav-v88'/);
+assert.match(worker,/const CACHE='safimaint-fiix-supplies-v89'/);
 assert.match(worker,/safimaint-fiix-nav-v87\.css/);
 assert.match(worker,/safimaint-fiix-nav-v87\.js/);
 assert.match(config,/9\.9\.3-fiix-nav-safimaint/);
