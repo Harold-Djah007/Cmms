@@ -46,7 +46,7 @@
     if(typeof ui.v87Open==='undefined')ui.v87Open=groupForRoute(ui.route)||'assets';
     if(ui.route!==lastRoute){
       const current=groupForRoute(ui.route);
-      if(current)ui.v87Open=current;
+      ui.v87Open=current||null;
       lastRoute=ui.route;
     }
     return ui.v87Open;
