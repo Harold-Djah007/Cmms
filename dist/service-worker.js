@@ -1,4 +1,4 @@
-const CACHE='safimaint-supplies-v83';
+const CACHE='safimaint-fiix-v85';
 const APP_SHELL=[
   './',
   './index.html',
@@ -52,6 +52,7 @@ const APP_SHELL=[
   './assets/safimaint-supplies-v81.css',
   './assets/safimaint-fiix-supplies-v82.css',
   './assets/safimaint-fiix-supplies-v83.css',
+  './assets/safimaint-fiix-v85.css',
   './assets/safimaint-qr-v75.js',
   './assets/safimaint-field-planner-v53.css',
   './assets/safimaint-lifecycle-v52.css',
@@ -63,6 +64,7 @@ const APP_SHELL=[
   './assets/safimaint-supplies-v81.js',
   './assets/safimaint-fiix-supplies-v82.js',
   './assets/safimaint-fiix-supplies-v83.js',
+  './assets/safimaint-fiix-v85.js',
   './assets/safimaint-logo.svg',
   './assets/favicon.svg',
   './assets/app-icon.svg'
