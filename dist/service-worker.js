@@ -1,4 +1,4 @@
-const CACHE='safimaint-nav-v87';
+const CACHE='safimaint-nav-v88';
 const APP_SHELL=[
   './',
   './index.html',
