@@ -15,5 +15,5 @@ assert.match(css,/\.s80-record-heading/);
 assert.match(css,/\.s80-tabs/);
 assert.match(css,/\.s80-stock-grid/);
 for(const label of ['Parts list','Current stock','Stock history','Stock levels per location','Cycle Count','BOMs','Businesses','Receipts','Files','Custom','Log']) assert.match(v80,new RegExp(label));
-assert.match(worker,/const CACHE='safimaint-fiix-supplies-v89'/);
+assert.match(worker,/const CACHE='safimaint-fiix-supplies-v90'/);
 console.log('Fiix-familiar Supplies v89 checks passed.');
