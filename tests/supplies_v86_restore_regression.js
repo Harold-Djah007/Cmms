@@ -16,7 +16,7 @@ assert.doesNotMatch(index,/safimaint-fiix-v85/);
 for(const label of ['Search','Filters','Customize view','Show','records']) assert.match(v81,new RegExp(label));
 assert.match(v81css,/s80-list-panel/);
 assert.match(v81css,/s80-list-table/);
-assert.match(worker,/const CACHE='safimaint-nav-v87'/);
+assert.match(worker,/const CACHE='safimaint-nav-v88'/);
 assert.doesNotMatch(worker,/safimaint-fiix-v85/);
 assert.match(config,/9\.9\.3-fiix-nav-safimaint/);
 console.log('Preferred v81 supplies experience restored and newer regressions disabled.');
