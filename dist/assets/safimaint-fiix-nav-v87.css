@@ -25,3 +25,23 @@
 .s79-nav-group.open>.s79-nav-children{display:block!important}
 .sidebar #navigation{overflow:visible!important}
 @media(max-width:900px){.sidebar #navigation{overflow:auto!important}}
+
+/* v90 rail stability: the whole sidebar stays fixed while groups expand inside the nav viewport. */
+.sidebar{
+  height:100vh!important;
+  min-height:100vh!important;
+  max-height:100vh!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+.sidebar .brand,.sidebar .site-card,.sidebar .sidebar-foot{flex:0 0 auto!important}
+.sidebar #navigation{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.sidebar .sidebar-foot{margin-top:auto!important}
