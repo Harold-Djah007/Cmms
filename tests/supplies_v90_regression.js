@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const js=fs.readFileSync('dist/assets/safimaint-fiix-supplies-v90.js','utf8');
+const css=fs.readFileSync('dist/assets/safimaint-fiix-supplies-v90.css','utf8');
+const index=fs.readFileSync('dist/index.html','utf8');
+const worker=fs.readFileSync('dist/service-worker.js','utf8');
+const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
+
+assert.match(js,/enhanceList/);
+assert.match(js,/enhanceRecord/);
+assert.match(js,/data-v90-new/);
+assert.match(js,/data-v90-print-list/);
+assert.match(js,/data-v90-list/);
+assert.match(css,/Fiix-familiar Parts & Supplies/);
+assert.match(css,/v90-list-caption/);
+assert.match(css,/v90-record-state/);
+assert.match(index,/safimaint-fiix-supplies-v90\.css\?v=90/);
+assert.match(index,/safimaint-fiix-supplies-v90\.js\?v=90/);
+assert.match(worker,/const CACHE='safimaint-fiix-supplies-v90'/);
+assert.match(config,/9\.9\.6-stable-fiix-supplies-v90/);
+console.log('Stable Fiix Supplies v90 checks passed.');
