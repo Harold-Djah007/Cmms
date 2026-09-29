@@ -1,0 +1,16 @@
+/* SafiMaintain v87 — Fiix navigation behavior with SafiMaintain visual language */
+.s79-nav{padding-top:7px}
+.s79-nav>.s79-nav-item,.s79-nav>.s79-nav-group{margin-bottom:2px}
+.s79-nav-parent{cursor:pointer}
+.s79-nav-group.route-active>.s79-nav-parent{
+  color:#f1fffb;
+  background:rgba(20,174,145,.08);
+}
+.s79-nav-group.route-active.open>.s79-nav-parent{
+  background:linear-gradient(90deg,rgba(18,178,146,.16),rgba(24,124,152,.10));
+}
+.s79-nav-parent>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s79-nav-children{animation:v87Drop .16s ease both}
+.s79-nav-children .s79-nav-item.child{margin:1px 0}
+@keyframes v87Drop{from{opacity:.25;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.s79-nav-children{animation:none!important}}
