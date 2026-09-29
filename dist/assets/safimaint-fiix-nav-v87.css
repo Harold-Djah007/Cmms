@@ -14,3 +14,14 @@
 .s79-nav-children .s79-nav-item.child{margin:1px 0}
 @keyframes v87Drop{from{opacity:.25;transform:translateY(-3px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.s79-nav-children{animation:none!important}}
+
+/* v87.1 recording fixes */
+.s79-nav-parent{grid-template-columns:32px minmax(0,1fr) auto 16px!important;gap:5px!important;font-size:12px!important}
+.s79-nav-parent>span:nth-child(2){white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.s79-nav-item.child{grid-template-columns:25px minmax(0,1fr) auto!important;min-height:36px!important;padding:5px 7px!important}
+.s79-nav-item.child>span:nth-child(2){min-width:0;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+.s79-nav-children{margin-left:15px!important;padding-left:11px!important}
+.s79-nav-group:not(.open)>.s79-nav-children{display:none!important}
+.s79-nav-group.open>.s79-nav-children{display:block!important}
+.sidebar #navigation{overflow:visible!important}
+@media(max-width:900px){.sidebar #navigation{overflow:auto!important}}
