@@ -44,9 +44,9 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
 assert.match(index,/safimaint-assets-v78\.css\?v=78/);
 assert.match(index,/safimaint-assets-v78\.js\?v=78/);
-assert.match(worker,/const CACHE='safimaint-supplies-v82'/);
+assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
 assert.match(worker,/safimaint-assets-v78\.css/);
 assert.match(worker,/safimaint-assets-v78\.js/);
-assert.match(config,/9\.8\.0-fiix-register-shell/);
+assert.match(config,/9\.9\.0-readable-fiix-supplies/);
 
 console.log('Assets v78 atlas, stable expansion and fixed navigation checks passed.');

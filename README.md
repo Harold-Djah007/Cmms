@@ -167,6 +167,7 @@ node tests/supplies_v79_regression.js
 node tests/supplies_v80_regression.js
 node tests/supplies_v81_regression.js
 node tests/supplies_v82_regression.js
+node tests/supplies_v83_regression.js
 ```
 
 ## Recommended acceptance test

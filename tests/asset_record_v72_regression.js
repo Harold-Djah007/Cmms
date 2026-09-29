@@ -25,7 +25,7 @@ assert.match(source,/longitude/);
 assert.match(index,/safimaint-asset-record-v72\.css\?v=75/);
 assert.match(index,/safimaint-asset-record-v72\.js\?v=75/);
 assert.match(index,/safimaint-qr-v75\.js\?v=75/);
-assert.match(worker,/const CACHE='safimaint-supplies-v82'/);
+assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
 assert.match(worker,/safimaint-asset-record-v72\.css/);
 assert.match(worker,/safimaint-asset-record-v72\.js/);
 assert.match(worker,/safimaint-qr-v75\.js/);

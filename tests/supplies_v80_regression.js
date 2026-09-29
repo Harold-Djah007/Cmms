@@ -44,9 +44,9 @@ assert.match(css,/@media\(max-width:720px\)/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 assert.match(index,/safimaint-supplies-v80\.css\?v=80/);
 assert.match(index,/safimaint-supplies-v80\.js\?v=80/);
-assert.match(worker,/const CACHE='safimaint-supplies-v82'/);
+assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
 assert.match(worker,/safimaint-supplies-v80\.css/);
 assert.match(worker,/safimaint-supplies-v80\.js/);
-assert.match(config,/9\.8\.0-fiix-register-shell/);
+assert.match(config,/9\.9\.0-readable-fiix-supplies/);
 
 console.log('Supplies v80 Fiix-familiar list, record and stock controls passed.');
