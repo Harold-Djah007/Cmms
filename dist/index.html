@@ -70,6 +70,7 @@
         <button class="nav-group open" data-nav-group="maint" type="button"><svg><use href="#i-work"/></svg><span>Maintenance</span><i>▾</i></button>
         <div class="nav-sub open" data-sub="maint">
           <button class="nav-item" data-view="work-orders"><span>Work Orders</span><b id="navWorkCount">0</b></button>
+          <button class="nav-item" data-view="requests"><span>Work Requests</span><b id="navReqCount" hidden>0</b></button>
           <button class="nav-item" data-view="my-work"><span>My Work</span><b id="navMineCount" hidden>0</b></button>
           <button class="nav-item" data-view="maintenance"><span>Scheduled Maintenance</span></button>
         </div>
@@ -85,6 +86,7 @@
         <div class="nav-sub open" data-sub="supplies">
           <button class="nav-item" data-view="inventory"><span>Parts and Supplies</span></button>
           <button class="nav-item" data-view="stock-take"><span>Inventory Cycle Count</span></button>
+          <button class="nav-item" data-view="purchasing"><span>Purchase Orders</span><b id="navPoCount" hidden>0</b></button>
         </div>
         <button class="nav-item" data-view="reports"><svg><use href="#i-chart"/></svg><span>Reports</span></button>
       </nav>
@@ -256,6 +258,7 @@
                 <option value="all">All types</option>
                 <option>Corrective</option>
                 <option>Preventive</option>
+                <option>Inspection</option>
                 <option>Project</option>
               </select>
               <label class="toggle">
@@ -319,6 +322,7 @@
         <section class="view" id="view-assets">
           <div class="fiix-ribbon">
             <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="newAssetButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
             <button class="ribbon-btn" id="printTagsButton" type="button"><svg><use href="#i-tag"/></svg>Print Tags</button>
             <button class="ribbon-btn" id="scanFromAssets" type="button"><svg><use href="#i-scan"/></svg>Scan</button>
             <label class="ribbon-search">
@@ -349,11 +353,13 @@
         <section class="view" id="view-maintenance">
           <div class="fiix-ribbon">
             <button class="ribbon-btn" data-view-link="work-orders" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="newPmButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
+            <button class="ribbon-btn" id="generateDuePm" type="button">Generate Due</button>
           </div>
           <div class="section-toolbar">
             <div>
               <h2>Scheduled Maintenance</h2>
-              <p>Time-based plans that generate a work order when they come due.</p>
+              <p>Time- and meter-based plans that generate a work order when they come due.</p>
             </div>
           </div>
           <div class="timeline" id="maintenanceTimeline"></div>
@@ -362,7 +368,8 @@
         <section class="view" id="view-inventory">
           <div class="fiix-ribbon">
             <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
-            <button class="ribbon-btn primary" data-view-link="stock-take" type="button"><svg><use href="#i-tag"/></svg>Cycle Count</button>
+            <button class="ribbon-btn primary" id="newPartButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
+            <button class="ribbon-btn" data-view-link="stock-take" type="button"><svg><use href="#i-tag"/></svg>Cycle Count</button>
             <button class="ribbon-btn" id="exportPartsButton" type="button"><svg><use href="#i-download"/></svg>Export</button>
             <label class="ribbon-search">
               <svg><use href="#i-search"/></svg>
@@ -442,6 +449,67 @@
           </div>
         </section>
 
+        <section class="view" id="view-requests">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="newRequestButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
+          </div>
+          <div class="section-toolbar">
+            <div>
+              <h2>Work Requests</h2>
+              <p>Anyone can raise a request. Approve it to create a work order, or decline it.</p>
+            </div>
+          </div>
+          <div class="table-card">
+            <div class="responsive-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Asset</th>
+                    <th>Requested By</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="requestRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-purchasing">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="inventory" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="newPoButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
+          </div>
+          <div class="section-toolbar">
+            <div>
+              <h2>Purchase Orders</h2>
+              <p>Reorder parts that are below minimum, then receive them into the bin.</p>
+            </div>
+          </div>
+          <div class="table-card">
+            <div class="responsive-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PO</th>
+                    <th>Vendor</th>
+                    <th>Lines</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="poRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="view" id="view-reports">
           <div class="fiix-ribbon">
             <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
@@ -471,6 +539,12 @@
               <div class="big-number" id="pmCompliance">0%</div>
               <p id="pmCopy">On-time preventive work versus overdue plans.</p>
               <div class="insight-pills" id="insightPills"></div>
+            </article>
+            <article class="panel">
+              <p class="eyebrow">Maintenance cost</p>
+              <h2>Labor + parts</h2>
+              <div class="big-number" id="costReport">GHS 0</div>
+              <p id="costCopy">Total cost of closed work this period.</p>
             </article>
             <article class="panel">
               <p class="eyebrow">Data safety</p>
@@ -516,7 +590,7 @@
       <div class="form-grid">
         <label class="full">What needs attention?<input name="title" required minlength="3" placeholder="Example: Pump making unusual noise"></label>
         <label>Asset<select name="asset" required id="assetSelect"></select></label>
-        <label>Type<select name="type" required><option>Corrective</option><option>Preventive</option><option>Project</option></select></label>
+        <label>Type<select name="type" required><option>Corrective</option><option>Preventive</option><option>Inspection</option><option>Project</option></select></label>
         <label>Priority<select name="priority" required><option>Medium</option><option>High</option><option>Critical</option><option>Low</option></select></label>
         <label>Assign to<select name="assignee" required id="assigneeSelect"></select></label>
         <label>Due date<input name="due" type="date" required></label>
@@ -611,6 +685,147 @@
       <div class="dialog-actions">
         <button type="button" class="secondary-button" id="cancelTimeDialog">Cancel</button>
         <button type="submit" class="primary-button">Add time</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="requestDialog" aria-labelledby="requestDialogTitle">
+    <form method="dialog" id="requestForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Work request portal</p>
+          <h2 id="requestDialogTitle">New work request</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeRequestDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label class="full">What needs attention?<input name="title" required minlength="3" placeholder="Example: Unusual noise at the mix pit"></label>
+        <label>Asset<select name="asset" required id="requestAssetSelect"></select></label>
+        <label>Priority<select name="priority" required><option>Medium</option><option>High</option><option>Critical</option><option>Low</option></select></label>
+        <label class="full">Details<textarea name="notes" rows="3" placeholder="Symptoms, location, and when it started"></textarea></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelRequestDialog">Cancel</button>
+        <button type="submit" class="primary-button">Submit request</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="assetDialog" aria-labelledby="assetDialogTitle">
+    <form method="dialog" id="assetForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Asset register</p>
+          <h2 id="assetDialogTitle">New asset</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeAssetDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label>Code<input name="code" required placeholder="A430"></label>
+        <label>Name<input name="name" required placeholder="Digester recirculation pump"></label>
+        <label>Kind<select name="kind" required><option>Equipment</option><option>Facility</option><option>Tool</option></select></label>
+        <label>Parent<select name="parent" id="assetParentSelect"></select></label>
+        <label>Location<input name="location" required placeholder="Operations"></label>
+        <label>Criticality<select name="criticality"><option>A</option><option selected>B</option><option>C</option></select></label>
+        <label>Manufacturer<input name="manufacturer" placeholder="Grundfos"></label>
+        <label>Serial<input name="serial" placeholder="SN-001"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelAssetDialog">Cancel</button>
+        <button type="submit" class="primary-button">Create asset</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="partDialog" aria-labelledby="partDialogTitle">
+    <form method="dialog" id="partForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Parts and supplies</p>
+          <h2 id="partDialogTitle">New part</h2>
+        </div>
+        <button type="button" class="icon-button" id="closePartDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label>Code<input name="code" required placeholder="A430"></label>
+        <label>Name<input name="name" required placeholder="Mechanical seal kit"></label>
+        <label>Location<input name="location" required placeholder="CHP Container"></label>
+        <label>Aisle / Row / Bin<input name="bin" placeholder="1 / B / 04"></label>
+        <label>Min<input name="minimum" type="number" min="0" value="1" required></label>
+        <label>Max<input name="maximum" type="number" min="0" value="4" required></label>
+        <label>Unit cost<input name="unitCost" type="number" min="0" step="0.01" value="0"></label>
+        <label>Vendor<input name="vendor" placeholder="Local stores"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelPartDialog">Cancel</button>
+        <button type="submit" class="primary-button">Create part</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pmDialog" aria-labelledby="pmDialogTitle">
+    <form method="dialog" id="pmForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Scheduled maintenance</p>
+          <h2 id="pmDialogTitle">New schedule</h2>
+        </div>
+        <button type="button" class="icon-button" id="closePmDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label class="full">Name<input name="title" required placeholder="Monthly CHP oil check"></label>
+        <label>Asset<select name="assetId" required id="pmAssetSelect"></select></label>
+        <label>Assigned To<select name="owner" id="pmOwnerSelect"></select></label>
+        <label>Trigger<select name="trigger"><option value="time">Time-based</option><option value="meter">Meter-based</option></select></label>
+        <label>Every (days)<input name="intervalDays" type="number" min="1" value="30"></label>
+        <label>Meter every<input name="meterEvery" type="number" min="1" value="250"></label>
+        <label>Next due<input name="date" type="date" required></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelPmDialog">Cancel</button>
+        <button type="submit" class="primary-button">Create schedule</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="poDialog" aria-labelledby="poDialogTitle">
+    <form method="dialog" id="poForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Purchasing</p>
+          <h2 id="poDialogTitle">New purchase order</h2>
+        </div>
+        <button type="button" class="icon-button" id="closePoDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label>Part<select name="partId" required id="poPartSelect"></select></label>
+        <label>Quantity<input name="qty" type="number" min="1" value="1" required></label>
+        <label>Vendor<input name="vendor" required placeholder="Local stores"></label>
+        <label>Unit cost<input name="cost" type="number" min="0" step="0.01" value="0"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelPoDialog">Cancel</button>
+        <button type="submit" class="primary-button">Create PO</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="costDialog" aria-labelledby="costDialogTitle">
+    <form method="dialog" id="costForm">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Additional costs</p>
+          <h2 id="costDialogTitle">Add cost</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeCostDialog" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="form-grid">
+        <label>Description<input name="desc" required placeholder="Contractor, hire, transport"></label>
+        <label>Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelCostDialog">Cancel</button>
+        <button type="submit" class="primary-button">Add cost</button>
       </div>
     </form>
   </dialog>

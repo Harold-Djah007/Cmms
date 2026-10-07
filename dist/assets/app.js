@@ -1,12 +1,12 @@
-const STORAGE_KEY = 'safimaint-safisana-v1';
-const LEGACY_KEYS = ['safimaint-field-v1', 'safimaint-pilot-v1'];
+const STORAGE_KEY = 'safimaint-fiix-ops-v1';
+const LEGACY_KEYS = ['safimaint-safisana-v1', 'safimaint-field-v1', 'safimaint-pilot-v1'];
 
 const people = [
-  { name: 'Abena Sarpong', initials: 'AS', role: 'Operations manager', kind: 'planner', trade: 'Planning' },
-  { name: 'Simeon Sakyi', initials: 'SS', role: 'Maintenance technician', kind: 'technician', trade: 'Mechanical' },
-  { name: 'Kwame Mensah', initials: 'KM', role: 'Mechanical technician', kind: 'technician', trade: 'Mechanical' },
-  { name: 'Esi Agyeman', initials: 'EA', role: 'Mechanical technician', kind: 'technician', trade: 'Mechanical' },
-  { name: 'Yaw Boateng', initials: 'YB', role: 'Instrumentation', kind: 'technician', trade: 'Instrumentation' }
+  { name: 'Abena Sarpong', initials: 'AS', role: 'Operations manager', kind: 'planner', trade: 'Planning', rate: 55 },
+  { name: 'Simeon Sakyi', initials: 'SS', role: 'Maintenance technician', kind: 'technician', trade: 'Mechanical', rate: 42 },
+  { name: 'Kwame Mensah', initials: 'KM', role: 'Mechanical technician', kind: 'technician', trade: 'Mechanical', rate: 40 },
+  { name: 'Esi Agyeman', initials: 'EA', role: 'Mechanical technician', kind: 'technician', trade: 'Mechanical', rate: 40 },
+  { name: 'Yaw Boateng', initials: 'YB', role: 'Instrumentation', kind: 'technician', trade: 'Instrumentation', rate: 45 }
 ];
 const technicians = people.filter(p => p.kind === 'technician');
 const planner = people[0];
@@ -34,9 +34,9 @@ const seedData = {
     { id: 'MP', code: 'MP', name: 'Mix Pit', kind: 'Facility', parent: 'SSGL', location: 'Mix Pit', status: 'Attention', lastService: daysFromNow(-18), nextService: daysFromNow(1), criticality: 'A' },
     { id: 'NUR', code: 'NUR', name: 'Nursery', kind: 'Facility', parent: 'SSGL', location: 'Nursery', status: 'Healthy', lastService: daysFromNow(-9), nextService: daysFromNow(25), criticality: 'B' },
     { id: 'WI', code: 'WI', name: 'Waste Intake', kind: 'Facility', parent: 'SSGL', location: 'Waste Intake', status: 'Healthy', lastService: daysFromNow(-4), nextService: daysFromNow(12), criticality: 'A' },
-    { id: 'CHP', code: 'CHP', name: 'CHP Container', kind: 'Facility', parent: 'OPS', location: 'Operations', status: 'Attention', lastService: daysFromNow(-11), nextService: daysFromNow(0), criticality: 'A', meter: { name: 'Run hours', value: 4120, unit: 'h' } },
+    { id: 'CHP', code: 'CHP', name: 'CHP Container', kind: 'Facility', parent: 'OPS', location: 'Operations', status: 'Attention', lastService: daysFromNow(-11), nextService: daysFromNow(0), criticality: 'A', meter: { name: 'Run hours', value: 4120, unit: 'h' }, manufacturer: 'Tedom', serial: 'CHP-2018-04', warranty: daysFromNow(180), bom: [{ partId: 'A326', qty: 1 }, { partId: 'A386', qty: 1 }] },
     { id: 'RO', code: 'RO', name: 'RO Plant', kind: 'Equipment', parent: 'OPS', location: 'Operations', status: 'Attention', lastService: daysFromNow(-22), nextService: daysFromNow(5), criticality: 'A' },
-    { id: 'PUMP', code: 'A2067', name: 'Digester feed pump', kind: 'Equipment', parent: 'MP', location: 'Mix Pit', status: 'Down', lastService: daysFromNow(-41), nextService: daysFromNow(0), criticality: 'A', meter: { name: 'Hours', value: 1860, unit: 'h' } },
+    { id: 'PUMP', code: 'A2067', name: 'Digester feed pump', kind: 'Equipment', parent: 'MP', location: 'Mix Pit', status: 'Down', lastService: daysFromNow(-41), nextService: daysFromNow(0), criticality: 'A', meter: { name: 'Hours', value: 1860, unit: 'h' }, manufacturer: 'Flygt', serial: 'FP-4011', warranty: daysFromNow(-20), bom: [{ partId: 'MS40', qty: 1 }, { partId: 'BLT', qty: 1 }] },
     { id: 'REG', code: 'A1994', name: 'Gas pressure regulator', kind: 'Equipment', parent: 'CHP', location: 'CHP Container', status: 'Attention', lastService: daysFromNow(-16), nextService: daysFromNow(3), criticality: 'A' },
     { id: 'A170', code: 'A170', name: 'Tahmo weather station', kind: 'Equipment', parent: 'OPS', location: 'Operations', status: 'Healthy', lastService: daysFromNow(-6), nextService: daysFromNow(24), criticality: 'B' },
     { id: 'A424', code: 'A424', name: 'Compost sewing machine', kind: 'Equipment', parent: 'A136', location: 'Gada', status: 'Healthy', lastService: daysFromNow(-15), nextService: daysFromNow(15), criticality: 'B' },
@@ -58,23 +58,31 @@ const seedData = {
     { id: '1828', title: 'EPA monthly reporting', asset: 'Operations', assetId: 'OPS', location: 'Operations', priority: 'High', type: 'Preventive', assignee: 'Simeon Sakyi', due: daysFromNow(-20), status: 'Completed', estimatedHours: 3, loggedHours: 3, summary: 'Previous cycle closed.', instructions: '', createdAt: daysFromNow(-30), completedAt: daysFromNow(-20), completionNotes: 'Filed with EPA.', downtimeHours: 0, cause: 'Scheduled', tasks: [{ id: 't1', text: 'File report', done: true }], partsUsed: [], timeLog: [{ hours: 3, note: 'Filed', at: daysFromNow(-20) }], comments: [] }
   ],
   inventory: [
-    { id: 'A123', code: 'A123', name: 'RELAY C10-A10DX/24V R.S.', category: 'Electrical', quantity: 4, minimum: 2, maximum: 8, make: 'Schneider', barcode: 'A123', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'B', bin: '04', qty: 4 }], receipts: [] },
+    { id: 'A123', code: 'A123', name: 'RELAY C10-A10DX/24V R.S.', category: 'Electrical', quantity: 4, minimum: 2, maximum: 8, make: 'Schneider', barcode: 'A123', unitCost: 85, vendor: 'Schneider', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'B', bin: '04', qty: 4 }], receipts: [] },
     { id: 'A239', code: 'A239', name: 'Cylinder head & gasket (Sandfilter)', category: 'Mechanical', quantity: 0, minimum: 1, maximum: 2, make: '', barcode: 'A239', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'A', bin: '01', qty: 0 }], receipts: [] },
     { id: 'A243', code: 'A243', name: 'Inter cooler', category: 'Mechanical', quantity: 1, minimum: 1, maximum: 2, make: '', barcode: 'A243', locations: [{ site: 'SSGL', location: 'Operations', aisle: '2', row: 'C', bin: '11', qty: 1 }], receipts: [] },
     { id: 'A249', code: 'A249', name: 'CHP container (Sandfilter) kit', category: 'Assembly', quantity: 10, minimum: 4, maximum: 12, make: '', barcode: 'A249', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'A', bin: '02', qty: 10 }], receipts: [{ qty: 10, receipt: 'GRN-008', supplier: 'Local stores', at: daysFromNow(-12) }] },
-    { id: 'A375', code: 'A375', name: 'Gasket copper', category: 'Seals', quantity: 2, minimum: 4, maximum: 10, make: '', barcode: 'A375', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'B', bin: '08', qty: 2 }], receipts: [] },
+    { id: 'A375', code: 'A375', name: 'Gasket copper', category: 'Seals', quantity: 2, minimum: 4, maximum: 10, make: '', barcode: 'A375', unitCost: 18, vendor: 'Local stores', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'B', bin: '08', qty: 2 }], receipts: [] },
     { id: 'A326', code: 'A326', name: 'Comp oil 0w48', category: 'Lubricants', quantity: 5, minimum: 4, maximum: 12, make: '', barcode: 'A326', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '2', row: 'A', bin: '03', qty: 5 }], receipts: [] },
     { id: 'A386', code: 'A386', name: 'Turbo charger gasket set', category: 'Seals', quantity: 1, minimum: 1, maximum: 3, make: '', barcode: 'A386', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'C', bin: '06', qty: 1 }], receipts: [] },
     { id: 'BLT', code: 'BLT-B72', name: 'Drive belt B-72', category: 'Mechanical', quantity: 1, minimum: 3, maximum: 6, make: '', barcode: 'BLT-B72', locations: [{ site: 'SSGL', location: 'Operations', aisle: '3', row: 'A', bin: '12', qty: 1 }], receipts: [] },
     { id: 'MS40', code: 'MS-40-SS', name: 'Pump mechanical seal', category: 'Seals', quantity: 2, minimum: 2, maximum: 4, make: '', barcode: 'MS-40-SS', locations: [{ site: 'SSGL', location: 'Mix Pit', aisle: '1', row: 'A', bin: '02', qty: 2 }], receipts: [] }
   ],
   schedules: [
-    { id: 'PM-201', title: 'EPA monthly reporting', asset: 'Operations', assetId: 'OPS', date: daysFromNow(0), owner: 'Simeon Sakyi', interval: 'Every month' },
-    { id: 'PM-202', title: 'Weather station clean', asset: 'Tahmo weather station', assetId: 'A170', date: daysFromNow(3), owner: 'Simeon Sakyi', interval: 'Every month' },
-    { id: 'PM-203', title: 'Feed pump inspection', asset: 'Digester feed pump', assetId: 'PUMP', date: daysFromNow(7), owner: 'Kwame Mensah', interval: 'Every month' },
-    { id: 'PM-204', title: 'CHP oil and leak check', asset: 'CHP Container', assetId: 'CHP', date: daysFromNow(5), owner: 'Simeon Sakyi', interval: 'Every two weeks' },
-    { id: 'PM-205', title: 'Storage tank inspection', asset: 'Safisana storage tanks', assetId: 'A415', date: daysFromNow(14), owner: 'Kwame Mensah', interval: 'Every quarter' }
+    { id: 'PM-201', title: 'EPA monthly reporting', asset: 'Operations', assetId: 'OPS', date: daysFromNow(0), owner: 'Simeon Sakyi', interval: 'Every month', trigger: 'time', intervalDays: 30, active: true },
+    { id: 'PM-202', title: 'Weather station clean', asset: 'Tahmo weather station', assetId: 'A170', date: daysFromNow(3), owner: 'Simeon Sakyi', interval: 'Every month', trigger: 'time', intervalDays: 30, active: true },
+    { id: 'PM-203', title: 'Feed pump inspection', asset: 'Digester feed pump', assetId: 'PUMP', date: daysFromNow(7), owner: 'Kwame Mensah', interval: 'Every month', trigger: 'time', intervalDays: 30, active: true },
+    { id: 'PM-204', title: 'CHP oil and leak check', asset: 'CHP Container', assetId: 'CHP', date: daysFromNow(5), owner: 'Simeon Sakyi', interval: 'Every 250 hours', trigger: 'meter', meterEvery: 250, lastMeter: 4000, active: true },
+    { id: 'PM-205', title: 'Storage tank inspection', asset: 'Safisana storage tanks', assetId: 'A415', date: daysFromNow(14), owner: 'Kwame Mensah', interval: 'Every quarter', trigger: 'time', intervalDays: 90, active: true }
   ],
+  requests: [
+    { id: 'WR-101', title: 'Smell of gas around Mix Pit walkway', assetId: 'MP', asset: 'Mix Pit', requestedBy: 'Yaw Boateng', priority: 'High', status: 'Submitted', notes: 'Noticed after the morning offload.', createdAt: daysFromNow(0), convertedTo: '' },
+    { id: 'WR-102', title: 'Weather station shield cracked', assetId: 'A170', asset: 'Tahmo weather station', requestedBy: 'Esi Agyeman', priority: 'Medium', status: 'Converted', notes: 'Convert to PM if it is already on the schedule.', createdAt: daysFromNow(-2), convertedTo: '1966' }
+  ],
+  purchaseOrders: [
+    { id: 'PO-1008', vendor: 'Local stores', status: 'Submitted', createdAt: daysFromNow(-1), lines: [{ partId: 'A375', name: 'Gasket copper', qty: 6, cost: 18 }] }
+  ],
+  vendors: ['Local stores', 'Schneider', 'PumpTech Ghana'],
   threads: [
     { id: 'MSG-1', title: 'WO 1994 · gas regulator', type: 'work', recordType: 'work', recordId: '1994', with: 'Simeon Sakyi', messages: [
       { from: 'Simeon Sakyi', text: 'Pressure dropped after the morning run. I need the regulator kit from CHP stores.', at: '08:10', read: true },
@@ -122,22 +130,47 @@ function currentUser() {
 function currentUserName() { return currentUser().name; }
 
 function loadState() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      parsed.threads = parsed.threads || structuredClone(seedData.threads);
-      parsed.inventory = (parsed.inventory || []).map(normalizePart);
-      return parsed;
-    }
-  } catch (_) {}
-  return structuredClone(seedData);
+  for (const key of [STORAGE_KEY, ...LEGACY_KEYS]) {
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) return hydrateState(JSON.parse(stored));
+    } catch (_) {}
+  }
+  return hydrateState(structuredClone(seedData));
+}
+
+function hydrateState(data) {
+  const seed = structuredClone(seedData);
+  const next = { ...seed, ...data };
+  next.threads = next.threads?.length ? next.threads : seed.threads;
+  next.requests = next.requests || seed.requests;
+  next.purchaseOrders = next.purchaseOrders || seed.purchaseOrders;
+  next.vendors = next.vendors || seed.vendors;
+  next.activity = next.activity || seed.activity;
+  next.inventory = (next.inventory || []).map(normalizePart);
+  next.assets = (next.assets || []).map(normalizeAsset);
+  next.workOrders = (next.workOrders || []).map(normalizeWork);
+  next.schedules = (next.schedules || []).map(normalizePm);
+  return next;
 }
 
 function normalizePart(part) {
   const locations = part.locations || [{ site: 'SSGL', location: part.location || 'Operations', aisle: '', row: '', bin: '', qty: part.quantity || 0 }];
   const quantity = locations.reduce((sum, loc) => sum + Number(loc.qty || 0), 0);
-  return { category: 'Parts And Supplies', minimum: 1, maximum: 5, make: '', barcode: part.code || part.id, receipts: [], ...part, locations, quantity };
+  return { category: 'Parts And Supplies', minimum: 1, maximum: 5, make: '', barcode: part.code || part.id, receipts: [], unitCost: 0, vendor: '', ...part, locations, quantity };
+}
+
+function normalizeAsset(asset) {
+  return { manufacturer: '', serial: '', model: '', warranty: '', assignedTo: '', bom: [], meterHistory: [], notes: '', ...asset };
+}
+
+function normalizeWork(work) {
+  return { additionalCosts: [], followUpOf: '', requestId: '', failureCode: '', completedAt: '', completionNotes: '', downtimeHours: 0, cause: '', partsUsed: [], timeLog: [], comments: [], tasks: [], ...work };
+}
+
+function normalizePm(pm) {
+  const intervalDays = pm.intervalDays || (String(pm.interval || '').includes('week') ? 14 : String(pm.interval || '').includes('quarter') ? 90 : 30);
+  return { trigger: 'time', intervalDays, meterEvery: 0, lastMeter: 0, active: true, tasks: [], ...pm, intervalDays };
 }
 
 function saveState() {
@@ -220,6 +253,68 @@ function qrMark(code) {
   return `<svg class="qr-mark" viewBox="0 0 7 7" aria-hidden="true">${cells}</svg>`;
 }
 
+function personRate(name) {
+  return people.find(p => p.name === name)?.rate || 40;
+}
+
+function laborCost(work) {
+  return (work.loggedHours || 0) * personRate(work.assignee);
+}
+
+function partsCost(work) {
+  return (work.partsUsed || []).reduce((sum, line) => {
+    const part = findPart(line.partId);
+    return sum + (line.qty || 0) * Number(part?.unitCost || 0);
+  }, 0);
+}
+
+function extraCost(work) {
+  return (work.additionalCosts || []).reduce((sum, c) => sum + Number(c.amount || 0), 0);
+}
+
+function workCost(work) {
+  return laborCost(work) + partsCost(work) + extraCost(work);
+}
+
+function money(n) {
+  return `GHS ${Number(n || 0).toFixed(0)}`;
+}
+
+function nextRequestId() {
+  const nums = (state.requests || []).map(r => Number(String(r.id).replace(/\D/g, ''))).filter(n => !Number.isNaN(n));
+  return `WR-${Math.max(100, ...nums, 0) + 1}`;
+}
+
+function nextPoId() {
+  const nums = (state.purchaseOrders || []).map(p => Number(String(p.id).replace(/\D/g, ''))).filter(n => !Number.isNaN(n));
+  return `PO-${Math.max(1000, ...nums, 0) + 1}`;
+}
+
+function nextPmId() {
+  const nums = state.schedules.map(s => Number(String(s.id).replace(/\D/g, ''))).filter(n => !Number.isNaN(n));
+  return `PM-${Math.max(200, ...nums, 0) + 1}`;
+}
+
+function openRequests() {
+  return (state.requests || []).filter(r => r.status === 'Submitted');
+}
+
+function openPos() {
+  return (state.purchaseOrders || []).filter(p => p.status !== 'Received');
+}
+
+function maybeReorder(part) {
+  if (partOnHand(part) > part.minimum) return;
+  const open = (state.purchaseOrders || []).some(po => po.status !== 'Received' && po.lines.some(l => l.partId === part.id));
+  if (open) return;
+  const qty = Math.max(part.maximum - partOnHand(part), 1);
+  state.purchaseOrders.unshift({
+    id: nextPoId(), vendor: part.vendor || 'Local stores', status: 'Draft', createdAt: daysFromNow(0),
+    lines: [{ partId: part.id, name: part.name, qty, cost: part.unitCost || 0 }]
+  });
+  notify(`${part.code} reorder`, `Draft ${state.purchaseOrders[0].id} created because ${part.name} is below min.`, { type: 'stock', recordType: 'part', recordId: part.id });
+}
+
 function renderDashboard() {
   const open = openWork();
   const overdue = open.filter(isOverdue);
@@ -233,7 +328,7 @@ function renderDashboard() {
     ['Late', overdue.length, overdue.length ? 'Past suggested completion' : 'Nothing late', 'i-alert', overdue.length ? 'danger' : '', 'work-orders'],
     ['Due today', dueToday, `${state.schedules.filter(s => s.date <= daysFromNow(7)).length} PM this week`, 'i-calendar', '', 'maintenance'],
     ['Offline assets', down.length, `${state.assets.filter(a => a.kind !== 'Facility' && a.status !== 'Down').length} online`, 'i-asset', down.length ? 'warn' : '', 'assets'],
-    ['Low stock', lowParts.length, 'Count before you issue', 'i-box', 'blue', 'stock-take']
+    ['Work requests', openRequests().length, `${openPos().length} open POs`, 'i-inbox', openRequests().length ? 'blue' : '', 'requests']
   ];
   document.querySelector('#metricGrid').innerHTML = metrics.map(([label, value, note, icon, tone, view]) => `
     <button class="metric-card ${tone}" data-view-link="${view}">
@@ -358,6 +453,16 @@ function renderWorkOrders() {
   const unread = unreadCount();
   msgBadge.textContent = unread;
   msgBadge.hidden = unread === 0;
+  const reqBadge = document.querySelector('#navReqCount');
+  if (reqBadge) {
+    reqBadge.textContent = openRequests().length;
+    reqBadge.hidden = openRequests().length === 0;
+  }
+  const poBadge = document.querySelector('#navPoCount');
+  if (poBadge) {
+    poBadge.textContent = openPos().length;
+    poBadge.hidden = openPos().length === 0;
+  }
 }
 
 function renderMyWork() {
@@ -442,7 +547,7 @@ function renderSchedule(target, schedules, full = true) {
     <div class="timeline-group">
       <div class="timeline-date">${prettyDate(s.date)}</div>
       <article class="timeline-card">
-        <div><h3>${escapeHTML(s.title)}</h3><p>${escapeHTML(s.asset)} · ${escapeHTML(s.owner)} · ${escapeHTML(s.interval)}</p></div>
+        <div><h3>${escapeHTML(s.title)}</h3><p>${escapeHTML(s.asset)} · ${escapeHTML(s.owner)} · ${escapeHTML(s.trigger === 'meter' ? `Every ${s.meterEvery} ${findAsset(s.assetId)?.meter?.unit || 'units'}` : s.interval)}</p></div>
         <button class="action-button primary" data-generate-pm="${s.id}">Generate WO</button>
       </article>
     </div>` : `
@@ -450,6 +555,37 @@ function renderSchedule(target, schedules, full = true) {
       <div class="date-block"><small>${new Date(`${s.date}T12:00:00`).toLocaleDateString('en-GB', { month: 'short' })}</small>${new Date(`${s.date}T12:00:00`).getDate()}</div>
       <div><h3>${escapeHTML(s.title)}</h3><p>${escapeHTML(s.asset)}</p></div>
     </button>`).join('');
+}
+
+function renderRequests() {
+  const rows = document.querySelector('#requestRows');
+  if (!rows) return;
+  rows.innerHTML = (state.requests || []).map(r => `
+    <tr>
+      <td><span class="code-link">${escapeHTML(r.id)}</span></td>
+      <td><strong>${escapeHTML(r.title)}</strong><small>${escapeHTML(r.notes || '')}</small></td>
+      <td>${escapeHTML(r.asset)}</td>
+      <td>${escapeHTML(r.requestedBy)}</td>
+      <td><span class="priority-badge ${r.priority}">${r.priority}</span></td>
+      <td><span class="status-badge ${statusClass(r.status)}">${r.status}${r.convertedTo ? ` · ${r.convertedTo}` : ''}</span></td>
+      <td>${r.status === 'Submitted' ? `<button class="action-button primary" data-convert-request="${r.id}">Convert</button> <button class="action-button" data-decline-request="${r.id}">Decline</button>` : ''}</td>
+    </tr>`).join('') || '<tr><td colspan="7">No work requests.</td></tr>';
+}
+
+function renderPurchasing() {
+  const rows = document.querySelector('#poRows');
+  if (!rows) return;
+  rows.innerHTML = (state.purchaseOrders || []).map(po => {
+    const total = po.lines.reduce((sum, l) => sum + l.qty * Number(l.cost || 0), 0);
+    return `<tr>
+      <td><span class="code-link">${escapeHTML(po.id)}</span></td>
+      <td>${escapeHTML(po.vendor)}</td>
+      <td>${po.lines.map(l => `${escapeHTML(l.name)} × ${l.qty}`).join(', ')}</td>
+      <td><strong>${money(total)}</strong></td>
+      <td><span class="status-badge ${statusClass(po.status)}">${po.status}</span></td>
+      <td>${po.status !== 'Received' ? `<button class="action-button primary" data-receive-po="${po.id}">Receive</button>` : ''}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6">No purchase orders.</td></tr>';
 }
 
 function renderInventory() {
@@ -550,8 +686,8 @@ function renderMessages() {
 }
 
 function renderReports() {
-  const completed = state.workOrders.filter(w => w.status === 'Completed').length;
-  document.querySelector('#completedReport').textContent = completed;
+  const completed = state.workOrders.filter(w => w.status === 'Completed');
+  document.querySelector('#completedReport').textContent = completed.length;
   const counts = ['Critical', 'High', 'Medium', 'Low'].map(p => [p, state.workOrders.filter(w => w.status !== 'Completed' && w.priority === p).length]);
   const max = Math.max(1, ...counts.map(([, n]) => n));
   document.querySelector('#priorityChart').innerHTML = counts.map(([p, n]) =>
@@ -560,7 +696,10 @@ function renderReports() {
   const onTimePm = state.schedules.filter(s => s.date >= daysFromNow(0)).length;
   document.querySelector('#pmCompliance').textContent = `${Math.round((onTimePm / Math.max(state.schedules.length, 1)) * 100)}%`;
   const hours = state.workOrders.reduce((sum, w) => sum + (w.loggedHours || 0), 0);
-  document.querySelector('#insightPills').innerHTML = `<span>${unreadCount()} unread messages</span><span>${hours.toFixed(1)} h logged</span>`;
+  const cost = completed.reduce((sum, w) => sum + workCost(w), 0);
+  const costEl = document.querySelector('#costReport');
+  if (costEl) costEl.textContent = money(cost);
+  document.querySelector('#insightPills').innerHTML = `<span>${unreadCount()} unread</span><span>${hours.toFixed(1)} h logged</span><span>${openRequests().length} requests</span><span>${openPos().length} open POs</span>`;
 }
 
 function renderRecord() {
@@ -599,20 +738,24 @@ function renderWorkRecord(root) {
     details: 'General',
     tasks: `Tasks (${progress.done}/${progress.total})`,
     parts: 'Parts',
+    log: 'Labor',
+    costs: `Costs (${money(workCost(w))})`,
     messages: 'Messages',
-    log: 'Work log',
     completion: 'Completion'
   };
-  const actions = w.status === 'Completed' ? '' : `
-    ${w.status === 'In Progress' ? '' : `<button class="ribbon-btn" data-wo-action="start" data-id="${w.id}">${w.status === 'On Hold' ? 'Resume' : 'Start'}</button>`}
+  const actions = `
+    ${w.status === 'Completed' ? '' : `${w.status === 'In Progress' ? '' : `<button class="ribbon-btn" data-wo-action="start" data-id="${w.id}">${w.status === 'On Hold' ? 'Resume' : 'Start'}</button>`}
     ${w.status === 'In Progress' ? `<button class="ribbon-btn" data-wo-action="hold" data-id="${w.id}">Hold</button>` : ''}
     <button class="ribbon-btn" data-wo-action="time" data-id="${w.id}">Log time</button>
-    <button class="ribbon-btn ${w.status === 'In Progress' ? 'primary' : ''}" data-wo-action="complete" data-id="${w.id}">Complete</button>`;
+    <button class="ribbon-btn ${w.status === 'In Progress' ? 'primary' : ''}" data-wo-action="complete" data-id="${w.id}">Complete</button>`}
+    <button class="ribbon-btn" data-copy-wo="${w.id}">Copy</button>
+    <button class="ribbon-btn" data-follow-wo="${w.id}">Follow-up</button>
+    <button class="ribbon-btn" data-delete-wo="${w.id}">Delete</button>`;
   const panels = {
     details: `<div class="record-grid" id="woFields">
       <label>Status<select name="status">${['Open', 'In Progress', 'On Hold', 'Completed'].map(s => `<option ${s === w.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
       <label>Asset<select name="assetId">${state.assets.filter(a => a.kind !== 'Facility' || a.id === w.assetId).map(a => `<option value="${a.id}" ${a.id === w.assetId ? 'selected' : ''}>${escapeHTML(a.name)}</option>`).join('')}</select></label>
-      <label>Maintenance Type<select name="type">${['Corrective', 'Preventive', 'Project'].map(t => `<option ${t === w.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <label>Maintenance Type<select name="type">${['Corrective', 'Preventive', 'Inspection', 'Project'].map(t => `<option ${t === w.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       <label>Priority<select name="priority">${['Low', 'Medium', 'High', 'Critical'].map(p => `<option ${p === w.priority ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
       <label>Assigned To<select name="assignee">${people.map(p => `<option ${p.name === w.assignee ? 'selected' : ''}>${escapeHTML(p.name)}</option>`).join('')}</select></label>
       <label>Suggested Completion Date<input name="due" type="date" value="${w.due}"></label>
@@ -621,20 +764,34 @@ function renderWorkRecord(root) {
       <label class="full">Summary of Issue<textarea name="summary" rows="2">${escapeHTML(w.summary || w.title)}</textarea></label>
       <label class="full">Work Instructions<textarea name="instructions" rows="3">${escapeHTML(w.instructions || w.description || '')}</textarea></label>
     </div>`,
-    tasks: `${(w.tasks || []).map(t => `<div class="task-row"><label><input type="checkbox" data-toggle-task="${t.id}" data-id="${w.id}" ${t.done ? 'checked' : ''}><span>${escapeHTML(t.text)}</span></label></div>`).join('') || '<p>No tasks yet.</p>'}
-      <div class="part-add"><input id="newTaskText" placeholder="Add a task"><button class="action-button primary" data-add-task="${w.id}">Add</button></div>`,
+    tasks: `${(w.tasks || []).map(t => `<div class="task-row"><label><input type="checkbox" data-toggle-task="${t.id}" data-id="${w.id}" ${t.done ? 'checked' : ''}><span>${escapeHTML(t.text)}</span></label>
+        ${t.kind === 'inspect' ? `<select data-inspect-result="${t.id}" data-id="${w.id}"><option value="">Result</option><option ${t.result === 'pass' ? 'selected' : ''} value="pass">Pass</option><option ${t.result === 'fail' ? 'selected' : ''} value="fail">Fail</option></select>` : ''}</div>`).join('') || '<p>No tasks yet.</p>'}
+      <div class="part-add"><input id="newTaskText" placeholder="Add a task"><button class="action-button primary" data-add-task="${w.id}">Add</button>
+      <button class="action-button" data-add-inspect="${w.id}">Add inspection</button></div>`,
     parts: `${(w.partsUsed || []).map(p => `<div class="part-row"><div><strong>${escapeHTML(p.name)}</strong><small> qty ${p.qty}</small></div></div>`).join('') || '<p>No parts issued.</p>'}
       <div class="part-add"><select id="issuePartSelect">${state.inventory.map(p => `<option value="${p.id}">${escapeHTML(p.name)} (${partOnHand(p)})</option>`).join('')}</select>
       <button class="action-button primary" data-issue-part="${w.id}">Issue 1</button></div>`,
     messages: `${(w.comments || []).map(c => `<div class="bubble ${c.from === currentUserName() ? 'mine' : ''}"><strong>${escapeHTML(c.from)}</strong><p>${escapeHTML(c.text)}</p><small>${escapeHTML(c.at)}</small></div>`).join('') || '<p>No messages on this work order.</p>'}
       <div class="part-add"><input id="woComment" placeholder="Message the assigned technician">
       <button class="action-button primary" data-wo-comment="${w.id}">Send</button></div>`,
-    log: `${(w.timeLog || []).map(l => `<div class="log-row"><div><strong>${l.hours} h</strong><p>${escapeHTML(l.note || 'Labor')}</p></div><small>${prettyDate(l.at)}</small></div>`).join('') || '<p>No labor logged.</p>'}`,
+    log: `${(w.timeLog || []).map(l => `<div class="log-row"><div><strong>${l.hours} h · ${money(l.hours * personRate(w.assignee))}</strong><p>${escapeHTML(l.note || 'Labor')}</p></div><small>${prettyDate(l.at)}</small></div>`).join('') || '<p>No labor logged.</p>'}
+      <p><small>${w.loggedHours || 0} h actual vs ${w.estimatedHours || 0} h estimated · ${money(laborCost(w))}</small></p>`,
+    costs: `<div class="record-grid">
+        <div class="field"><small>Labor</small><strong>${money(laborCost(w))}</strong></div>
+        <div class="field"><small>Parts</small><strong>${money(partsCost(w))}</strong></div>
+        <div class="field"><small>Other</small><strong>${money(extraCost(w))}</strong></div>
+        <div class="field"><small>Total cost</small><strong>${money(workCost(w))}</strong></div>
+      </div>
+      ${(w.additionalCosts || []).map((c, i) => `<div class="log-row"><div><strong>${money(c.amount)}</strong><p>${escapeHTML(c.desc)}</p></div><button class="text-button" data-remove-cost="${i}" data-id="${w.id}">Remove</button></div>`).join('')}
+      <button class="action-button primary" data-add-cost="${w.id}" style="margin-top:12px">Add cost</button>`,
     completion: `<div class="record-grid" id="woComplete">
       <label>Completed On<input name="completedAt" type="date" value="${w.completedAt || ''}"></label>
       <label>Downtime (hours)<input name="downtimeHours" type="number" step="0.25" value="${w.downtimeHours || 0}"></label>
+      <label>Failure code<select name="failureCode">${['', 'Wear', 'Breakdown', 'Operator error', 'Scheduled', 'Unknown'].map(c => `<option ${c === (w.failureCode || w.cause || '') ? 'selected' : ''}>${c || '—'}</option>`).join('')}</select></label>
       <label>Cause<input name="cause" value="${escapeHTML(w.cause || '')}" placeholder="Wear, breakdown, scheduled"></label>
       <label class="full">Completion Notes<textarea name="completionNotes" rows="3">${escapeHTML(w.completionNotes || '')}</textarea></label>
+      ${w.followUpOf ? `<p class="full">Follow-up of WO ${escapeHTML(w.followUpOf)}</p>` : ''}
+      ${w.requestId ? `<p class="full">Converted from ${escapeHTML(w.requestId)}</p>` : ''}
     </div>`
   };
   root.innerHTML = `${recordChrome(`Work Order Administration: WO ${w.id}`, 'Work Order', w.id, w.title, `<span class="status-badge ${statusClass(w.status)}">${w.status}</span> <span class="priority-badge ${w.priority}">${w.priority}</span> <span class="type-badge ${w.type}">${w.type}</span>`, actions, true)}
@@ -650,19 +807,35 @@ function renderAssetRecord(root) {
   const related = state.workOrders.filter(w => w.assetId === a.id || w.asset === a.name);
   const kids = state.assets.filter(c => c.parent === a.id);
   const online = assetOnlineLabel(a);
-  root.innerHTML = `${recordChrome(`${a.kind} Administration: ${a.code}`, a.kind, a.code, a.name, `<span class="status-badge ${online === 'Offline' ? 'offline' : 'online'}">${online}</span>`, `<button class="ribbon-btn primary" data-wo-for-asset="${a.name}">New</button>`)}
+  const cost = related.reduce((sum, w) => sum + workCost(w), 0);
+  root.innerHTML = `${recordChrome(`${a.kind} Administration: ${a.code}`, a.kind, a.code, a.name, `<span class="status-badge ${online === 'Offline' ? 'offline' : 'online'}">${online}</span>`, `<button class="ribbon-btn primary" data-wo-for-asset="${a.name}">New WO</button><button class="ribbon-btn" data-toggle-online="${a.id}">Set ${online === 'Offline' ? 'Online' : 'Offline'}</button>`)}
     <div class="record-body"><div class="record-panel">
-    <div class="record-grid">
-      <div class="field"><small>Location</small><strong>${escapeHTML(a.location)}</strong></div>
-      <div class="field"><small>Criticality</small><strong>${a.criticality || 'B'}</strong></div>
+    <div class="record-grid" id="assetFields">
+      <label>Location<input name="location" value="${escapeHTML(a.location)}"></label>
+      <label>Criticality<select name="criticality">${['A', 'B', 'C'].map(c => `<option ${c === (a.criticality || 'B') ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+      <label>Manufacturer<input name="manufacturer" value="${escapeHTML(a.manufacturer || '')}"></label>
+      <label>Serial<input name="serial" value="${escapeHTML(a.serial || '')}"></label>
+      <label>Warranty<input name="warranty" type="date" value="${a.warranty || ''}"></label>
+      <label>Assigned To<select name="assignedTo"><option value="">—</option>${people.map(p => `<option ${p.name === a.assignedTo ? 'selected' : ''}>${escapeHTML(p.name)}</option>`).join('')}</select></label>
       <div class="field"><small>Last service</small><strong>${prettyDate(a.lastService)}</strong></div>
       <div class="field"><small>Next service</small><strong>${prettyDate(a.nextService)}</strong></div>
       ${a.meter ? `<div class="field"><small>${escapeHTML(a.meter.name)}</small><strong>${a.meter.value} ${a.meter.unit}</strong></div>` : ''}
+      <div class="field"><small>Maintenance cost</small><strong>${money(cost)}</strong></div>
     </div>
+    <div class="record-toolbar" style="background:transparent;padding:12px 0"><button class="ribbon-btn primary" data-save-asset="${a.id}">Save</button></div>
+    <h3 style="margin:18px 0 8px">Bill of materials</h3>
+    ${(a.bom || []).length ? a.bom.map(line => {
+      const part = findPart(line.partId);
+      return `<div class="part-row"><div><strong>${escapeHTML(part?.name || line.partId)}</strong><small> qty ${line.qty}</small></div><button class="text-button" data-open-part="${line.partId}">Open</button></div>`;
+    }).join('') : '<p>No BOM lines. Issue parts from a work order to build history.</p>'}
+    <div class="part-add"><select id="bomPartSelect">${state.inventory.map(p => `<option value="${p.id}">${escapeHTML(p.name)}</option>`).join('')}</select>
+    <button class="action-button primary" data-add-bom="${a.id}">Add to BOM</button></div>
+    <h3 style="margin:18px 0 8px">Meter history</h3>
+    ${(a.meterHistory || []).length ? a.meterHistory.slice(0, 8).map(m => `<div class="log-row"><div><strong>${m.value} ${a.meter?.unit || ''}</strong></div><small>${prettyDate(m.at)}</small></div>`).join('') : '<p>No meter history yet. Use Batch Meter Reading.</p>'}
     <h3 style="margin:18px 0 8px">Under this record</h3>
     ${kids.length ? kids.map(c => `<button class="queue-item" data-open-asset="${c.id}" style="margin-bottom:8px"><span class="priority-line Medium"></span><div><h3>${escapeHTML(c.name)}</h3><p>${c.code} · ${c.kind}</p></div></button>`).join('') : '<p>No child assets.</p>'}
     <h3 style="margin:18px 0 8px">Work Orders</h3>
-    ${related.length ? related.slice(0, 8).map(w => `<button class="queue-item" data-open-wo="${w.id}" style="margin-bottom:8px"><span class="priority-line ${w.priority}"></span><div><h3>${escapeHTML(w.title)}</h3><p>${w.id} · ${w.status}</p></div></button>`).join('') : '<p>No work history.</p>'}
+    ${related.length ? related.slice(0, 8).map(w => `<button class="queue-item" data-open-wo="${w.id}" style="margin-bottom:8px"><span class="priority-line ${w.priority}"></span><div><h3>${escapeHTML(w.title)}</h3><p>${w.id} · ${w.status} · ${money(workCost(w))}</p></div></button>`).join('') : '<p>No work history.</p>'}
     </div></div></div>`;
 }
 
@@ -670,14 +843,18 @@ function renderPartRecord(root) {
   const p = findPart(record.id);
   if (!p) return;
   const qty = partOnHand(p);
-  root.innerHTML = `${recordChrome(`Part Administration: ${p.code}`, 'Part', p.code, p.name, `<span class="status-badge ${qty <= p.minimum ? 'down' : 'healthy'}">${qty <= p.minimum ? 'Below min' : 'In stock'}</span>`, `<button class="ribbon-btn primary" data-receive-part="${p.id}">Receive</button><button class="ribbon-btn" data-view-link="stock-take">Cycle Count</button>`)}
+  root.innerHTML = `${recordChrome(`Part Administration: ${p.code}`, 'Part', p.code, p.name, `<span class="status-badge ${qty <= p.minimum ? 'down' : 'healthy'}">${qty <= p.minimum ? 'Below min' : 'In stock'}</span>`, `<button class="ribbon-btn primary" data-receive-part="${p.id}">Receive</button><button class="ribbon-btn" data-reorder-part="${p.id}">Reorder</button><button class="ribbon-btn" data-view-link="stock-take">Cycle Count</button>`)}
     <div class="record-body"><div class="record-panel">
-    <div class="record-grid">
+    <div class="record-grid" id="partFields">
       <div class="field"><small>On hand</small><strong>${qty}</strong></div>
-      <div class="field"><small>Min / max</small><strong>${p.minimum} / ${p.maximum}</strong></div>
-      <div class="field"><small>Category</small><strong>${escapeHTML(p.category)}</strong></div>
+      <label>Min<input name="minimum" type="number" value="${p.minimum}"></label>
+      <label>Max<input name="maximum" type="number" value="${p.maximum}"></label>
+      <label>Category<input name="category" value="${escapeHTML(p.category)}"></label>
+      <label>Unit cost<input name="unitCost" type="number" step="0.01" value="${p.unitCost || 0}"></label>
+      <label>Vendor<input name="vendor" value="${escapeHTML(p.vendor || '')}"></label>
       <div class="field"><small>Barcode</small><strong>${escapeHTML(p.barcode)}</strong></div>
     </div>
+    <div class="record-toolbar" style="background:transparent;padding:12px 0"><button class="ribbon-btn primary" data-save-part="${p.id}">Save</button></div>
     <h3 style="margin:18px 0 8px">Stock by location</h3>
     <div class="table-card"><table><thead><tr><th>Site</th><th>Location</th><th>Aisle</th><th>Row</th><th>Bin</th><th>Qty</th></tr></thead>
     <tbody>${p.locations.map(l => `<tr><td>${escapeHTML(l.site)}</td><td>${escapeHTML(l.location)}</td><td>${escapeHTML(l.aisle || '—')}</td><td>${escapeHTML(l.row || '—')}</td><td>${escapeHTML(l.bin || '—')}</td><td><strong>${l.qty}</strong></td></tr>`).join('')}</tbody></table></div>
@@ -697,6 +874,8 @@ function renderAll() {
   renderStockTake();
   renderMessages();
   renderReports();
+  renderRequests();
+  renderPurchasing();
   renderRecord();
   populateSelects();
   updateBottomNav();
@@ -712,8 +891,10 @@ function viewMeta(name) {
     messages: { title: 'Notifications', context: 'Inbox' },
     assets: { title: assetTitle, context: 'Assets' },
     maintenance: { title: 'Scheduled Maintenance', context: 'Maintenance' },
+    requests: { title: 'Work Requests', context: 'Maintenance' },
     inventory: { title: 'Parts And Supplies', context: 'Supplies' },
     'stock-take': { title: 'Inventory Cycle Count', context: 'Supplies' },
+    purchasing: { title: 'Purchase Orders', context: 'Supplies' },
     reports: { title: 'Reports', context: 'Insights' }
   }[name] || { title: 'SafiMaintain', context: 'SAFI SANA' };
 }
@@ -776,6 +957,16 @@ function populateSelects() {
   document.querySelector('#messageAboutSelect').innerHTML = `<option value="">General</option>` +
     openWork().map(w => `<option value="work:${w.id}">WO ${w.id} · ${escapeHTML(w.title)}</option>`).join('') +
     state.inventory.map(p => `<option value="part:${p.id}">Part ${p.code} · ${escapeHTML(p.name)}</option>`).join('');
+  const reqAsset = document.querySelector('#requestAssetSelect');
+  if (reqAsset) reqAsset.innerHTML = state.assets.map(a => `<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
+  const parentSel = document.querySelector('#assetParentSelect');
+  if (parentSel) parentSel.innerHTML = `<option value="">Top level</option>` + state.assets.map(a => `<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
+  const pmAsset = document.querySelector('#pmAssetSelect');
+  if (pmAsset) pmAsset.innerHTML = state.assets.map(a => `<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
+  const pmOwner = document.querySelector('#pmOwnerSelect');
+  if (pmOwner) pmOwner.innerHTML = people.map(p => `<option>${escapeHTML(p.name)}</option>`).join('');
+  const poPart = document.querySelector('#poPartSelect');
+  if (poPart) poPart.innerHTML = state.inventory.map(p => `<option value="${p.id}">${escapeHTML(p.code)} · ${escapeHTML(p.name)}</option>`).join('');
 }
 
 function openWorkOrder(id) {
@@ -817,7 +1008,8 @@ function saveWorkRecord() {
   if (complete) {
     w.completedAt = get(complete, 'completedAt') || w.completedAt || '';
     w.downtimeHours = Number(get(complete, 'downtimeHours')) || 0;
-    w.cause = get(complete, 'cause') || '';
+    w.failureCode = get(complete, 'failureCode') || '';
+    w.cause = get(complete, 'cause') || w.failureCode || '';
     w.completionNotes = get(complete, 'completionNotes') || '';
   }
   if (w.status === 'Completed' && !w.completedAt) w.completedAt = daysFromNow(0);
@@ -857,31 +1049,78 @@ function issuePart(workId, partId) {
   if (existing) existing.qty += 1;
   else work.partsUsed = [...(work.partsUsed || []), { partId, name: part.name, qty: 1 }];
   logActivity(`${part.code} issued to ${workId}`);
-  if (part.quantity <= part.minimum) notify(`${part.code} below min`, `${part.name} is now ${part.quantity}.`, { type: 'stock', recordType: 'part', recordId: part.id });
+  if (part.quantity <= part.minimum) {
+    notify(`${part.code} below min`, `${part.name} is now ${part.quantity}.`, { type: 'stock', recordType: 'part', recordId: part.id });
+    maybeReorder(part);
+  }
   saveState();
   showToast(`${part.code} issued`);
+}
+
+function workFromPm(pm) {
+  if (state.workOrders.some(w => w.title === pm.title && (w.assetId === pm.assetId || w.asset === pm.asset) && w.status !== 'Completed')) return null;
+  const asset = findAsset(pm.assetId || pm.asset);
+  return {
+    id: nextWorkId(), title: pm.title, asset: pm.asset || asset?.name || '', assetId: pm.assetId, location: asset?.location || 'Operations',
+    priority: 'Medium', type: 'Preventive', assignee: pm.owner, due: pm.date || daysFromNow(0), status: 'Open',
+    estimatedHours: 2, loggedHours: 0, summary: `${pm.interval || 'Scheduled'} plan.`, instructions: 'Carry out the planned inspection and record condition.',
+    createdAt: daysFromNow(0), tasks: (pm.tasks?.length ? pm.tasks : [{ id: 't1', text: 'Carry out planned work', done: false }, { id: 't2', text: 'Record condition / meters', done: false }]),
+    partsUsed: [], timeLog: [], comments: [], completedAt: '', completionNotes: '', downtimeHours: 0, cause: '', additionalCosts: []
+  };
+}
+
+function advancePm(pm) {
+  if (pm.trigger === 'time') {
+    const d = new Date(`${pm.date || daysFromNow(0)}T12:00:00`);
+    d.setDate(d.getDate() + (pm.intervalDays || 30));
+    pm.date = d.toISOString().slice(0, 10);
+  }
+  if (pm.trigger === 'meter') {
+    const assetMeter = findAsset(pm.assetId)?.meter;
+    pm.lastMeter = assetMeter?.value || pm.lastMeter;
+  }
 }
 
 function generatePm(id) {
   const pm = state.schedules.find(s => s.id === id);
   if (!pm) return;
-  if (state.workOrders.some(w => w.title === pm.title && w.asset === pm.asset && w.status !== 'Completed')) {
-    showToast('A live WO already covers this PM');
-    return;
-  }
-  const asset = findAsset(pm.assetId || pm.asset);
-  const wo = {
-    id: nextWorkId(), title: pm.title, asset: pm.asset, assetId: pm.assetId, location: asset?.location || 'Operations',
-    priority: 'Medium', type: 'Preventive', assignee: pm.owner, due: pm.date, status: 'Open',
-    estimatedHours: 2, loggedHours: 0, summary: `${pm.interval} plan.`, instructions: 'Carry out the planned inspection and record condition.',
-    createdAt: daysFromNow(0), tasks: [{ id: 't1', text: 'Carry out planned work', done: false }, { id: 't2', text: 'Record condition / meters', done: false }],
-    partsUsed: [], timeLog: [], comments: [], completedAt: '', completionNotes: '', downtimeHours: 0, cause: ''
-  };
+  const wo = workFromPm(pm);
+  if (!wo) { showToast('A live WO already covers this PM'); return; }
+  advancePm(pm);
   state.workOrders.unshift(wo);
   logActivity(`${wo.id} generated from ${pm.id}`);
   saveState();
   openWorkOrder(wo.id);
   showToast(`${wo.id} created from PM`);
+}
+
+function generateDuePms() {
+  let created = 0;
+  state.schedules.filter(s => s.active !== false && s.trigger !== 'meter' && s.date <= daysFromNow(0)).forEach(pm => {
+    const wo = workFromPm(pm);
+    if (!wo) return;
+    advancePm(pm);
+    state.workOrders.unshift(wo);
+    created += 1;
+  });
+  if (!created) { showToast('No due schedules without a live WO'); return; }
+  logActivity(`${created} PM work orders generated`);
+  saveState();
+  showView('work-orders');
+  showToast(`${created} work order${created === 1 ? '' : 's'} generated`);
+}
+
+function checkMeterTriggers() {
+  state.schedules.filter(s => s.trigger === 'meter' && s.active !== false).forEach(pm => {
+    const asset = findAsset(pm.assetId);
+    if (!asset?.meter || !Number(pm.meterEvery || 0)) return;
+    if (asset.meter.value < Number(pm.lastMeter || 0) + Number(pm.meterEvery)) return;
+    const wo = workFromPm(pm);
+    if (!wo) return;
+    advancePm(pm);
+    state.workOrders.unshift(wo);
+    logActivity(`${wo.id} generated from meter trigger ${pm.id}`);
+  });
 }
 
 function postCount() {
@@ -920,6 +1159,132 @@ function receiveStock(partId, qty, receipt, supplier) {
   logActivity(`${part.code} received +${qty}`);
   saveState();
   showToast(`${part.code} +${qty}`);
+}
+
+function copyWorkOrder(id) {
+  const src = findWork(id);
+  if (!src) return;
+  const copy = structuredClone(src);
+  copy.id = nextWorkId();
+  copy.status = 'Open';
+  copy.loggedHours = 0;
+  copy.timeLog = [];
+  copy.partsUsed = [];
+  copy.completedAt = '';
+  copy.comments = [];
+  copy.createdAt = daysFromNow(0);
+  copy.tasks = (copy.tasks || []).map((t, i) => ({ ...t, id: `t${i + 1}`, done: false, result: '' }));
+  copy.followUpOf = '';
+  state.workOrders.unshift(copy);
+  logActivity(`${copy.id} copied from ${id}`);
+  saveState();
+  openWorkOrder(copy.id);
+  showToast(`${copy.id} created`);
+}
+
+function followUpWork(id) {
+  const src = findWork(id);
+  if (!src) return;
+  const wo = {
+    id: nextWorkId(), title: `Follow-up: ${src.title}`, asset: src.asset, assetId: src.assetId, location: src.location,
+    priority: src.priority, type: 'Corrective', assignee: src.assignee, due: daysFromNow(2), status: 'Open',
+    estimatedHours: 2, loggedHours: 0, summary: `Follow-up from WO ${src.id}.`, instructions: src.instructions || '',
+    createdAt: daysFromNow(0), tasks: [{ id: 't1', text: 'Investigate remaining defect', done: false }],
+    partsUsed: [], timeLog: [], comments: [], followUpOf: src.id, additionalCosts: []
+  };
+  state.workOrders.unshift(wo);
+  logActivity(`${wo.id} follow-up of ${id}`);
+  saveState();
+  openWorkOrder(wo.id);
+  showToast(`${wo.id} follow-up created`);
+}
+
+function deleteWorkOrder(id) {
+  if (!window.confirm(`Delete work order ${id}?`)) return;
+  state.workOrders = state.workOrders.filter(w => w.id !== id);
+  logActivity(`${id} deleted by ${currentUserName()}`);
+  saveState();
+  showView(lastListView === 'record' ? 'work-orders' : lastListView);
+  showToast(`${id} deleted`);
+}
+
+function convertRequest(id) {
+  const req = state.requests.find(r => r.id === id);
+  if (!req || req.status !== 'Submitted') return;
+  const asset = findAsset(req.assetId || req.asset);
+  const wo = {
+    id: nextWorkId(), title: req.title, asset: req.asset, assetId: req.assetId, location: asset?.location || 'Operations',
+    priority: req.priority, type: 'Corrective', assignee: asset?.assignedTo || currentUserName(), due: daysFromNow(1), status: 'Open',
+    estimatedHours: 2, loggedHours: 0, summary: req.notes || req.title, instructions: req.notes || '',
+    createdAt: daysFromNow(0), tasks: [{ id: 't1', text: 'Investigate reported issue', done: false }, { id: 't2', text: 'Correct and test', done: false }],
+    partsUsed: [], timeLog: [], comments: [], requestId: req.id, additionalCosts: []
+  };
+  req.status = 'Converted';
+  req.convertedTo = wo.id;
+  state.workOrders.unshift(wo);
+  notify(`WR ${req.id} converted`, `${wo.id} created from request.`, { type: 'work', recordType: 'work', recordId: wo.id, with: wo.assignee, from: currentUserName() });
+  logActivity(`${wo.id} converted from ${req.id}`);
+  saveState();
+  openWorkOrder(wo.id);
+  showToast(`${req.id} → ${wo.id}`);
+}
+
+function declineRequest(id) {
+  const req = state.requests.find(r => r.id === id);
+  if (!req) return;
+  req.status = 'Declined';
+  logActivity(`${id} declined`);
+  saveState();
+  showToast(`${id} declined`);
+}
+
+function receivePo(id) {
+  const po = state.purchaseOrders.find(p => p.id === id);
+  if (!po || po.status === 'Received') return;
+  po.lines.forEach(line => receiveStock(line.partId, line.qty, po.id, po.vendor));
+  po.status = 'Received';
+  logActivity(`${id} received`);
+  saveState();
+  showToast(`${id} received`);
+}
+
+function saveAssetRecord(id) {
+  const a = findAsset(id);
+  const box = document.querySelector('#assetFields');
+  if (!a || !box) return;
+  const get = name => box.querySelector(`[name="${name}"]`)?.value;
+  a.location = get('location');
+  a.criticality = get('criticality');
+  a.manufacturer = get('manufacturer');
+  a.serial = get('serial');
+  a.warranty = get('warranty');
+  a.assignedTo = get('assignedTo');
+  saveState();
+  showToast(`${a.code} saved`);
+}
+
+function savePartRecord(id) {
+  const p = findPart(id);
+  const box = document.querySelector('#partFields');
+  if (!p || !box) return;
+  const get = name => box.querySelector(`[name="${name}"]`)?.value;
+  p.minimum = Number(get('minimum')) || 0;
+  p.maximum = Number(get('maximum')) || 0;
+  p.category = get('category');
+  p.unitCost = Number(get('unitCost')) || 0;
+  p.vendor = get('vendor');
+  if (partOnHand(p) <= p.minimum) maybeReorder(p);
+  saveState();
+  showToast(`${p.code} saved`);
+}
+
+function toggleAssetOnline(id) {
+  const a = findAsset(id);
+  if (!a) return;
+  a.status = a.status === 'Down' ? 'Healthy' : 'Down';
+  logActivity(`${a.code} set ${a.status === 'Down' ? 'offline' : 'online'}`);
+  saveState();
+  showToast(`${a.code} ${a.status === 'Down' ? 'offline' : 'online'}`);
 }
 
 function openDialog(prefill = {}) {
@@ -1045,6 +1410,63 @@ function setupEvents() {
     if (e.target.closest('[data-save-create]')) {
       if (saveWorkRecord()) openDialog();
     }
+    const copyWo = e.target.closest('[data-copy-wo]');
+    if (copyWo) copyWorkOrder(copyWo.dataset.copyWo);
+    const followWo = e.target.closest('[data-follow-wo]');
+    if (followWo) followUpWork(followWo.dataset.followWo);
+    const delWo = e.target.closest('[data-delete-wo]');
+    if (delWo) deleteWorkOrder(delWo.dataset.deleteWo);
+    const convert = e.target.closest('[data-convert-request]');
+    if (convert) convertRequest(convert.dataset.convertRequest);
+    const decline = e.target.closest('[data-decline-request]');
+    if (decline) declineRequest(decline.dataset.declineRequest);
+    const recvPo = e.target.closest('[data-receive-po]');
+    if (recvPo) receivePo(recvPo.dataset.receivePo);
+    const saveAsset = e.target.closest('[data-save-asset]');
+    if (saveAsset) saveAssetRecord(saveAsset.dataset.saveAsset);
+    const savePart = e.target.closest('[data-save-part]');
+    if (savePart) savePartRecord(savePart.dataset.savePart);
+    const onlineBtn = e.target.closest('[data-toggle-online]');
+    if (onlineBtn) toggleAssetOnline(onlineBtn.dataset.toggleOnline);
+    const addBom = e.target.closest('[data-add-bom]');
+    if (addBom) {
+      const asset = findAsset(addBom.dataset.addBom);
+      const partId = document.querySelector('#bomPartSelect')?.value;
+      if (asset && partId) {
+        asset.bom = asset.bom || [];
+        const existing = asset.bom.find(l => l.partId === partId);
+        if (existing) existing.qty += 1; else asset.bom.push({ partId, qty: 1 });
+        saveState();
+      }
+    }
+    const addInspect = e.target.closest('[data-add-inspect]');
+    if (addInspect) {
+      const work = findWork(addInspect.dataset.addInspect);
+      const input = document.querySelector('#newTaskText');
+      if (work) {
+        work.tasks.push({ id: `t${Date.now()}`, text: input?.value.trim() || 'Inspection point', done: false, kind: 'inspect', result: '' });
+        saveState();
+      }
+    }
+    const addCost = e.target.closest('[data-add-cost]');
+    if (addCost) {
+      timeTarget = addCost.dataset.addCost;
+      document.querySelector('#costForm').reset();
+      document.querySelector('#costDialog').showModal();
+    }
+    const removeCost = e.target.closest('[data-remove-cost]');
+    if (removeCost) {
+      const work = findWork(removeCost.dataset.id);
+      if (work) {
+        work.additionalCosts.splice(Number(removeCost.dataset.removeCost), 1);
+        saveState();
+      }
+    }
+    const reorder = e.target.closest('[data-reorder-part]');
+    if (reorder) {
+      const part = findPart(reorder.dataset.reorderPart);
+      if (part) { maybeReorder(part); saveState(); showView('purchasing'); showToast('Reorder drafted'); }
+    }
     const addTask = e.target.closest('[data-add-task]');
     if (addTask) {
       const input = document.querySelector('#newTaskText');
@@ -1115,6 +1537,17 @@ function setupEvents() {
     if (countInput) {
       countDraft[countInput.dataset.countInput] = countInput.value;
       renderStockTake();
+    }
+    const inspect = e.target.closest('[data-inspect-result]');
+    if (inspect) {
+      const work = findWork(inspect.dataset.id);
+      const task = work?.tasks.find(t => t.id === inspect.dataset.inspectResult);
+      if (task) {
+        task.result = inspect.value;
+        task.done = inspect.value === 'pass' || inspect.value === 'fail';
+        if (inspect.value === 'fail') followUpWork(work.id);
+        else saveState();
+      }
     }
   });
   document.body.addEventListener('submit', e => {
@@ -1216,9 +1649,16 @@ function setupEvents() {
     state.assets.forEach(a => {
       if (!a.meter) return;
       const value = form.get(`meter-${a.id}`);
-      if (value !== null) a.meter.value = Number(value);
+      if (value === null) return;
+      const next = Number(value);
+      if (next !== a.meter.value) {
+        a.meterHistory = a.meterHistory || [];
+        a.meterHistory.unshift({ value: next, at: daysFromNow(0) });
+        a.meter.value = next;
+      }
     });
     logActivity(`Meter readings saved by ${currentUserName()}`);
+    checkMeterTriggers();
     saveState();
     document.querySelector('#meterDialog').close();
     showToast('Meters updated');
@@ -1238,6 +1678,108 @@ function setupEvents() {
     document.querySelector('#timeDialog').close();
   });
   document.querySelector('#newMessageButton').addEventListener('click', () => document.querySelector('#messageDialog').showModal());
+  document.querySelector('#newRequestButton')?.addEventListener('click', () => document.querySelector('#requestDialog').showModal());
+  document.querySelector('#newAssetButton')?.addEventListener('click', () => document.querySelector('#assetDialog').showModal());
+  document.querySelector('#newPartButton')?.addEventListener('click', () => document.querySelector('#partDialog').showModal());
+  document.querySelector('#newPmButton')?.addEventListener('click', () => {
+    document.querySelector('#pmForm').reset();
+    document.querySelector('#pmForm [name="date"]').value = daysFromNow(7);
+    document.querySelector('#pmDialog').showModal();
+  });
+  document.querySelector('#newPoButton')?.addEventListener('click', () => document.querySelector('#poDialog').showModal());
+  document.querySelector('#generateDuePm')?.addEventListener('click', generateDuePms);
+  [['closeRequestDialog', 'cancelRequestDialog', 'requestDialog'], ['closeAssetDialog', 'cancelAssetDialog', 'assetDialog'], ['closePartDialog', 'cancelPartDialog', 'partDialog'], ['closePmDialog', 'cancelPmDialog', 'pmDialog'], ['closePoDialog', 'cancelPoDialog', 'poDialog'], ['closeCostDialog', 'cancelCostDialog', 'costDialog']].forEach(([closeId, cancelId, dialogId]) => {
+    [closeId, cancelId].forEach(id => document.querySelector(`#${id}`)?.addEventListener('click', () => document.querySelector(`#${dialogId}`).close()));
+  });
+  document.querySelector('#requestForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const asset = findAsset(form.get('asset'));
+    state.requests.unshift({
+      id: nextRequestId(), title: form.get('title').trim(), assetId: asset?.id || '', asset: asset?.name || '',
+      requestedBy: currentUserName(), priority: form.get('priority'), status: 'Submitted', notes: form.get('notes').trim(),
+      createdAt: daysFromNow(0), convertedTo: ''
+    });
+    notify('New work request', `${state.requests[0].id}: ${form.get('title')}`, { type: 'work' });
+    saveState();
+    e.currentTarget.reset();
+    document.querySelector('#requestDialog').close();
+    showView('requests');
+    showToast(`${state.requests[0].id} submitted`);
+  });
+  document.querySelector('#assetForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const id = form.get('code').trim();
+    if (findAsset(id)) { showToast('Code already exists'); return; }
+    state.assets.push(normalizeAsset({
+      id, code: id, name: form.get('name').trim(), kind: form.get('kind'), parent: form.get('parent') || null,
+      location: form.get('location').trim(), status: 'Healthy', lastService: daysFromNow(0), nextService: daysFromNow(30),
+      criticality: form.get('criticality'), manufacturer: form.get('manufacturer'), serial: form.get('serial')
+    }));
+    saveState();
+    document.querySelector('#assetDialog').close();
+    openAsset(id);
+    showToast(`${id} created`);
+  });
+  document.querySelector('#partForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const id = form.get('code').trim();
+    if (findPart(id)) { showToast('Code already exists'); return; }
+    const [aisle, row, bin] = String(form.get('bin') || '').split('/').map(s => s.trim());
+    state.inventory.unshift(normalizePart({
+      id, code: id, name: form.get('name').trim(), category: 'Parts And Supplies', minimum: Number(form.get('minimum')),
+      maximum: Number(form.get('maximum')), unitCost: Number(form.get('unitCost') || 0), vendor: form.get('vendor'),
+      barcode: id, locations: [{ site: 'SSGL', location: form.get('location').trim(), aisle: aisle || '', row: row || '', bin: bin || '', qty: 0 }], receipts: []
+    }));
+    saveState();
+    document.querySelector('#partDialog').close();
+    openPart(id);
+    showToast(`${id} created`);
+  });
+  document.querySelector('#pmForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const asset = findAsset(form.get('assetId'));
+    const trigger = form.get('trigger');
+    state.schedules.push(normalizePm({
+      id: nextPmId(), title: form.get('title').trim(), asset: asset?.name || '', assetId: asset?.id,
+      date: form.get('date'), owner: form.get('owner'), trigger,
+      interval: trigger === 'meter' ? `Every ${form.get('meterEvery')} ${asset?.meter?.unit || 'units'}` : `Every ${form.get('intervalDays')} days`,
+      intervalDays: Number(form.get('intervalDays') || 30), meterEvery: Number(form.get('meterEvery') || 0),
+      lastMeter: asset?.meter?.value || 0, active: true
+    }));
+    saveState();
+    document.querySelector('#pmDialog').close();
+    showView('maintenance');
+    showToast('Schedule created');
+  });
+  document.querySelector('#poForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const part = findPart(form.get('partId'));
+    state.purchaseOrders.unshift({
+      id: nextPoId(), vendor: form.get('vendor'), status: 'Submitted', createdAt: daysFromNow(0),
+      lines: [{ partId: part.id, name: part.name, qty: Number(form.get('qty')), cost: Number(form.get('cost') || part.unitCost || 0) }]
+    });
+    saveState();
+    document.querySelector('#poDialog').close();
+    showView('purchasing');
+    showToast(`${state.purchaseOrders[0].id} created`);
+  });
+  document.querySelector('#costForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const work = findWork(timeTarget);
+    if (work) {
+      work.additionalCosts = work.additionalCosts || [];
+      work.additionalCosts.push({ desc: form.get('desc').trim(), amount: Number(form.get('amount')) });
+      saveState();
+      showToast('Cost added');
+    }
+    document.querySelector('#costDialog').close();
+  });
   ['closeMessageDialog', 'cancelMessageDialog'].forEach(id => document.querySelector(`#${id}`).addEventListener('click', () => document.querySelector('#messageDialog').close()));
   ['closeReceiveDialog', 'cancelReceiveDialog'].forEach(id => document.querySelector(`#${id}`).addEventListener('click', () => document.querySelector('#receiveDialog').close()));
   ['closeMeterDialog', 'cancelMeterDialog'].forEach(id => document.querySelector(`#${id}`).addEventListener('click', () => document.querySelector('#meterDialog').close()));
@@ -1337,7 +1879,9 @@ function registerWebMCP() {
 
 document.querySelector('#todayLabel').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 setupEvents();
+checkMeterTriggers();
 renderAll();
+localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 showView(mode === 'technician' ? 'my-work' : 'dashboard');
 updateConnection();
 registerWebMCP();

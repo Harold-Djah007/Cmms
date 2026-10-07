@@ -455,6 +455,13 @@ td.type-cell { font-weight: 700; text-align: center; }
 td.type-cell.Preventive { background: var(--type-pm); color: #0d3a5c; }
 td.type-cell.Project { background: var(--type-project); color: #5a3a18; }
 td.type-cell.Corrective { background: var(--type-corrective); color: #3d4a58; }
+td.type-cell.Inspection { background: #c8e0c4; color: #1e4d2b; }
+.type-badge.Inspection { background: #c8e0c4; color: #1e4d2b; border-color: #8fbf88; }
+.status-badge.submitted { color: #155f84; background: #e7f3f8; }
+.status-badge.approved { color: #137b4c; background: #e5f8ef; }
+.status-badge.declined { color: #9c2d25; background: #ffe9e7; }
+.status-badge.received { color: #137b4c; background: #e5f8ef; }
+.status-badge.draft { color: #536664; background: #edf1f0; }
 
 .list-pager {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -533,7 +540,7 @@ td.type-cell.Corrective { background: var(--type-corrective); color: #3d4a58; }
 .mini-stat span { display: block; color: var(--muted); font-size: .76rem; }
 .mini-stat strong { font-size: 1.35rem; }
 
-.report-grid { display: grid; grid-template-columns: 1fr 1.25fr 1fr 1fr; gap: 12px; }
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .big-number { font-size: 2.8rem; font-weight: 800; letter-spacing: -.04em; color: var(--navy-900); line-height: 1.05; margin: 14px 0 8px; }
 .positive-copy { color: var(--ok); }
 .bar-chart { display: grid; gap: 10px; margin-top: 14px; }
