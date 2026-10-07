@@ -85,7 +85,7 @@
   };
   window.renderPartDetail=renderPartDetail;
 
-  showStockLocation=function(p,index=null){
+  const showStockLocation=function(p,index=null){
     if(!p)return;
     if(!Array.isArray(state.stores)||!state.stores.length){toast('Create a store in Sites & stores before adding stock');go('sites');return}
     p.locations=Array.isArray(p.locations)?p.locations:[];

@@ -35,7 +35,9 @@
     const title=document.querySelector('.s80-titlebar>div:first-child');if(title&&!title.querySelector('.s81-release-chip'))title.insertAdjacentHTML('afterbegin','<span class="s81-release-chip">Stock control</span>');
     const command=document.querySelector('.s80-commandbar');if(command&&!command.querySelector('.s81-list-controls'))command.insertAdjacentHTML('beforeend',listControls());
     const footer=document.querySelector('.s80-list-footer');if(footer)footer.innerHTML=pagination(document.querySelectorAll('[data-s80-part-row]').length);
-    const headings=document.querySelectorAll('.s80-list-table th');headings.forEach((heading,index)=>{if(index>0&&index<9){heading.dataset.s81Sort=String(index);heading.tabIndex=0;heading.title='Sort by '+columnNames[index]}});
+    const headings=document.querySelectorAll('.s80-list-table th');
+    if(headings.length)columnNames.splice(0,columnNames.length,...[...headings].map((heading,index)=>index===0?'Select':heading.textContent.trim()||'Open'));
+    headings.forEach((heading,index)=>{if(index>0&&index<headings.length-1){heading.dataset.s81Sort=String(index);heading.tabIndex=0;heading.title='Sort by '+columnNames[index]}});
     const record=document.querySelector('.s80-record-heading'),part=typeof getPart==='function'?getPart(ui.selectedPart):null;if(record&&part&&!document.querySelector('.s81-record-summary'))record.insertAdjacentHTML('afterend',summary(part));
     const toolbar=document.querySelector('.s80-record-actions');if(toolbar&&!toolbar.querySelector('.s81-editing-chip'))toolbar.insertAdjacentHTML('beforeend','<span class="s81-editing-chip"><i></i> Editable record</span>');
     applyColumns();applySort();

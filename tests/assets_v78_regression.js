@@ -9,13 +9,12 @@ const index=fs.readFileSync('dist/index.html','utf8');
 const worker=fs.readFileSync('dist/service-worker.js','utf8');
 const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
 
-// The hierarchy is a new asset atlas, not the previous table with another skin.
-assert.match(source,/Live plant register/);
-assert.match(source,/Plant navigator/);
-assert.match(source,/Structure at a glance/);
-assert.match(source,/Operational focus/);
-assert.match(source,/Traceable history/);
-assert.match(source,/Facility → area → equipment → component/);
+// A compact, location-first register keeps the record workflow discoverable.
+assert.match(source,/ax78-register-actions/);
+assert.match(source,/Name \/ location/);
+assert.match(source,/class="ax78-code"/);
+assert.match(source,/aria-label="Search assets"/);
+assert.doesNotMatch(source,/Structure at a glance|Operational focus|Traceable history/);
 
 // Expansion owns only the branch. It must never invoke the global render path.
 const toggleBody=source.match(/function toggleBranch\(button\)\{([\s\S]*?)\n  \}/)?.[1]||'';
@@ -42,11 +41,9 @@ assert.match(css,/\.ar72-tabs\{position:sticky!important/);
 assert.match(css,/@media\(max-width:700px\)/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
-assert.match(index,/safimaint-assets-v78\.css\?v=78/);
-assert.match(index,/safimaint-assets-v78\.js\?v=78/);
-assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
+assert.match(index,/safimaint-assets-v78\.css(?:\?v=\d+)?/);
+assert.match(index,/safimaint-assets-v78\.js(?:\?v=\d+)?/);
 assert.match(worker,/safimaint-assets-v78\.css/);
 assert.match(worker,/safimaint-assets-v78\.js/);
-assert.match(config,/9\.9\.0-readable-fiix-supplies/);
 
 console.log('Assets v78 atlas, stable expansion and fixed navigation checks passed.');

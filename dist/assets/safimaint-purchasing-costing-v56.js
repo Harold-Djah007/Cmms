@@ -88,9 +88,11 @@
   postStock=function(partId,type,qty,storeId,bin,opts={}){
     const p=getPart(partId),quantity=Math.abs(Number(qty||0));
     if(!p)return previousPostStock(partId,type,qty,storeId,bin,opts);
+    // Post the validated stock movement before consuming FIFO layers. Failed
+    // movements must not reduce inventory value while leaving quantity intact.
     let costInfo=null;
-    if(['Issue','Transfer'].includes(type)||(type==='Adjustment'&&Number(qty)<0))costInfo=consumeLots(partId,storeId,bin,quantity);
     const tx=previousPostStock(partId,type,qty,storeId,bin,opts);if(!tx)return tx;
+    if(['Issue','Transfer'].includes(type)||(type==='Adjustment'&&Number(qty)<0))costInfo=consumeLots(partId,storeId,bin,quantity);
     if(type==='Receipt'||(type==='Adjustment'&&Number(qty)>0)){
       const unitCost=Number(opts.unitCost??p.lastPrice??p.unitCost??0);addLot(partId,storeId,bin,quantity,unitCost,opts.reference||tx.id,p.currency||'GHS');p.lastPrice=unitCost||p.lastPrice;p.unitCost=Number(p.unitCost||unitCost||0);
       tx.unitCost=unitCost;tx.extendedCost=quantity*unitCost;

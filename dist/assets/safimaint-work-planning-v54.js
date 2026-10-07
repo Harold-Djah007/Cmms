@@ -17,17 +17,18 @@
       '<div class="v54-form-section"><strong>Assets</strong><div class="v54-choice-grid">'+assets.map(a=>'<label class="v54-choice"><input type="checkbox" name="assetIds" value="'+esc(a.id)+'"> '+esc(a.code)+' · '+esc(a.name)+'</label>').join('')+'</div></div>'+
       field('type','Maintenance type','Corrective',{type:'select',options:typeOptions()})+
       field('priority','Priority','Medium',{type:'select',options:priorityOptions()})+
+      field('due','Due date',day(2),{type:'date',required:true})+
+      '<details class="safi-advanced-fields"><summary>More planning options</summary><div class="form-grid">'+
       field('status','Initial status','Open',{type:'select',options:activeStatusOptions()})+
       field('projectId','Project','',{type:'select',options:[{value:'',label:'No project'},...projects.map(p=>({value:p.id,label:p.name}))]})+
       field('suggestedStart','Suggested start',day(0),{type:'date',required:true})+
-      field('due','Suggested completion / due',day(2),{type:'date',required:true})+
       field('estimateHours','Estimated total labour','1',{type:'number',min:0,step:'.25'})+
       field('assigneeGroupId','Assigned team','',{type:'select',options:[{value:'',label:'No team'},...groups.map(g=>({value:g.id,label:g.name}))]})+
       '<div class="v54-form-section"><strong>Assigned people</strong><div class="v54-choice-grid">'+users.map(u=>'<label class="v54-choice"><input type="checkbox" name="assigneeIds" value="'+esc(u.id)+'"> '+esc(u.name)+' · '+esc(getRole(u.roleId)?.name||'User')+'</label>').join('')+'</div></div>'+
       field('taskGroupId','Task group / SOP','',{type:'select',options:[{value:'',label:'No task group'},...taskGroups.map(g=>({value:g.id,label:g.name}))]})+
       field('instructions','Instructions / safety / acceptance criteria','',{type:'textarea',span:true})+
       (custom.length?'<div class="v54-form-section"><strong>Custom work-order fields</strong><div class="v52-custom-work">'+custom.map(d=>'<label>'+esc(d.name)+(d.required?' <span class="v54-required">*</span>':'')+(d.type==='Yes / No'?'<select name="cf_'+esc(d.id)+'"><option value=""></option><option>Yes</option><option>No</option></select>':'<input name="cf_'+esc(d.id)+'" type="'+(d.type==='Number'?'number':d.type==='Date'?'date':'text')+'">')+'</label>').join('')+'</div></div>':'')+
-      '</div>',onSubmit:fd=>{
+      '</div></details></div>',onSubmit:fd=>{
         const assetIds=fd.getAll('assetIds').map(String);if(!assetIds.length){toast('Select at least one asset');return}
         const start=String(fd.get('suggestedStart')),due=String(fd.get('due'));if(due<start){toast('Due date cannot be before suggested start');return}
         const customValues={};for(const d of custom){const value=String(fd.get('cf_'+d.id)||'');if(d.required&&!value){toast(d.name+' is required');return}customValues[d.id]=value}

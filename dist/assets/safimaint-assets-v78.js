@@ -1,7 +1,7 @@
 'use strict';
 
 // SafiMaintain Assets v78
-// A new asset atlas with stable, in-place hierarchy expansion. This layer keeps
+// A compact location register with stable, in-place hierarchy expansion. This layer keeps
 // the mature v72 asset record and replaces only the hierarchy experience.
 (function(){
   const previousAssetRenderer=renderAssets;
@@ -58,9 +58,10 @@
       const kind=kindOf(a);
       return '<article class="ax78-tree-item" data-ax78-item="'+esc(a.id)+'" style="--asset-depth:'+Math.min(depth,9)+'">'+
         '<div class="ax78-node" data-kind="'+kind+'" draggable="true" data-fx23-drag="'+esc(a.id)+'" data-fx23-drop="'+esc(a.id)+'">'+
-          '<button class="ax78-toggle '+(kids.length?'':'empty')+' '+(isCollapsed?'collapsed':'')+'" type="button" '+(kids.length?'data-ax78-toggle="'+esc(a.id)+'" aria-expanded="'+String(!isCollapsed)+'"':'disabled')+' aria-label="'+(isCollapsed?'Expand ':'Collapse ')+esc(a.name)+'"><span></span></button>'+
-          '<button class="ax78-open" type="button" data-fx23-open="'+esc(a.id)+'"><span class="ax78-asset-icon">'+icon(a)+'</span><span class="ax78-name"><strong>'+esc(a.name)+'</strong><small>'+esc(a.code)+' · '+esc(a.type)+'</small></span></button>'+
-          '<span class="ax78-relation">'+esc(relationOf(a))+'</span>'+
+          '<button class="ax78-toggle '+(kids.length?'':'ax78-leaf')+' '+(isCollapsed?'collapsed':'')+'" type="button" '+(kids.length?'data-ax78-toggle="'+esc(a.id)+'" aria-expanded="'+String(!isCollapsed)+'"':'disabled')+' aria-label="'+(isCollapsed?'Expand ':'Collapse ')+esc(a.name)+'"><span></span></button>'+
+          '<button class="ax78-open" type="button" data-fx23-open="'+esc(a.id)+'"><span class="ax78-asset-icon">'+icon(a)+'</span><span class="ax78-name"><strong>'+esc(a.name)+'</strong><small>'+esc(a.type)+'</small></span></button>'+
+          '<span class="ax78-code">'+esc(a.code)+'</span>'+
+          '<span class="ax78-relation">'+esc((assetById(a.partOfAssetId||a.locationId||a.parentId)?.name)||relationOf(a))+'</span>'+
           '<span class="ax78-work '+(work?'has-work':'')+'">'+(work?work+' open':'No open work')+'</span>'+
           '<span class="ax78-state '+(a.operatingState==='Offline'?'offline':'online')+'"><i></i>'+esc(a.operatingState||'Unknown')+'</span>'+
           '<button class="ax78-more" type="button" data-fx23-rowmenu="'+esc(a.id)+'" aria-label="Actions for '+esc(a.name)+'">•••</button>'+
@@ -72,34 +73,13 @@
     if(rendered)return html;
     return '<div class="ax78-empty"><span>'+hierarchyIcon()+'</span><strong>'+(allAssets().length?'No assets match this view':'Build your first asset structure')+'</strong><p>'+(allAssets().length?'Change the search or filter to reveal more records.':'Start with a facility, then place rooms, equipment, components and tools beneath it.')+'</p><button class="button primary" data-action="add-asset">＋ Add asset</button></div>';
   }
-  function attentionMarkup(){
-    const list=allAssets().filter(a=>a.operatingState==='Offline'||activeWork(a).length).sort((a,b)=>(b.operatingState==='Offline')-(a.operatingState==='Offline')||activeWork(b).length-activeWork(a).length).slice(0,5);
-    return list.length?list.map(a=>'<button type="button" class="ax78-attention-row" data-fx23-open="'+esc(a.id)+'"><span class="ax78-mini-icon">'+icon(a)+'</span><span><strong>'+esc(a.name)+'</strong><small>'+esc(a.code)+' · '+(a.operatingState==='Offline'?'Offline':activeWork(a).length+' active work order'+(activeWork(a).length===1?'':'s'))+'</small></span><b>→</b></button>').join(''):'<div class="ax78-clear"><i></i><strong>No immediate asset exceptions</strong><span>All equipment is online with no open asset work.</span></div>';
-  }
-  function recentEvents(){
-    const events=[...(state.assetEvents||[])].sort((a,b)=>String(b.at||'').localeCompare(String(a.at||''))).slice(0,5);
-    return events.length?events.map(event=>{const a=assetById(event.assetId);return '<div class="ax78-event"><i></i><span><strong>'+esc(event.type||'Asset update')+'</strong><small>'+esc(a?.name||event.assetId||'Asset')+' · '+esc(event.detail||'Record updated')+'</small></span><time>'+dateTimeFmt(event.at)+'</time></div>'}).join(''):'<div class="ax78-clear"><strong>No asset activity yet</strong><span>State, hierarchy and maintenance changes will appear here.</span></div>';
-  }
   function atlas(){
-    const assets=allAssets(),online=assets.filter(a=>a.operatingState==='Online').length,offline=assets.filter(a=>a.operatingState==='Offline').length;
-    const locations=assets.filter(a=>locationTypes.has(a.type)).length,equipment=assets.filter(a=>['Equipment','Subassembly'].includes(a.type)).length,tools=assets.filter(a=>a.type==='Tool').length;
-    const work=assets.reduce((sum,a)=>sum+activeWork(a).length,0),bomLinks=assets.reduce((sum,a)=>sum+(a.bom||[]).length,0);
-    const healthy=assets.filter(a=>a.operatingState!=='Offline'&&!['Attention','Critical'].includes(a.condition)).length;
-    const readiness=assets.length?Math.round(healthy/assets.length*100):100;
-    return '<div class="ax78-page">'+
-      '<header class="ax78-header"><div class="ax78-heading"><span class="ax78-kicker"><i></i> Live plant register</span><h1>Assets</h1><p>See where every maintainable item belongs, what needs attention and which spare parts keep it running.</p></div><div class="ax78-header-actions"><button class="button" data-fx23-import>Import</button><button class="button primary" data-action="add-asset">＋ Add asset</button></div><div class="ax78-health"><span class="ax78-health-ring" style="--health:'+readiness+'"><b>'+readiness+'%</b></span><span><small>Asset readiness</small><strong>'+online+' online</strong><em>'+offline+' offline</em></span></div></header>'+
-      '<section class="ax78-stats"><button data-ax78-scope="all"><span>'+hierarchyIcon()+'</span><small>Total register</small><strong>'+assets.length+'</strong><em>'+locations+' locations</em></button><button data-ax78-scope="equipment"><span>'+pulseIcon()+'</span><small>Equipment</small><strong>'+equipment+'</strong><em>'+online+' available</em></button><button data-ax78-scope="attention" class="attention"><span>'+pulseIcon()+'</span><small>Needs attention</small><strong>'+Math.max(offline,assets.filter(a=>activeWork(a).length).length)+'</strong><em>'+work+' open jobs</em></button><button data-route="inventory"><span>'+boxIcon()+'</span><small>Stock connections</small><strong>'+bomLinks+'</strong><em>Linked BOM items</em></button></section>'+
-      '<section class="ax78-workspace">'+
-        '<article class="ax78-explorer"><header><div><span>Plant navigator</span><h2>'+esc(site().name||'Current site')+'</h2><p>Facility → area → equipment → component</p></div><div class="ax78-view-actions"><button type="button" data-ax78-expand>Expand all</button><button type="button" data-ax78-collapse>Collapse all</button></div></header>'+
-          '<div class="ax78-tools"><label><span>⌕</span><input type="search" data-ax78-search value="'+esc(ui.assetSearch||'')+'" placeholder="Search name, code or location"></label><div class="ax78-scopes">'+[['all','All'],['facilities','Locations'],['equipment','Equipment'],['tools','Tools'],['attention','Attention']].map(([id,label])=>'<button type="button" data-ax78-scope="'+id+'" class="'+((ui.assetScope||'all')===id?'active':'')+'">'+label+'</button>').join('')+'</div></div>'+
-          '<div class="ax78-column-head"><span>Asset and location</span><span>Relationship</span><span>Work</span><span>State</span><span></span></div><div class="ax78-tree" data-ax78-tree>'+treeMarkup()+'</div><footer><span><i></i> Drag any record onto a valid parent to move it</span><b>'+assets.length+' assets</b></footer>'+
-        '</article>'+
-        '<aside class="ax78-side">'+
-          '<section class="ax78-topology"><header><div><span>Structure at a glance</span><h2>Your plant model</h2></div><b>Live</b></header><div class="ax78-flow"><button data-ax78-scope="facilities"><i>'+assetTypeIcon('Facility')+'</i><span><small>Locations</small><strong>'+locations+'</strong></span></button><em></em><button data-ax78-scope="equipment"><i>'+assetTypeIcon('Equipment')+'</i><span><small>Equipment</small><strong>'+equipment+'</strong></span></button><em></em><button data-ax78-scope="tools"><i>'+assetTypeIcon('Tool')+'</i><span><small>Tools</small><strong>'+tools+'</strong></span></button></div></section>'+
-          '<section class="ax78-panel"><header><div><span>Operational focus</span><h2>Asset attention</h2></div><button data-ax78-scope="attention">View all</button></header><div class="ax78-attention-list">'+attentionMarkup()+'</div></section>'+
-          '<section class="ax78-panel"><header><div><span>Traceable history</span><h2>Recent activity</h2></div><button data-route="audit">Audit</button></header><div class="ax78-events">'+recentEvents()+'</div></section>'+
-        '</aside>'+
-      '</section><input id="fx23CsvInput" type="file" accept=".csv,text/csv" hidden></div>';
+    const assets=allAssets();
+    return '<div class="ax78-page ax78-register">'+
+      '<header class="ax78-register-actions"><button class="button primary" data-action="add-asset">＋ New asset</button><button class="button" data-fx23-import>Import</button><span>Facilities, equipment and tools</span></header>'+
+      '<section class="ax78-workspace"><article class="ax78-explorer"><header><div><h1>Assets</h1><p>'+esc(site().name||'Current site')+' · Browse by location or search a record.</p></div><div class="ax78-view-actions"><button type="button" data-ax78-expand>Expand all</button><button type="button" data-ax78-collapse>Collapse all</button></div></header>'+
+      '<div class="ax78-tools"><label><span aria-hidden="true">⌕</span><input type="search" aria-label="Search assets" data-ax78-search value="'+esc(ui.assetSearch||'')+'" placeholder="Name, code or location"></label><div class="ax78-scopes" aria-label="Asset types">'+[['all','All'],['facilities','Facilities'],['equipment','Equipment'],['tools','Tools'],['attention','Needs attention']].map(([id,label])=>'<button type="button" data-ax78-scope="'+id+'" aria-pressed="'+((ui.assetScope||'all')===id)+'" class="'+((ui.assetScope||'all')===id?'active':'')+'">'+label+'</button>').join('')+'</div></div>'+
+      '<div class="ax78-register-scroll"><div class="ax78-column-head"><span>Name / location</span><span>Code</span><span>Relationship</span><span>Open work</span><span>Status</span><span></span></div><div class="ax78-tree" data-ax78-tree>'+treeMarkup()+'</div></div><footer><span>Select a record to view details, parts, meters and history.</span><b>'+assets.length+' records</b></footer></article></section><input id="fx23CsvInput" type="file" accept=".csv,text/csv" hidden></div>';
   }
 
   function renderAssetsV78(){

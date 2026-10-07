@@ -1,0 +1,14 @@
+{
+  "name": "safimaintain",
+  "version": "10.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run_regressions.js",
+    "test:browser": "node scripts/rebuild_acceptance.cjs",
+    "test:browser:legacy": "node scripts/browser_acceptance.cjs",
+    "demo": "node scripts/preview_server.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

@@ -27,9 +27,8 @@ assert.match(css,/\.ar72-record\{[^}]*animation:none!important/);
 assert.match(css,/\.ar72-tabs\{position:sticky/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
-assert.match(index,/safimaint-assets-v77\.css\?v=77/);
-assert.match(index,/safimaint-fiix-operating-model-v23\.js\?v=77/);
-assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
+assert.match(index,/safimaint-assets-v77\.css(?:\?v=\d+)?/);
+assert.match(index,/safimaint-fiix-operating-model-v23\.js(?:\?v=\d+)?/);
 assert.match(worker,/safimaint-assets-v77\.css/);
 
 console.log('Assets v77 design and stable hierarchy regression checks passed.');

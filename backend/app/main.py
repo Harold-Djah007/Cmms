@@ -5,22 +5,28 @@ import json
 import mimetypes
 import smtplib
 import ssl
+import sqlite3
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, closing
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
+from threading import Lock
+from tempfile import TemporaryFile
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .config import settings
+from .config import settings, validate_production_config
+from .http_safety import HttpSafetyMiddleware
 from .database import connect, migrate, transaction
 from .security import Identity, demand, permission_set, require_identity
 from .validation import authorize_changes, validate_state
 
 WORKSPACE = "default"
+MAIL_FLUSH_LOCK = Lock()
 MAX_FILE_BYTES = 25 * 1024 * 1024
 ALLOWED_TYPES = {
     "application/pdf", "image/jpeg", "image/png", "image/webp", "text/plain", "text/csv",
@@ -50,24 +56,44 @@ class StateWrite(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    validate_production_config()
     migrate()
     settings.attachment_path.mkdir(parents=True, exist_ok=True)
     yield
 
 
 app = FastAPI(title="SafiMaintain API", version="1.0.0", docs_url="/api/docs", redoc_url=None, lifespan=lifespan)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+app.add_middleware(HttpSafetyMiddleware)
+from .accounts import router as account_router
+app.include_router(account_router)
+
+
+@app.get("/api/ready")
+def readiness():
+    try:
+        with closing(connect()) as db:
+            if db.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                raise RuntimeError("Database check failed")
+            db.execute("SELECT version FROM schema_migrations LIMIT 1").fetchone()
+        with TemporaryFile(dir=settings.attachment_path) as probe:
+            probe.write(b"ready")
+            probe.flush()
+        return {"status": "ready", "service": "safimaint"}
+    except (OSError, RuntimeError, sqlite3.Error) as error:
+        raise HTTPException(status_code=503, detail="Persistent storage is not ready") from error
 
 
 @app.get("/api/health")
 def health() -> dict:
-    with connect() as db:
+    with closing(connect()) as db:
         db.execute("SELECT 1").fetchone()
     return {"status": "ok", "service": "safimaint", "time": now()}
 
 
 @app.get("/api/v1/session")
 def session(identity: Identity = Depends(require_identity)) -> dict:
-    with connect() as db:
+    with closing(connect()) as db:
         state, revision, _ = read_workspace(db)
     permissions = permission_set(state, identity)
     return {"identity": identity.__dict__, "permissions": sorted(permissions), "revision": revision}
@@ -75,7 +101,7 @@ def session(identity: Identity = Depends(require_identity)) -> dict:
 
 @app.get("/api/v1/state")
 def get_state(response: Response, identity: Identity = Depends(require_identity)) -> dict:
-    with connect() as db:
+    with closing(connect()) as db:
         state, revision, state_hash = read_workspace(db)
     if state is None:
         raise HTTPException(status_code=404, detail="Workspace is not initialized")
@@ -121,7 +147,7 @@ def put_state(payload: StateWrite, identity: Identity = Depends(require_identity
 
 @app.get("/api/v1/history")
 def history(limit: int = 30, identity: Identity = Depends(require_identity)) -> dict:
-    with connect() as db:
+    with closing(connect()) as db:
         state, _, _ = read_workspace(db)
         demand(permission_set(state, identity), {"admin.people"})
         rows = db.execute(
@@ -165,6 +191,8 @@ def attachment_access(state: dict | None, identity: Identity, entity_type: str, 
         allowed = bool(permissions & ({"work.execute", "work.manage"} if write else {"work.view", "work.execute", "work.manage"}))
     elif entity_type == "asset":
         allowed = bool(permissions & ({"asset.edit", "asset.state"} if write else {"asset.view", "asset.edit", "asset.state"}))
+    elif entity_type == "part":
+        allowed = bool(permissions & ({"inventory.manage"} if write else {"inventory.view", "inventory.manage", "inventory.issue"}))
     elif entity_type == "request":
         allowed = bool(permissions & ({"work.manage", "asset.view"} if write else {"work.view", "work.manage", "asset.view"}))
     if not allowed:
@@ -174,7 +202,7 @@ def attachment_access(state: dict | None, identity: Identity, entity_type: str, 
 def validate_attachment_entity(state: dict | None, entity_type: str, entity_id: str) -> None:
     if not state:
         raise HTTPException(status_code=404, detail="Workspace is not initialized")
-    collection = {"asset": "assets", "work": "workOrders", "request": "requests"}.get(entity_type.lower())
+    collection = {"asset": "assets", "work": "workOrders", "request": "requests", "part": "parts"}.get(entity_type.lower())
     if not collection:
         raise HTTPException(status_code=422, detail="Unsupported attachment entity type")
     if not any(str(item.get("id")) == entity_id for item in state.get(collection, [])):
@@ -188,7 +216,7 @@ async def upload_attachment(
 ) -> dict:
     entity_type = entity_type.lower().strip()
     entity_id = entity_id.strip()
-    with connect() as db:
+    with closing(connect()) as db:
         state, _, _ = read_workspace(db)
     attachment_access(state, identity, entity_type, write=True)
     validate_attachment_entity(state, entity_type, entity_id)
@@ -199,7 +227,7 @@ async def upload_attachment(
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="Attachment exceeds 25 MB")
     digest = hashlib.sha256(data).hexdigest()
-    with connect() as db:
+    with closing(connect()) as db:
         duplicate = db.execute(
             "SELECT id,original_name,content_type,size_bytes,sha256,uploaded_at,uploaded_by "
             "FROM attachments WHERE workspace_id=? AND entity_type=? AND entity_id=? AND sha256=? AND original_name=? "
@@ -223,7 +251,7 @@ async def upload_attachment(
 def list_attachments(entity_type: str, entity_id: str, identity: Identity = Depends(require_identity)) -> dict:
     entity_type = entity_type.lower().strip()
     entity_id = entity_id.strip()
-    with connect() as db:
+    with closing(connect()) as db:
         state, _, _ = read_workspace(db)
         attachment_access(state, identity, entity_type, write=False)
         validate_attachment_entity(state, entity_type, entity_id)
@@ -233,7 +261,7 @@ def list_attachments(entity_type: str, entity_id: str, identity: Identity = Depe
 
 @app.get("/api/v1/attachments/file/{attachment_id}")
 def download_attachment(attachment_id: str, identity: Identity = Depends(require_identity)):
-    with connect() as db:
+    with closing(connect()) as db:
         state, _, _ = read_workspace(db)
         row = db.execute("SELECT * FROM attachments WHERE id=? AND workspace_id=?", (attachment_id, WORKSPACE)).fetchone()
     if not row:
@@ -248,48 +276,76 @@ def download_attachment(attachment_id: str, identity: Identity = Depends(require
 
 @app.post("/api/v1/mail/flush")
 def flush_mail(identity: Identity = Depends(require_identity)) -> dict:
-    with connect() as db:
+    if not MAIL_FLUSH_LOCK.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Mail delivery is already running")
+    try:
+        return deliver_mail(identity)
+    finally:
+        MAIL_FLUSH_LOCK.release()
+
+
+def record_mail_delivery(message_id: str, identity: Identity) -> int:
+    # Merge each accepted delivery into the latest workspace, so a concurrent
+    # operational save or a later SMTP failure cannot lose delivery evidence.
+    with transaction() as db:
+        state, revision, previous_hash = read_workspace(db)
+        item = next((mail for mail in state.get("mailOutbox", []) if mail["id"] == message_id), None)
+        if item is None:
+            raise HTTPException(status_code=409, detail="Delivered mail record was removed during delivery")
+        timestamp, next_revision = now(), revision + 1
+        item.update(status="Sent", sentAt=timestamp)
+        state.setdefault("meta", {}).update(serverRevision=next_revision, serverUpdatedAt=timestamp, serverUpdatedBy=identity.email)
+        encoded = canonical(state)
+        state_hash = hashlib.sha256(encoded.encode()).hexdigest()
+        db.execute("INSERT INTO state_history VALUES(?,?,?,?,?,?)", (WORKSPACE, next_revision, encoded, state_hash, timestamp, identity.email))
+        db.execute("UPDATE workspaces SET revision=?,state_json=?,state_hash=?,updated_at=?,updated_by=? WHERE id=?", (next_revision, encoded, state_hash, timestamp, identity.email, WORKSPACE))
+        db.execute("INSERT INTO server_audit(workspace_id,revision,actor,action,detail,previous_hash,state_hash,occurred_at) VALUES(?,?,?,?,?,?,?,?)", (WORKSPACE, next_revision, identity.email, "MAIL_DELIVERED", message_id, previous_hash, state_hash, timestamp))
+    return next_revision
+
+
+def deliver_mail(identity: Identity) -> dict:
+    with closing(connect()) as db:
         state, revision, _ = read_workspace(db)
         demand(permission_set(state, identity), {"admin.notifications"})
+    if state is None:
+        raise HTTPException(status_code=404, detail="Workspace is not initialized")
     if not settings.smtp_host:
         raise HTTPException(status_code=503, detail="SMTP delivery is not configured")
     pending = [m for m in state.get("mailOutbox", []) if str(m.get("status", "")).lower() in {"queued locally", "queued", "retry"}]
-    sent = 0
-    context = ssl.create_default_context()
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
-        if settings.smtp_starttls:
-            smtp.starttls(context=context)
-        if settings.smtp_username:
-            smtp.login(settings.smtp_username, settings.smtp_password)
-        for item in pending:
-            message = EmailMessage()
-            message["From"], message["To"], message["Subject"] = settings.smtp_from, item["to"], item["subject"]
-            message.set_content(item.get("body", ""))
-            smtp.send_message(message)
-            item["status"], item["sentAt"] = "Sent", now()
-            sent += 1
-    if not sent:
+    if not pending:
         return {"sent": 0, "revision": revision}
-    with transaction() as db:
-        _, current_revision, previous_hash = read_workspace(db)
-        if current_revision != revision:
-            raise HTTPException(status_code=409, detail="New records arrived during mail delivery; refresh before retrying")
-        next_revision = revision + 1
-        state.setdefault("meta", {})["serverRevision"] = next_revision
-        state["meta"]["serverUpdatedAt"] = now()
-        encoded = canonical(state)
-        state_hash, timestamp = hashlib.sha256(encoded.encode()).hexdigest(), now()
-        db.execute("INSERT INTO state_history VALUES(?,?,?,?,?,?)", (WORKSPACE, next_revision, encoded, state_hash, timestamp, identity.email))
-        db.execute("UPDATE workspaces SET revision=?,state_json=?,state_hash=?,updated_at=?,updated_by=? WHERE id=?", (next_revision, encoded, state_hash, timestamp, identity.email, WORKSPACE))
-        db.execute("INSERT INTO server_audit(workspace_id,revision,actor,action,detail,previous_hash,state_hash,occurred_at) VALUES(?,?,?,?,?,?,?,?)", (WORKSPACE, next_revision, identity.email, "MAIL_FLUSH", f"Delivered {sent} email messages", previous_hash, state_hash, timestamp))
-    return {"sent": sent, "revision": next_revision}
+    sent = 0
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
+            if settings.smtp_starttls:
+                smtp.starttls(context=ssl.create_default_context())
+            if settings.smtp_username:
+                smtp.login(settings.smtp_username, settings.smtp_password)
+            for item in pending:
+                message = EmailMessage()
+                message["From"], message["To"], message["Subject"] = settings.smtp_from, item["to"], item["subject"]
+                message.set_content(item.get("body", ""))
+                refused = smtp.send_message(message)
+                if refused:
+                    raise smtplib.SMTPRecipientsRefused(refused)
+                revision = record_mail_delivery(item["id"], identity)
+                sent += 1
+    except (smtplib.SMTPException, OSError, ValueError) as error:
+        raise HTTPException(status_code=502, detail=f"Mail relay failed after accepting {sent} messages. Accepted messages remain marked Sent; remaining messages can be retried.") from error
+    return {"sent": sent, "revision": revision}
 
 
 STATIC = Path(__file__).resolve().parents[2] / "dist"
 
 
 @app.get("/{path:path}", include_in_schema=False)
-def spa(path: str):
+def spa(path: str, request: Request):
+    if settings.auth_mode == "password" and (not path or path.endswith(".html")) and path != "auth.html":
+        from .accounts import session_identity
+        try:
+            session_identity(request)
+        except HTTPException:
+            return RedirectResponse("/auth.html", status_code=303)
     candidate = (STATIC / path).resolve()
     if path and candidate.is_file() and STATIC.resolve() in candidate.parents:
         return FileResponse(candidate)

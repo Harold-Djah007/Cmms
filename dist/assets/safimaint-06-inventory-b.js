@@ -29,11 +29,13 @@ function showCycleCount(partId=null){
     ${field('bin','Bin',loc?.bin||'Unassigned')}${field('counted','Counted quantity',String(loc?.onHand??0),{type:'number',required:true,step:'0.01'})}
     ${field('note','Count note','',{type:'textarea',span:true})}
   </div><div class="notice info" style="margin-top:14px">Expected quantity is taken from current system stock at the selected location. Posting the count creates an auditable variance adjustment.</div>`,submitText:'Post count',onSubmit:fd=>{
-    const p=getPart(String(fd.get('partId')));const storeId=String(fd.get('storeId'));const bin=String(fd.get('bin'));const loc=stockLocation(p,storeId,bin);
-    const expected=Number(loc.onHand),counted=Number(fd.get('counted')),variance=counted-expected;
+    const p=getPart(String(fd.get('partId')));const storeId=String(fd.get('storeId'));const bin=String(fd.get('bin')).trim();
+    const counted=Number(fd.get('counted'));
+    if(!p||!getStore(storeId)||!bin||!Number.isFinite(counted)||counted<0){toast('Select a part, store and bin, and enter a non-negative count.');return}
+    const loc=p.locations.find(l=>l.storeId===storeId&&l.bin===bin),expected=Number(loc?.onHand||0),variance=counted-expected;
     const count={id:uid('CNT'),partId:p.id,storeId,bin,expected,counted,variance,status:'Posted',at:iso(),userId:CURRENT_USER,note:String(fd.get('note')||'')};
+    try{if(variance!==0)postStock(p.id,'Adjustment',variance,storeId,bin,{reference:count.id,note:count.note})}catch(error){toast(error.message);return}
     state.cycleCounts.unshift(count);
-    if(variance!==0) postStock(p.id,'Adjustment',variance,storeId,bin,{reference:count.id,note:count.note});
     addAudit('CYCLE_COUNT_POSTED',count.id,`${p.code}: expected ${expected}, counted ${counted}, variance ${variance}`);ensurePurchaseRequest(p,'Cycle count');
     saveState();closeModal();render();toast(`${count.id} posted`);
   }});

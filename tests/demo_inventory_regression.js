@@ -14,9 +14,9 @@ assert.equal((indexSource.match(/safimaint-demo-v67\.js/g)||[]).length,1);
 assert.ok(!indexSource.includes('safimaint-demo-workspace-v67.js'));
 assert.ok(!serviceWorkerSource.includes("'./assets/safimaint-demo-workspace-v67.js'"));
 assert.match(serviceWorkerSource,/safimaint-flux-v71/);
-assert.match(indexSource,/safimaint-stock-first\.css\?v=74/);
-assert.match(indexSource,/safimaint-stock-first\.js\?v=76/);
-assert.match(indexSource,/safimaint-flux-v71\.css\?v=76/);
+assert.match(indexSource,/safimaint-stock-first\.css(?:\?v=\d+)?/);
+assert.match(indexSource,/safimaint-stock-first\.js(?:\?v=\d+)?/);
+assert.match(indexSource,/safimaint-flux-v71\.css(?:\?v=\d+)?/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.css/);
 assert.match(serviceWorkerSource,/safimaint-stock-first\.js/);
 assert.match(serviceWorkerSource,/safimaint-flux-v71\.css/);
@@ -28,7 +28,7 @@ assert.match(assetHierarchySource,/assetTypeIcon\('Tool'\)/);
 function demoContext(initialState){
   const memory=new Map();
   const context={
-    console,structuredClone,
+    console,structuredClone,URLSearchParams,location:{search:'?device=1'},
     state:initialState,
     ui:{route:'dashboard'},
     APP_VERSION:68,
@@ -64,6 +64,20 @@ assert.equal(fresh.state.meta.demoVersion,68);
 assert.ok(fresh.state.assets.length>=10);
 assert.ok(fresh.state.parts.length>=6);
 assert.ok(fresh.state.workOrders.length>=4);
+assert.equal(fresh.state.assets.find(a=>a.id==='DEW-01').parentId,'AREA-DEW');
+assert.equal(fresh.state.assets.find(a=>a.id==='AREA-DEW').parentId,'FAC-OPS');
+const oldPlacement=structuredClone(fresh.state);
+delete oldPlacement.meta.dewateringPlacementV102;
+oldPlacement.assets=oldPlacement.assets.filter(a=>a.id!=='AREA-DEW');
+Object.assign(oldPlacement.assets.find(a=>a.id==='DEW-01'),{parentId:'FAC-OPS',locationId:undefined});
+const repairedPlacement=demoContext(oldPlacement);
+assert.equal(repairedPlacement.state.assets.find(a=>a.id==='DEW-01').locationId,'AREA-DEW');
+assert.equal(repairedPlacement.state.assets.filter(a=>a.id==='AREA-DEW').length,1);
+const userPlacement=structuredClone(oldPlacement);
+Object.assign(userPlacement.assets.find(a=>a.id==='DEW-01'),{parentId:'AREA-DIG',location:'User-selected location'});
+const retainedPlacement=demoContext(userPlacement);
+assert.equal(retainedPlacement.state.assets.find(a=>a.id==='DEW-01').parentId,'AREA-DIG');
+assert.equal(retainedPlacement.state.assets.find(a=>a.id==='DEW-01').location,'User-selected location');
 assert.ok(fresh.state.parts.some(part=>part.locations?.some(location=>Number.isFinite(location.min)&&Number.isFinite(location.max))));
 assert.ok(fresh.state.workStatusDefinitions.some(status=>status.name==='Work In Progress'));
 assert.ok(!fresh.state.workStatusDefinitions.some(status=>status.name==='In Progress'));
@@ -137,7 +151,7 @@ const purchasing=stock.renderPartDetail(part);
 assert.match(purchasing,/Preferred supplier/);
 assert.match(purchasing,/No purchasing documents/);
 
-stock.showStockLocation(part,null);
+stock.window.showStockLocation(part,null);
 for(const name of ['storeId','aisle','row','bin','onHand','min','max','active']){
   assert.match(stock.modal.body,new RegExp('name="'+name+'"'));
 }

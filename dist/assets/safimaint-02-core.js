@@ -1,4 +1,5 @@
 'use strict';
+let loadedStoredWorkspace = false;
 let state = loadState();
 const ui = {route:'dashboard',selectedAsset:'P-201',selectedPart:'PRT-2',assetTab:'details',inventorySearch:'',assetSearch:'',workSearch:'',workStatus:'All statuses'};
 let modalSubmit = null;
@@ -9,6 +10,7 @@ function loadState(){
     if(!raw) return structuredClone(seed);
     const parsed = JSON.parse(raw);
     if(!parsed||typeof parsed!=='object') return structuredClone(seed);
+    loadedStoredWorkspace = true;
     // Preserve field records across compatible frontend releases instead of erasing a technician's device cache.
     parsed.meta=parsed.meta||{};
     parsed.meta.version=APP_VERSION;
@@ -50,7 +52,7 @@ function statusClass(value){
   return 'neutral';
 }
 function status(value){return `<span class="status ${statusClass(value)}">${esc(value)}</span>`}
-function routeTitle(){return ({dashboard:'Overview',calendar:'Maintenance calendar','work-orders':'Work orders',pm:'Scheduled maintenance',requests:'Requests',assets:'Assets',meters:'Meters',downtime:'Downtime',inventory:'Parts & supplies',transactions:'Stock transactions',counts:'Cycle counts',planning:'Purchase planning','purchase-orders':'Purchase orders',vendors:'Vendors','tool-crib':'Tool crib',reliability:'Reliability',people:'People & groups',roles:'Roles & permissions',sites:'Sites & stores',notifications:'Mail & alerts',audit:'Audit trail',security:'Security'})[ui.route]||'SafiMaintain'}
+function routeTitle(){return ({dashboard:'Maintenance overview',calendar:'Maintenance calendar','work-orders':'Work orders',pm:'Scheduled maintenance',requests:'Work requests',assets:'All assets','asset-register':'Asset register',facilities:'Facilities',equipment:'Equipment',tools:'Tools',meters:'Meters',downtime:'Downtime',inventory:'Parts & supplies','stock-locations':'Current stock','batch-stock':'Batch stock adjustment',transactions:'Stock history',counts:'Cycle counts','bom-groups':'BOM groups',businesses:'Suppliers & businesses',planning:'Reorder list','purchase-orders':'Purchase orders',vendors:'Suppliers','tool-crib':'Tool crib',reliability:'Reliability',reports:'Reports',people:'People & groups',roles:'Roles',permissions:'Permissions',groups:'Groups',sites:'Sites & stores',notifications:'Notifications',audit:'Audit trail',security:'Security',workflows:'Workflow automation','sync-center':'Offline / sync',import:'Import',export:'Export'})[ui.route]||'Workspace'}
 
 function userIdsForAudience(rule, context={}){
   const ids=new Set();
@@ -95,8 +97,22 @@ function stockLocation(part,storeId,bin){
   return loc;
 }
 function postStock(partId,type,qty,storeId,bin,{reference='',workOrderId=null,note='',toStoreId=null,toBin=null}={}){
-  const part=getPart(partId); if(!part) return;
+  const part=getPart(partId); if(!part) throw new Error('Part not found.');
   qty=Number(qty);
+  if(!['Receipt','Issue','Adjustment','Transfer'].includes(type))throw new Error('Choose a valid stock movement type.');
+  if(!Number.isFinite(qty)||qty===0||(type!=='Adjustment'&&qty<0))throw new Error('Enter a valid quantity; reductions use Adjustment.');
+  if(!getStore(storeId)||!String(bin||'').trim())throw new Error('Choose a valid store and bin.');
+  const existing=part.locations.find(l=>l.storeId===storeId&&l.bin===bin),onHand=Number(existing?.onHand||0);
+  if((type==='Issue'||type==='Transfer')&&qty>onHand)throw new Error('Not enough stock in the selected location.');
+  if(type==='Adjustment'&&onHand+qty<0)throw new Error('Adjustment would make stock negative.');
+  if(type==='Transfer'&&(!getStore(toStoreId)||!String(toBin||'').trim()))throw new Error('Choose a valid transfer destination.');
+  if(type==='Transfer'&&storeId===toStoreId&&bin===toBin)throw new Error('Choose a different transfer destination.');
+  if(workOrderId){
+    const work=getWork(workOrderId);
+    if(!work)throw new Error('Work order not found.');
+    const closed=typeof window.safiWorkStatusControl==='function'?window.safiWorkStatusControl(work)==='CLOSED':['Completed','Closed','Cancelled'].includes(work.status);
+    if(closed)throw new Error('Reopen the work order before posting stock against it.');
+  }
   const source=stockLocation(part,storeId,bin);
   if(type==='Receipt'){source.onHand+=Math.abs(qty)}
   else if(type==='Issue'){if(source.onHand<Math.abs(qty)) throw new Error('Not enough stock in the selected location.');source.onHand-=Math.abs(qty)}

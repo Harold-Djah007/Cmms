@@ -1,13 +1,26 @@
 'use strict';
 (function(){
   const list=v=>Array.isArray(v)?v:[];
+  function attention(key){
+    if(key==='maintenance')return list(state.workOrders).filter(w=>typeof window.safiWorkStatusControl==='function'?window.safiWorkStatusControl(w)!=='CLOSED':!['Completed','Closed','Cancelled'].includes(w.status)).map(w=>({id:w.id,title:w.id+' · '+w.title,reason:w.status||'Open',kind:'work'}));
+    if(key==='assets')return list(state.assets).filter(a=>a.operatingState==='Offline').map(a=>({id:a.id,title:(a.code||a.id)+' · '+a.name,reason:'Offline',kind:'asset'}));
+    if(key==='supplies')return list(state.parts).filter(p=>partOnHand(p)<Number(p.min||0)).map(p=>({id:p.id,title:(p.code||p.id)+' · '+p.name,reason:partOnHand(p)+' on hand / '+Number(p.min||0)+' minimum',kind:'part'}));
+    return [];
+  }
+  window.safiNavigationAttention=attention;
+  function sources(key){
+    const labels={maintenance:'Open work orders',assets:'Offline assets',supplies:'Parts below minimum'};
+    if(!labels[key])return '';
+    const rows=attention(key);
+    return '<div class="sm-nav-attention"><strong>'+labels[key]+' · '+rows.length+'</strong><div>'+rows.map(row=>'<button type="button" data-sm-attention="'+row.kind+'" data-record-id="'+esc(row.id)+'"><span>'+esc(row.title)+'</span><small>'+esc(row.reason)+'</small></button>').join('')+(rows.length?'':'<small>No records need attention here.</small>')+'</div></div>';
+  }
   const can=p=>!p||typeof safiCan!=='function'||safiCan(p);
   const routeGroups={
     maintenance:new Set(['work-orders','requests','pm','calendar','task-groups','projects']),
     assets:new Set(['assets','asset-register','facilities','equipment','tools','meters','downtime']),
-    supplies:new Set(['inventory','stock-locations','batch-stock','counts','transactions','bom-groups','businesses']),
-    purchasing:new Set(['planning','purchase-requests','receipts','vendors']),
-    settings:new Set(['sites','people','groups','roles','permissions','notifications','workflows','audit','sync-center','security'])
+    supplies:new Set(['inventory','stock-locations','batch-stock','counts','transactions','bom-groups','businesses','planning']),
+    purchasing:new Set(['purchase-requests','receipts','vendors']),
+    settings:new Set(['sites','people','groups','roles','permissions','workflows','audit','security'])
   };
   const icons={
     dashboard:'home',maintenance:'work',notifications:'bell',assets:'assets',
@@ -53,7 +66,10 @@
   }
   function child(route,label,glyph,permission=''){
     if(!can(permission))return'';
-    return '<button class="s79-nav-item child '+(ui.route===route?'active':'')+'" data-route="'+route+'"'+(ui.route===route?' aria-current="page"':'')+'><span class="s79-nav-icon">'+icon(icons[glyph]||glyph)+'</span><span>'+label+'</span></button>';
+    const key=({'work-orders':'maintenance',assets:'assets',inventory:'supplies',planning:'supplies'})[route];
+    const count=key?attention(key).length:0;
+    const reason=({maintenance:'open work orders',assets:'offline assets',supplies:'parts below minimum'})[key];
+    return '<div class="s79-nav-item child '+(ui.route===route?'active':'')+'"><button class="sm-nav-destination" data-route="'+route+'"'+(ui.route===route?' aria-current="page"':'')+'><span class="s79-nav-icon">'+icon(icons[glyph]||glyph)+'</span><span>'+label+'</span></button>'+(count?'<button type="button" class="sm-child-count" data-sm-show-sources="'+key+'" title="Show '+reason+'" aria-label="Show '+count+' '+reason+'">'+count+'</button>':'')+'</div>';
   }
   function direct(route,label,glyph,permission='',badge=''){
     if(!can(permission))return'';
@@ -80,9 +96,11 @@
         ['work-orders','Work orders','maintenance','work.view'],
         ['requests','Work requests','requests','work.view'],
         ['pm','Scheduled maintenance','pm','pm.manage'],
-        ['calendar','Maintenance calendar','calendar','work.view']
+        ['calendar','Maintenance calendar','calendar','work.view'],
+        ['task-groups','Task groups','maintenance','work.manage'],
+        ['projects','Projects','maintenance','work.manage']
       ])+
-      direct('notifications','Notifications','notifications','admin.notifications','alertBadge')+
+      direct('notifications','Notifications','notifications','asset.view','alertBadge')+
       group('assets','Assets','assets','assets','offlineBadge','asset.view',[
         ['assets','All assets','allassets','asset.view'],
         ['facilities','Facilities','facility','asset.view'],
@@ -98,13 +116,10 @@
         ['counts','Cycle counts','count','inventory.view'],
         ['transactions','Stock history','history','inventory.view'],
         ['bom-groups','BOM groups','bom','inventory.view'],
-        ['businesses','Businesses','business','inventory.view']
+        ['businesses','Suppliers & businesses','business','inventory.view'],
+        ['planning','Reorder list','business','inventory.view']
       ])+
-      group('purchasing','Purchasing','purchasing','planning','purchaseBadge','inventory.view',[
-        ['planning','Purchase planning','business','inventory.view'],
-        ['purchase-requests','Purchase requests','requests','purchase.view'],
-        ['receipts','Receipts','stock','purchase.view']
-      ])+
+      direct('sync-center','Offline / sync','sync')+
       direct('reports','Reports','reports','report.view')+
       group('settings','Settings','settings','security','','admin.people',[
         ['sites','Sites & stores','sites','admin.people'],
@@ -118,17 +133,38 @@
       ])+
     '</div>';
     nav.setAttribute('aria-label','Primary navigation');
+    const active=nav.querySelector('[aria-current="page"]');
+    if(active&&nav.dataset.activeRoute!==ui.route){nav.dataset.activeRoute=ui.route;active.scrollIntoView({block:'nearest',behavior:'auto'})}
     if(typeof updateBadges==='function')updateBadges();
+    for(const [key,id] of [['maintenance','workBadge'],['assets','offlineBadge'],['supplies','stockBadge']]){
+      const el=document.getElementById(id),rows=attention(key);if(!el)continue;
+      el.textContent=rows.length||'';el.classList.toggle('show',rows.length>0);el.hidden=!rows.length;
+      el.title=({maintenance:'Open work orders',assets:'Offline assets',supplies:'Parts below minimum'})[key]+': '+rows.length;
+    }
   }
   simpleNavigation=navigation;window.simpleNavigation=navigation;window.safiFiixNavV87=navigation;
 
+  document.addEventListener('keydown',event=>{if(event.target.matches('[data-sm-show-sources]')&&['Enter',' '].includes(event.key)){event.preventDefault();event.target.click()}});
   document.addEventListener('click',event=>{
+    const badge=event.target.closest('[data-sm-show-sources]');
+    if(badge){event.preventDefault();event.stopImmediatePropagation();const key=badge.dataset.smShowSources;openModal({title:({maintenance:'Open work orders',assets:'Offline assets',supplies:'Parts below minimum'})[key],eyebrow:'Attention details',body:sources(key),submitText:'Close',onSubmit:()=>closeModal()});return}
+    const source=event.target.closest('[data-sm-attention]');
+    if(source){
+      event.preventDefault();event.stopImmediatePropagation();
+      const id=source.dataset.recordId;closeModal();
+      if(source.dataset.smAttention==='work'){go('work-orders');openWorkDrawer(id)}
+      if(source.dataset.smAttention==='asset'){ui.selectedAsset=id;ui.assetView='record';ui.assetRecordTab='general';go('assets')}
+      if(source.dataset.smAttention==='part'){ui.selectedPart=id;ui.s80SupplyMode='record';ui.s80SupplyTab='stock';go('inventory')}
+      document.getElementById('sidebar')?.classList.remove('open');document.getElementById('scrim')?.classList.remove('show');
+      return;
+    }
     const toggle=event.target.closest('[data-v87-toggle]');
     if(!toggle)return;
     event.preventDefault();event.stopImmediatePropagation();
     const key=toggle.dataset.v87Toggle;
     ui.v87Open=ui.v87Open===key?null:key;
     navigation();
+
   },true);
 
   const previousRender=window.render;

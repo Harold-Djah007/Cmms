@@ -15,7 +15,7 @@
   }
   async function withStore(mode,fn){
     const db=await openDb();
-    try{return await new Promise((resolve,reject)=>{const t=db.transaction(STORE,mode),s=t.objectStore(STORE),req=fn(s);if(req&&'onsuccess'in req){req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)}else{t.oncomplete=()=>resolve(req);t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error)}})}
+    try{return await new Promise((resolve,reject)=>{const t=db.transaction(STORE,mode),s=t.objectStore(STORE),req=fn(s);let result=req;if(req&&'onsuccess'in req){req.onsuccess=()=>{result=req.result};req.onerror=()=>reject(req.error)}t.oncomplete=()=>resolve(result);t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error)})}
     finally{db.close()}
   }
   async function allLocal(){return await withStore('readonly',s=>s.getAll())||[]}
@@ -59,6 +59,7 @@
   async function repaintVisible(){
     const jobs=[...document.querySelectorAll('[data-local-file-list]')].map(el=>paint('asset',el.dataset.localFileList,el));
     jobs.push(...[...document.querySelectorAll('[data-work-file-list]')].map(el=>paint('work',el.dataset.workFileList,el)));
+    jobs.push(...[...document.querySelectorAll('[data-s79-part-file-list]')].map(el=>paint('part',el.dataset.s79PartFileList,el)));
     await Promise.allSettled(jobs)
   }
   async function updateSyncBadges(){
@@ -79,7 +80,7 @@
   window.render=render;
 
   document.addEventListener('change',e=>{
-    if(e.target.matches('[data-local-file-input],[data-work-file-input],#v53RequestFiles'))setTimeout(()=>syncPending({quiet:true}),500)
+    if(e.target.matches('[data-local-file-input],[data-work-file-input],[data-s79-part-file],#v53RequestFiles'))setTimeout(()=>syncPending({quiet:true}),500)
   },true);
   document.addEventListener('click',async e=>{
     const sync=e.target.closest('[data-v58-sync-file]');if(sync){e.preventDefault();e.stopImmediatePropagation();const f=await window.SafiFiles?.get(sync.dataset.v58SyncFile);if(!f)return;if(!apiReady()){toast('Shared service is not available yet');return}try{await uploadRecord(f);toast(f.name+' synced');await repaintVisible()}catch(err){toast('File sync failed: '+err.message)}return}

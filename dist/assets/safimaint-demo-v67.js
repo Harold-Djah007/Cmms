@@ -81,7 +81,8 @@
       {id:'AREA-DIG',code:'DIG',name:'Digester Area',type:'Area',parentId:'FAC-OPS',siteId:'SITE-GH',category:'Process area',criticality:'A',condition:'Attention',operatingState:'Online',location:'Wet process',ownerUserId:'U-2',ownerGroupId:'GRP-MAINT',commissioned:'2018-02-14',bom:[]},
       {id:'P-201',code:'P-201',name:'Digester Feed Pump 02',type:'Equipment',parentId:'AREA-DIG',locationId:'AREA-DIG',siteId:'SITE-GH',category:'Pump',criticality:'A',condition:'Attention',operatingState:'Offline',location:'Digester feed line · Pump plinth 02',latitude:5.70387,longitude:-0.03163,ownerUserId:'U-3',ownerGroupId:'GRP-MAINT',manufacturer:'Grundfos',model:'CR 32-4',serial:'GF-88214',warrantyExpiry:'2027-06-10',commissioned:'2021-06-11',account:'Wastewater process assets',chargeDepartment:'Maintenance',notes:'Duty feed pump. Verify isolation and drain line before opening seal housing.',businessIds:['VEN-2'],customFields:{'Duty':'Duty / standby pair','Design flow':'32 m³/h','Isolation procedure':'SOP-MECH-014'},warranties:[{id:'WAR-P201-1',provider:'PumpTech Ghana',reference:'PTG-GF-88214',start:'2021-06-11',expiry:'2027-06-10',coverage:'Pump casing, motor and manufacturer defects',status:'Active'}],bom:['PRT-1','PRT-2'],bomQuantities:{'PRT-1':2,'PRT-2':1},offlineSince:new Date(Date.now()-2*3600000).toISOString(),downtimeReason:'Mechanical seal leakage'},
       {id:'MIX-03',code:'MX-03',name:'Digester Mixer 03',type:'Equipment',parentId:'AREA-DIG',siteId:'SITE-GH',category:'Mixer',criticality:'A',condition:'Healthy',operatingState:'Online',location:'Digester 3',ownerUserId:'U-3',ownerGroupId:'GRP-MAINT',manufacturer:'SEW',model:'X3KR',serial:'SEW-33091',commissioned:'2022-01-19',bom:['PRT-3'],bomQuantities:{'PRT-3':1}},
-      {id:'DEW-01',code:'DW-01',name:'Sludge Dewatering Press',type:'Equipment',parentId:'FAC-OPS',siteId:'SITE-GH',category:'Dewatering',criticality:'A',condition:'Attention',operatingState:'Online',location:'Dewatering bay',ownerUserId:'U-3',ownerGroupId:'GRP-MAINT',manufacturer:'Huber',model:'Q-PRESS',serial:'HQP-1208',commissioned:'2021-11-02',bom:['PRT-6'],bomQuantities:{'PRT-6':2}},
+      {id:'AREA-DEW',code:'DEW',name:'Dewatering Bay',type:'Area',parentId:'FAC-OPS',siteId:'SITE-GH',category:'Process area',criticality:'A',condition:'Healthy',operatingState:'Online',location:'Dewatering bay',ownerUserId:'U-2',ownerGroupId:'GRP-MAINT',bom:[]},
+      {id:'DEW-01',code:'DW-01',name:'Sludge Dewatering Press',type:'Equipment',parentId:'AREA-DEW',locationId:'AREA-DEW',siteId:'SITE-GH',category:'Dewatering',criticality:'A',condition:'Attention',operatingState:'Online',location:'Dewatering bay',ownerUserId:'U-3',ownerGroupId:'GRP-MAINT',manufacturer:'Huber',model:'Q-PRESS',serial:'HQP-1208',commissioned:'2021-11-02',bom:['PRT-6'],bomQuantities:{'PRT-6':2}},
       {id:'TOOL-01',code:'SPN-001',name:'Torque Wrench',type:'Tool',parentId:'CHP-01',siteId:'SITE-GH',category:'Tool',criticality:'C',condition:'Healthy',operatingState:'Online',location:'CHP Store',ownerUserId:'U-4',ownerGroupId:'GRP-STORES',manufacturer:'Norbar',model:'Pro 100',serial:'NW-11082',commissioned:'2024-02-01',bom:[]}
     ];
     s.meters=[
@@ -190,6 +191,15 @@
     ['sites','stores','groups','users','vendors','businesses','parts','assets','workOrders','pmSchedules','meters','meterReadings','stockTransactions','cycleCounts','purchaseRequests','purchaseOrders','rfqs','receipts','notifications','mailOutbox','audit','roles'].forEach(key=>{
       if(!Array.isArray(state[key])){state[key]=[];changed=true}
     });
+    // Repair only the original demo placement, once; retain user moves and edits.
+    if(!state.meta.dewateringPlacementV102){
+      const press=state.assets.find(a=>a.id==='DEW-01');
+      if(press&&press.parentId==='FAC-OPS'&&!press.locationId&&press.location==='Dewatering bay'){
+        if(!state.assets.some(a=>a.id==='AREA-DEW'))state.assets.push({id:'AREA-DEW',code:'DEW',name:'Dewatering Bay',type:'Area',parentId:'FAC-OPS',siteId:press.siteId,category:'Process area',condition:'Healthy',operatingState:'Online',location:'Dewatering bay',bom:[]});
+        press.parentId='AREA-DEW';press.locationId='AREA-DEW';
+      }
+      state.meta.dewateringPlacementV102=true;changed=true;
+    }
     if(!Array.isArray(state.workStatusDefinitions)||!state.workStatusDefinitions.length){
       state.workStatusDefinitions=clone(DEFAULT_STATUSES);changed=true
     }else{
@@ -293,6 +303,6 @@
   // repairing array shapes alone would still leave a dashboard full of zeros.
   if(isDemo()&&sparseWorkspace())loadDemo({automatic:true});
   else if(isDemo())repairDemoState();
-  else if(sparseWorkspace())loadDemo({automatic:true});
+  else if(sparseWorkspace()&&!state.meta?.onboardingComplete&&typeof location!=='undefined'&&new URLSearchParams(location.search).get('device')==='1')loadDemo({automatic:true});
   if(ui.route==='dashboard')render()
 })();

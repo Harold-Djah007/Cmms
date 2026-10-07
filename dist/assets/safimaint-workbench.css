@@ -1,0 +1,48 @@
+/* Live Safisana Fiix reference, reviewed 7 October 2026.
+   Original SafiMaintain styling; shared compact workspace and record grammar. */
+body.safimaint-stock-first{--sm-bg:#edf1f4;--sm-line:#cfdbe2;--sm-ink:#243b4a;--sm-muted:#617888;background:var(--sm-bg)!important}
+body.safimaint-stock-first .sidebar{width:220px!important;padding:16px 10px 10px!important;background:#24363e!important}
+body.safimaint-stock-first .workspace{margin-left:220px!important}
+body.safimaint-stock-first .sidebar .brand{padding:0 8px 16px!important}
+body.safimaint-stock-first .sidebar .brand strong{font-size:20px!important}
+body.safimaint-stock-first .sidebar .site-card{border-radius:4px!important;padding:9px 10px!important;margin-bottom:14px!important;min-height:55px!important;background:#2c424b!important}
+body.safimaint-stock-first .s79-nav-item,body.safimaint-stock-first .s79-nav-parent{min-height:36px!important;border-radius:3px!important;font-size:13px!important;padding:7px 9px!important}
+body.safimaint-stock-first .s79-nav-item.child{min-height:32px!important;font-size:12px!important;padding:6px!important}
+body.safimaint-stock-first .s79-nav-children{margin-left:10px!important;padding-left:6px!important}
+body.safimaint-stock-first .s79-nav-icon svg{width:17px!important;height:17px!important}
+body.safimaint-stock-first .s79-nav-parent>i{opacity:.65}
+body.safimaint-stock-first .s79-nav-item.active,body.safimaint-stock-first .s79-nav-group.route-active>.s79-nav-parent{background:#365b60!important;box-shadow:inset 3px 0 #61c4b3!important}
+body.safimaint-stock-first .topbar{min-height:58px!important;padding:10px 20px!important;border-top:3px solid #168c80!important;gap:14px!important}
+body.safimaint-stock-first .topbar .search-box{height:35px!important;min-height:35px!important;font-size:13px!important;border-radius:4px!important}
+body.safimaint-stock-first .top-actions .button,body.safimaint-stock-first .top-actions #scanButton{height:34px!important;min-height:34px!important;padding:7px 10px!important;font-size:12px!important;border-radius:4px!important}
+body.safimaint-stock-first #appView{padding:18px 20px!important;max-width:none!important}
+.mw-breadcrumbs{margin-bottom:12px;font-size:12px}
+body.safimaint-stock-first .sm-demo-banner{border-radius:4px!important;padding:7px 10px!important;margin-bottom:12px!important;font-size:11px!important}
+body.safimaint-stock-first #appView :is(.card,.mw-panel,.s93-register,.ax78-workspace,.ax78-register,.s80-record-shell){border-radius:5px!important;box-shadow:none!important;border-color:#cfdbe2!important}
+body.safimaint-stock-first #appView :is(.page-head,.sf-page-head,.v50-page-head){margin-bottom:16px!important}
+body.safimaint-stock-first #appView :is(.page-head,.sf-page-head,.v50-page-head) h1{font-size:23px!important;letter-spacing:-.3px!important}
+body.safimaint-stock-first #appView :is(.card-head,.mw-panel>header){padding:12px 16px!important;background:#f8fafb!important;border-bottom:1px solid #dbe4e9!important}
+body.safimaint-stock-first #appView :is(.card-head,.mw-panel>header) h2{font-size:15px!important}
+body.safimaint-stock-first #appView :is(table,.mw-work-table,.s93-table) th{background:#e4edf2!important;color:#4e6777!important;border-bottom:1px solid #c7d7e1!important;font-size:12px!important;padding:9px 12px!important;text-transform:none!important}
+body.safimaint-stock-first #appView :is(table,.mw-work-table,.s93-table) td{font-size:13px!important;padding:10px 12px!important;line-height:1.5!important}
+body.safimaint-stock-first #appView tbody tr:nth-child(even){background:#f7f9fb!important}
+body.safimaint-stock-first #appView tbody tr:hover{background:#eef7f5!important}
+body.safimaint-stock-first .s93-location-workspace .s93-tree td{height:35px;padding:8px 10px!important;font-size:12px!important}
+body.safimaint-stock-first .s93-actionbar{border:1px solid #cfdbe2!important;border-bottom:0!important;background:#e8eef2!important;padding:8px 10px!important}
+body.safimaint-stock-first .s93-actionbar .button{border-radius:3px!important;font-size:12px!important;min-height:31px!important;padding:6px 10px!important}
+body.safimaint-stock-first .s93-register-head{background:#edf3f6!important;padding:11px 14px!important;gap:12px!important}
+body.safimaint-stock-first .s93-register-head h1{font-size:20px!important;letter-spacing:-.25px!important}
+body.safimaint-stock-first .s93-register-head input{border:1px solid #b9cbd6!important;border-radius:3px!important;box-shadow:none!important}
+body.safimaint-stock-first .s93-view button{font-size:12px!important;border-radius:3px!important}
+body.safimaint-stock-first .s93-record .s80-record-actions{background:#e8eef2!important;border-radius:4px!important;box-shadow:none!important;padding:8px 10px!important}
+body.safimaint-stock-first .s93-record .s80-tabs{background:#e8eef2!important;border-bottom:1px solid #bdcfd9!important}
+body.safimaint-stock-first .s93-record .s80-tabs button{border-radius:0!important;padding:10px 14px!important}
+body.safimaint-stock-first .s93-record .s80-tabs button.active{box-shadow:inset 0 -3px #148b7b!important}
+.mw-page-heading{background:#fff!important;border-radius:5px!important;padding:14px 18px!important;border-left:3px solid #148b7b!important}
+.mw-page-heading h1{font-size:24px!important;margin-bottom:4px!important}.mw-page-heading p{font-size:13px!important}
+.mw-home{gap:16px!important}.mw-metric{padding:16px!important;border-radius:5px!important;min-height:118px}.mw-metric strong{font-size:32px!important}
+.mw-metric:before{display:none}.mw-work-table td{padding:10px 12px!important}.mw-work-table td button small{margin-bottom:2px}
+.mw-attention-grid{gap:16px!important}.mw-attention{padding:12px 16px!important}.mw-queue-tools{padding:10px 12px!important}
+@media(min-width:1350px){.mw-home{grid-template-columns:minmax(280px,1fr) minmax(650px,2.4fr);align-items:start}.mw-page-heading,.mw-attention-grid{grid-column:1/-1}.mw-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important}.mw-work-panel{grid-column:2;grid-row:2}.mw-work-table{min-width:850px}.mw-attention-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.mw-panel>header{align-items:flex-start}.mw-attention-grid .mw-link{white-space:normal;text-align:right}}
+@media(max-width:900px){body.safimaint-stock-first .workspace{margin-left:0!important}body.safimaint-stock-first .sidebar{width:250px!important}body.safimaint-stock-first #appView{padding:16px!important}body.safimaint-stock-first .topbar{padding:10px 14px!important}.mw-home{display:grid;grid-template-columns:1fr}}
+@media(max-width:600px){body.safimaint-stock-first #appView{padding:12px!important}.mw-page-heading{padding:13px!important}.mw-page-heading h1{font-size:23px!important}.mw-metric{padding:13px!important;min-height:110px}.mw-metric strong{font-size:29px!important}.mw-attention-grid{grid-template-columns:1fr}.s93-search{width:100%!important}.s93-register-head{flex-wrap:wrap!important}.s93-register-head label input{width:100%!important}}

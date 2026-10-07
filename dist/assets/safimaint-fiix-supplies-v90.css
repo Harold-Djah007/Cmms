@@ -86,3 +86,11 @@
   .safimaint-supplies-v81 .s80-list-tools{display:flex;align-items:stretch}
   .v90-list-caption{width:100%}
 }
+
+/* Simple planning: essentials first, optional detail on demand. */
+.safi-advanced-fields{grid-column:1/-1;border-top:1px solid #d7e0e9;padding-top:12px}
+.safi-advanced-fields>summary{cursor:pointer;font-weight:600;padding:10px 0;font-size:14px}
+.safi-advanced-fields[open]>.form-grid{padding-top:12px}
+.v44-work-row[hidden],[data-work-search-empty][hidden]{display:none!important}
+:focus-visible{outline:3px solid #138577;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

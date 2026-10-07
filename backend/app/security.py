@@ -37,11 +37,16 @@ async def require_identity(
     x_ms_client_principal_id: str | None = Header(default=None),
     x_ms_client_principal_name: str | None = Header(default=None),
 ) -> Identity:
-    if x_ms_client_principal:
+    if settings.auth_mode == "password":
+        from .accounts import session_identity
+        return session_identity(request)
+    # Only an explicitly configured authentication proxy may supply identity.
+    # A directly exposed API must not accept a caller's forged owner headers.
+    if settings.trust_auth_headers and x_ms_client_principal:
         identity = _azure_principal(x_ms_client_principal)
         if identity:
             return identity
-    if x_ms_client_principal_id and x_ms_client_principal_name:
+    if settings.trust_auth_headers and x_ms_client_principal_id and x_ms_client_principal_name:
         return Identity(x_ms_client_principal_id, x_ms_client_principal_name.lower(), x_ms_client_principal_name, "microsoft-entra")
     if settings.dev_auth:
         # Development auth is enabled only by explicit configuration. This must

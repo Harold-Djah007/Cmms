@@ -1,7 +1,7 @@
 'use strict';
-const STORAGE_KEY = 'safimaint-simple-v7';
+const STORAGE_KEY = typeof location!=='undefined'&&typeof URLSearchParams!=='undefined'&&new URLSearchParams(location.search).get('presentation')==='1'?'safimaint-presentation-v1':'safimaint-simple-v7';
 let CURRENT_USER = 'U-1';
-const APP_VERSION = '9.9.6-stable-fiix-supplies-v90';
+const APP_VERSION = '10.0.0-safimaint';
 
 const iso = () => new Date().toISOString();
 const day = offset => {

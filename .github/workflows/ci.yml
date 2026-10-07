@@ -22,6 +22,10 @@ jobs:
         run: pip install -r backend/requirements-dev.txt
       - name: Python compile check
         run: python -m compileall -q backend
+      - name: Runtime dependency vulnerability check
+        run: |
+          pip install pip-audit==2.10.1
+          python -m pip_audit -r backend/requirements.txt
       - name: Backend tests
         run: python -m pytest -q backend/tests
       - name: JavaScript syntax check
@@ -29,20 +33,11 @@ jobs:
           for file in dist/assets/*.js dist/service-worker.js; do
             node --check "$file"
           done
-      - name: Demo and stock workflow regression tests
+      - name: All frontend regression tests
+        run: node tests/run_regressions.js
+      - name: Install browser test dependencies
         run: |
-          node tests/demo_inventory_regression.js
-          node tests/stock_first_redesign_regression.js
-          node tests/shared_bootstrap_regression.js
-          node tests/asset_record_v72_regression.js
-          node tests/asset_record_v72_smoke.js
-          node tests/qr_v75_regression.js
-          node tests/assets_v77_regression.js
-          node tests/assets_v78_regression.js
-          node tests/supplies_v79_regression.js
-          node tests/supplies_v80_regression.js
-          node tests/supplies_v81_regression.js
-          node tests/supplies_v86_restore_regression.js
-          node tests/fiix_nav_v87_regression.js
-          node tests/supplies_v89_regression.js
-          node tests/supplies_v90_regression.js
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Browser acceptance tests
+        run: npm run test:browser

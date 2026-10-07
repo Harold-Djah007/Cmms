@@ -25,7 +25,7 @@
       if(remote.has('*'))return remote;
       // In device/fresh-workspace mode keep the locally configured role usable
       // until the shared identity maps to the same persisted user.
-      if(remote.size)return remote;
+      return remote;
     }
     return local;
   }
@@ -43,9 +43,9 @@
 
   const routePermission={
     'work-orders':'work.view',calendar:'work.view',pm:'pm.manage',projects:'work.view','task-groups':'work.view',
-    assets:'asset.view','asset-register':'asset.view',equipment:'asset.view',facilities:'asset.view',tools:'asset.view','rotating-assets':'asset.view',meters:'asset.view',downtime:'asset.view','asset-events':'asset.view',
+    assets:'asset.view','asset-insights':'asset.view','asset-register':'asset.view',equipment:'asset.view',facilities:'asset.view',tools:'asset.view','rotating-assets':'asset.view',meters:'asset.view',downtime:'asset.view','asset-events':'asset.view',
     inventory:'inventory.view','stock-locations':'inventory.view',transactions:'inventory.view',counts:'inventory.view','bom-groups':'inventory.view','parts-forecaster':'inventory.view','tool-crib':'inventory.view',
-    planning:'purchase.view','purchase-requests':'purchase.view',rfqs:'purchase.view','purchase-orders':'purchase.view',receipts:'purchase.view','purchase-analytics':'purchase.view',
+    planning:'inventory.view','purchase-requests':'purchase.view',rfqs:'purchase.view','purchase-orders':'purchase.view',receipts:'purchase.view','purchase-analytics':'purchase.view',
     reports:'report.view','report-viewer':'report.view',analytics:'report.view',reliability:'report.view','work-insights':'report.view','failure-analysis':'report.view','labor-availability':'report.view','meter-analytics':'report.view',
     people:'admin.people',groups:'admin.people',roles:'admin.people',permissions:'admin.people',sites:'admin.people','asset-categories':'admin.people',priorities:'admin.people','maintenance-types':'admin.people','wo-statuses':'admin.people','failure-codes':'admin.people','meter-units':'admin.people','event-types':'admin.people','custom-fields':'admin.people',workflows:'admin.notifications',security:'admin.people',audit:'admin.people',localization:'admin.people',integrations:'admin.people'
   };
@@ -56,19 +56,20 @@
   function searchRecords(q){
     q=String(q||'').trim().toLowerCase();if(q.length<2)return [];
     const out=[],hit=(kind,title,sub,route,id,blob)=>{if(String(blob||[title,sub].join(' ')).toLowerCase().includes(q))out.push({kind,title,sub,route,id})};
-    state.assets.forEach(a=>hit('Asset',a.code+' · '+a.name,[a.type,a.location,a.serial,a.category].filter(Boolean).join(' · '),'assets',a.id,[a.id,a.code,a.name,a.description,a.serial,a.model,a.manufacturer,a.location,a.category].join(' ')));
-    state.workOrders.forEach(w=>hit('Work order',w.id+' · '+w.title,[w.status,w.priority,w.type].join(' · '),'work-orders',w.id,[w.id,w.title,w.description,w.status,w.priority,w.type,w.instructions,(w.assetIds||[]).map(id=>getAsset(id)?.name).join(' ')].join(' ')));
+    state.assets.filter(safiSiteAllowed).forEach(a=>hit('Asset',a.code+' · '+a.name,[a.type,a.location,a.serial,a.category].filter(Boolean).join(' · '),'assets',a.id,[a.id,a.code,a.name,a.description,a.serial,a.model,a.manufacturer,a.location,a.category].join(' ')));
+    state.workOrders.filter(safiSiteAllowed).forEach(w=>hit('Work order',w.id+' · '+w.title,[w.status,w.priority,w.type].join(' · '),'work-orders',w.id,[w.id,w.title,w.description,w.status,w.priority,w.type,w.instructions,(w.assetIds||[]).map(id=>getAsset(id)?.name).join(' ')].join(' ')));
     state.parts.forEach(p=>hit('Part',p.code+' · '+p.name,partOnHand(p)+' '+p.uom+' on hand','inventory',p.id,[p.id,p.code,p.name,p.description,p.category,p.barcode,p.manufacturer,p.model].join(' ')));
-    state.requests.forEach(r=>hit('Request',r.id+' · '+r.summary,r.status+' · '+(r.requester||''),'requests',r.id,[r.id,r.summary,r.description,r.requester,r.status,getAsset(r.assetId)?.name].join(' ')));
-    state.scheduledMaintenance.forEach(p=>hit('Scheduled maintenance',p.id+' · '+p.name,p.status+' · '+(p.triggerLogic||'ANY'),'pm',p.id,[p.id,p.name,p.status,(p.triggers||[]).map(t=>t.description).join(' '),(p.assetIds||[p.assetId]).map(id=>getAsset(id)?.name).join(' ')].join(' ')));
-    state.projects.forEach(p=>hit('Project',p.id+' · '+p.name,p.status||'','projects',p.id,[p.id,p.name,p.description,p.status].join(' ')));
+    state.requests.filter(safiSiteAllowed).forEach(r=>hit('Request',r.id+' · '+r.summary,r.status+' · '+(r.requester||''),'requests',r.id,[r.id,r.summary,r.description,r.requester,r.status,getAsset(r.assetId)?.name].join(' ')));
+    state.scheduledMaintenance.filter(safiSiteAllowed).forEach(p=>hit('Scheduled maintenance',p.id+' · '+p.name,p.status+' · '+(p.triggerLogic||'ANY'),'pm',p.id,[p.id,p.name,p.status,(p.triggers||[]).map(t=>t.description).join(' '),(p.assetIds||[p.assetId]).map(id=>getAsset(id)?.name).join(' ')].join(' ')));
+    state.projects.filter(safiSiteAllowed).forEach(p=>hit('Project',p.id+' · '+p.name,p.status||'','projects',p.id,[p.id,p.name,p.description,p.status].join(' ')));
     state.purchaseOrders.forEach(p=>hit('Purchase order',p.id+' · '+(getVendor(p.vendorId)?.name||'Supplier'),p.status||'','purchase-orders',p.id,[p.id,p.status,getVendor(p.vendorId)?.name,(p.lines||[]).map(l=>getPart(l.partId)?.name).join(' ')].join(' ')));
     state.purchaseRequests.forEach(r=>hit('Purchase request',r.id+' · '+(getPart(r.partId)?.name||r.partId),r.status||'','purchase-requests',r.id,[r.id,r.status,r.reason,getPart(r.partId)?.code,getPart(r.partId)?.name].join(' ')));
     state.rfqs.forEach(r=>hit('RFQ',r.id+' · '+(getPart(r.partId)?.name||r.partId),r.status||'','rfqs',r.id,[r.id,r.status,getPart(r.partId)?.code,getPart(r.partId)?.name,state.businesses.find(b=>b.id===r.businessId)?.name].join(' ')));
     state.businesses.forEach(b=>hit('Business',b.name,[b.type,b.group].filter(Boolean).join(' · '),'businesses',b.id,[b.id,b.name,b.type,b.group,b.contact,b.phone,b.email].join(' ')));
     state.users.forEach(u=>hit('Person',u.name,getRole(u.roleId)?.name||'User','people',u.id,[u.id,u.name,u.email,getRole(u.roleId)?.name,(u.groupIds||[]).map(id=>getGroup(id)?.name).join(' ')].join(' ')));
-    state.meters.forEach(m=>hit('Meter',(getAsset(m.assetId)?.code||m.assetId)+' · '+m.name,m.current+' '+m.unit,'meters',m.id,[m.id,m.name,m.unit,m.current,getAsset(m.assetId)?.name].join(' ')));
-    return out.slice(0,120);
+    state.meters.filter(safiSiteAllowed).forEach(m=>hit('Meter',(getAsset(m.assetId)?.code||m.assetId)+' · '+m.name,m.current+' '+m.unit,'meters',m.id,[m.id,m.name,m.unit,m.current,getAsset(m.assetId)?.name].join(' ')));
+    const kindPermission={'Asset':'asset.view','Work order':'work.view','Part':'inventory.view','Request':'work.view','Scheduled maintenance':'pm.manage','Project':'work.view','Purchase order':'purchase.view','Purchase request':'purchase.view','RFQ':'purchase.view','Business':'inventory.view','Person':'admin.people','Meter':'asset.view'};
+    return out.filter(result=>can(kindPermission[result.kind]||routePermission[result.route]||'asset.view')).slice(0,120);
   }
   window.safiSearchRecords=searchRecords;
 
@@ -103,7 +104,7 @@
     assets:{group:'Assets',name:'Asset availability',description:'Operating state, criticality and open work by asset.',columns:['Code','Asset','Type','Criticality','State','Open work'],rows:()=>state.assets.filter(a=>a.type!=='Site'&&safiSiteAllowed(a)).map(a=>[a.code,a.name,a.type,a.criticality||'',a.operatingState||'',state.workOrders.filter(w=>(w.assetIds||[]).includes(a.id)&&safiWorkStatusControl?.(w)!=='CLOSED').length])},
     downtime:{group:'Assets',name:'Downtime history',description:'Downtime reason, duration and linked corrective work.',columns:['Asset','Started','Ended','Reason','Hours','Work order'],rows:()=>state.downtime.filter(d=>safiSiteAllowed(d)).map(d=>[getAsset(d.assetId)?.name||d.assetId,d.startedAt||'',d.endedAt||'',d.reason||d.reasonCode||'',durationHours(d.startedAt,d.endedAt||iso()).toFixed(2),d.workOrderId||''])},
     stock:{group:'Inventory',name:'Stock risk',description:'On-hand quantity compared with configured minimum and maximum.',columns:['Part','Name','On hand','Minimum','Maximum','Unit cost','Value'],rows:()=>state.parts.map(p=>[p.code,p.name,partOnHand(p),Number(p.min||0),Number(p.max||0),Number(p.unitCost||0),(partOnHand(p)*Number(p.unitCost||0)).toFixed(2)])},
-    purchases:{group:'Purchasing',name:'Purchase order status',description:'Purchase orders, values, expected dates and receipt progress.',columns:['PO','Supplier','Status','Created','Expected','Value','Receipt %'],rows:()=>state.purchaseOrders.map(p=>{const qty=(p.lines||[]).reduce((n,l)=>n+Number(l.qty||0),0),rec=(p.lines||[]).reduce((n,l)=>n+Number(l.receivedQty||0),0),value=(p.lines||[]).reduce((n,l)=>n+Number(l.qty||0)*Number(l.unitCost||0),0);return[p.id,getVendor(p.vendorId)?.name||state.businesses.find(b=>b.id===p.businessId)?.name||'',p.status,p.createdAt||'',p.expectedDate||'',value.toFixed(2),qty?Math.round(rec/qty*100):0]})},
+    purchases:{group:'Inventory',name:'Reorder requirements',description:'Parts below minimum, preferred supplier and external reorder quantities.',columns:['Part','Name','On hand','Minimum','Reorder quantity','Preferred supplier','Lead time days'],rows:()=>state.parts.filter(p=>partOnHand(p)<Number(p.min||0)).map(p=>[p.code,p.name,partOnHand(p),Number(p.min||0),Number(p.reorderQty||Math.max(0,Number(p.max||p.min||0)-partOnHand(p))),state.businesses.find(b=>b.id===(p.preferredBusinessId||p.businessId))?.name||getVendor(p.vendorId)?.name||'Unassigned',Number(p.leadTimeDays||0)])},
     labor:{group:'Labour',name:'Logged labour',description:'Actual hours and labour cost by work order and person.',columns:['WO','Person','Hours','Rate','Cost','Date'],rows:()=>state.workOrders.flatMap(w=>(w.labor||[]).map(l=>{const u=getUser(l.userId),rate=Number(u?.hourlyRate||0);return[w.id,u?.name||l.userId,Number(l.hours||0),rate,(Number(l.hours||0)*rate).toFixed(2),l.at||'']}))},
     failures:{group:'Reliability',name:'Failure records',description:'Corrective work with structured Problem → Cause → Action.',columns:['WO','Asset','Problem','Cause','Action','Completed'],rows:()=>state.workOrders.filter(w=>w.failureCodes&&w.failureCodes.problem&&w.failureCodes.problem!=='Not selected').map(w=>[w.id,getAsset(w.assetIds?.[0])?.name||'',w.failureCodes.problem,w.failureCodes.cause,w.failureCodes.action,w.completedAt||''])}
   };
@@ -115,19 +116,23 @@
   }
   function reportFilteredRows(def){
     const from=ui.v55ReportFrom,to=ui.v55ReportTo;
-    if(!from&&!to)return def.rows();
-    const rows=def.rows();
-    // Date filtering is intentionally conservative: any ISO-like value in a row may qualify.
-    return rows.filter(row=>{const dates=row.filter(v=>/^\d{4}-\d{2}-\d{2}/.test(String(v||''))).map(v=>String(v).slice(0,10));if(!dates.length)return true;return dates.some(d=>(!from||d>=from)&&(!to||d<=to))});
+    const index=reportDateIndex(def);
+    if(index<0||!from&&!to)return def.rows();
+    return def.rows().filter(row=>{const value=String(row[index]||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(value)&&(!from||value>=from)&&(!to||value<=to)});
+  }
+  function reportDateIndex(def){return def.columns.findIndex(name=>['Due','Started','Created','Date','Completed'].includes(name))}
+  function csvCell(value){
+    const text=String(value??''),safe=typeof value==='string'&&(/^[\t\r\n]/.test(text)||/^\s*[=+@-]/.test(text))?"'"+text:text;
+    return '"'+safe.replaceAll('"','""')+'"';
   }
   function reportViewer(){
     const def=reportDefs[ui.v55ReportId]||reportDefs.backlog,rows=reportFilteredRows(def);
     return '<div class="v50-page">'+pageHead('Reports',def.name,def.description,'<button class="button" data-route="reports">← Report library</button><button class="button primary" data-v55-export-report>Export CSV</button>')+
-      '<div class="v55-report-controls"><label>From <input type="date" data-v55-report-from value="'+esc(ui.v55ReportFrom||'')+'"></label><label>To <input type="date" data-v55-report-to value="'+esc(ui.v55ReportTo||'')+'"></label><span class="grow"></span><span class="v50-pill">'+rows.length+' rows</span></div>'+
+      '<div class="v55-report-controls">'+(reportDateIndex(def)>=0?'<span>Filter by '+esc(def.columns[reportDateIndex(def)])+'</span><label>From <input type="date" data-v55-report-from value="'+esc(ui.v55ReportFrom||'')+'"></label><label>To <input type="date" data-v55-report-to value="'+esc(ui.v55ReportTo||'')+'"></label>':'<span>Current records · No date range applies</span>')+'<span class="grow"></span><span class="v50-pill">'+rows.length+' rows</span></div>'+
       '<div class="v50-table-wrap"><table class="v50-table"><thead><tr>'+def.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v??'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>';
   }
   function exportReport(){
-    const def=reportDefs[ui.v55ReportId]||reportDefs.backlog,rows=reportFilteredRows(def),escapeCsv=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+    const def=reportDefs[ui.v55ReportId]||reportDefs.backlog,rows=reportFilteredRows(def),escapeCsv=csvCell;
     const csv=[def.columns.map(escapeCsv).join(','),...rows.map(r=>r.map(escapeCsv).join(','))].join('\n'),blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='safimaint-'+(ui.v55ReportId||'report')+'-'+day(0)+'.csv';a.click();URL.revokeObjectURL(url);addAudit('REPORT_EXPORTED',ui.v55ReportId||'report',rows.length+' rows');saveState();toast('Report exported');
   }
 
@@ -200,7 +205,14 @@
   window.render=render;
 
   function lock(selector,permission,label){
-    if(can(permission))return;document.querySelectorAll(selector).forEach(el=>{el.disabled=true;el.classList.add('v55-action-locked');el.title='Requires '+permission;el.setAttribute('aria-label',(el.getAttribute('aria-label')||label||el.textContent.trim())+' — requires '+permission)});
+    document.querySelectorAll(selector).forEach(el=>{
+      if(can(permission)){
+        if(el.classList.contains('v55-action-locked')){el.disabled=false;el.classList.remove('v55-action-locked');el.title=el.dataset.v55OriginalTitle||'';if(el.dataset.v55OriginalAria)el.setAttribute('aria-label',el.dataset.v55OriginalAria);else el.removeAttribute('aria-label')}
+        return;
+      }
+      if(!el.classList.contains('v55-action-locked')){el.dataset.v55OriginalTitle=el.title||'';el.dataset.v55OriginalAria=el.getAttribute('aria-label')||''}
+      el.disabled=true;el.classList.add('v55-action-locked');el.title='Requires '+permission;el.setAttribute('aria-label',(el.dataset.v55OriginalAria||label||el.textContent.trim())+' — requires '+permission);
+    });
   }
   function applyActionPermissions(){
     lock('[data-action="new-work"],#newWorkButton','work.manage','Create work');
@@ -212,9 +224,10 @@
   }
 
   function openResult(kind,id,route){
+    const searchDialog=document.getElementById('searchModal');if(searchDialog?.open)searchDialog.close();
     closeModal();if(kind==='Asset'){ui.selectedAsset=id;ui.assetView='record';ui.assetRecordTab='general';go('assets');return}
     if(kind==='Work order'){go('work-orders');setTimeout(()=>openWorkDrawer(id),0);return}
-    if(kind==='Part'){ui.selectedPart=id;go('inventory');return}
+    if(kind==='Part'){ui.selectedPart=id;ui.s80SupplyMode='record';ui.s80SupplyTab='stock';go('inventory');return}
     if(kind==='Request'){go('requests');setTimeout(()=>document.querySelector('[data-v52-open-request="'+CSS.escape(id)+'"]')?.click(),0);return}
     if(kind==='Scheduled maintenance'){go('pm');return}
     go(route||'dashboard');
@@ -229,7 +242,7 @@
   },true);
   document.addEventListener('click',async e=>{
     const result=e.target.closest('[data-v55-result]');if(result){e.preventDefault();e.stopImmediatePropagation();const [kind,id,route]=result.dataset.v55Result.split('|');openResult(kind,id,route);return}
-    if(e.target.closest('[data-v55-search-page]')){e.preventDefault();e.stopImmediatePropagation();const q=document.querySelector('#searchForm [name="q"]')?.value||ui.v55SearchQuery;ui.v55SearchQuery=q;closeModal();go('search-results');return}
+    if(e.target.closest('[data-v55-search-page]')){e.preventDefault();e.stopImmediatePropagation();const q=document.querySelector('#searchForm [name="q"]')?.value||ui.v55SearchQuery;ui.v55SearchQuery=q;const dialog=document.getElementById('searchModal');if(dialog?.open)dialog.close();closeModal();go('search-results');return}
     if(e.target.closest('[data-v55-clear-search]')){e.preventDefault();e.stopImmediatePropagation();ui.v55SearchQuery='';render();return}
     const report=e.target.closest('[data-v55-report]');if(report){e.preventDefault();e.stopImmediatePropagation();ui.v55ReportId=report.dataset.v55Report;ui.v55ReportFrom='';ui.v55ReportTo='';go('report-viewer');return}
     if(e.target.closest('[data-v55-export-report]')){e.preventDefault();e.stopImmediatePropagation();exportReport();return}

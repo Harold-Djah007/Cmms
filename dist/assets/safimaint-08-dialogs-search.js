@@ -144,8 +144,8 @@ function exportData(){
   addAudit('DATA_EXPORTED','LOCAL','Full local JSON export');saveState();toast('Export created');
 }
 function updateBadges(){
-  const set=(id,value,danger=false)=>{const el=document.getElementById(id);if(!el)return;el.textContent=value||'';el.classList.toggle('show',Number(value)>0);el.classList.toggle('danger',danger&&Number(value)>0)};
-  set('workBadge',state.workOrders.filter(w=>!['Completed','Cancelled'].includes(w.status)).length);
+  const set=(id,value,danger=false)=>{const el=document.getElementById(id);if(!el)return;el.textContent=value||'';el.hidden=Number(value)<=0;el.classList.toggle('show',Number(value)>0);el.classList.toggle('danger',danger&&Number(value)>0)};
+  set('workBadge',state.workOrders.filter(w=>typeof window.safiWorkStatusControl==='function'?window.safiWorkStatusControl(w)!=='CLOSED':!['Completed','Closed','Cancelled'].includes(w.status)).length);
   set('requestBadge',state.requests.filter(r=>r.status==='Requested').length);
   set('offlineBadge',state.assets.filter(a=>a.operatingState==='Offline').length,true);
   set('stockBadge',state.parts.filter(p=>partOnHand(p)<p.min).length,true);

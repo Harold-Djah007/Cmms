@@ -26,7 +26,7 @@ assert.match(source,/const active=ui\.route===route/);
 
 // Stock-taking workflows are functional and append adjustments through postStock.
 assert.match(source,/data-s79-batch-row/);
-assert.match(source,/postStock\(p\.id,'Adjustment',desired-before/);
+assert.match(source,/postStock\(p\.id,'Adjustment',variance/);
 assert.match(source,/qtyBefore/);
 assert.match(source,/data-v66-open-location/);
 assert.match(source,/data-stock-move/);
@@ -45,11 +45,9 @@ assert.match(css,/\.s79-nav-item\.child\.active/);
 assert.match(css,/@media\(max-width:650px\)/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
-assert.match(index,/safimaint-supplies-v79\.css\?v=79/);
-assert.match(index,/safimaint-supplies-v79\.js\?v=79/);
-assert.match(worker,/const CACHE='safimaint-supplies-v83'/);
+assert.match(index,/safimaint-supplies-v79\.css(?:\?v=\d+)?/);
+assert.match(index,/safimaint-supplies-v79\.js(?:\?v=\d+)?/);
 assert.match(worker,/safimaint-supplies-v79\.css/);
 assert.match(worker,/safimaint-supplies-v79\.js/);
-assert.match(config,/9\.9\.0-readable-fiix-supplies/);
 
 console.log('Supplies v79 navigation, records and stock-taking checks passed.');

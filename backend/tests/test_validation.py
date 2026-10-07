@@ -345,3 +345,83 @@ def test_failure_codes_must_follow_configured_problem_cause_action_hierarchy():
     bad_action["workOrders"][0]["failureCodes"]["action"] = "Calibrate"
     with pytest.raises(HTTPException, match="action is not valid"):
         validate_state(bad_action, state)
+
+
+@pytest.mark.parametrize("collection,value", [("assets", [None]), ("parts", [1]), ("users", [{"id": None}])])
+def test_malformed_records_return_validation_error(collection, value):
+    state = valid_state()
+    state[collection] = value
+    with pytest.raises(HTTPException) as error:
+        validate_state(state)
+    assert error.value.status_code == 422
+
+
+@pytest.mark.parametrize("value", ["abc", "NaN", "Infinity", float("inf"), True])
+def test_invalid_stock_numbers_are_rejected(value):
+    state = valid_state()
+    state["parts"][0]["locations"][0]["onHand"] = value
+    with pytest.raises(HTTPException) as error:
+        validate_state(state)
+    assert error.value.status_code == 422
+
+
+def test_work_settings_require_planning_permission():
+    with pytest.raises(HTTPException) as error:
+        authorize_changes({"workSettings"}, {"work.execute"})
+    assert error.value.status_code == 403
+    authorize_changes({"workSettings"}, {"work.manage"})
+
+
+def test_nested_maintenance_can_share_a_child_without_a_cycle():
+    state = valid_state()
+    state["scheduledMaintenance"] = [
+        {"id": "P1", "nestedPlanIds": ["P2", "P3"]},
+        {"id": "P2", "nestedPlanIds": ["P4"]},
+        {"id": "P3", "nestedPlanIds": ["P4"]},
+        {"id": "P4", "nestedPlanIds": []},
+    ]
+    validate_state(state)
+    state["scheduledMaintenance"][3]["nestedPlanIds"] = ["P1"]
+    with pytest.raises(HTTPException, match="cycle"):
+        validate_state(state)
+
+
+def test_missing_asset_ancestor_is_rejected():
+    state = valid_state()
+    state["assets"][0]["parentId"] = "A2"
+    state["assets"][1]["parentId"] = "MISSING"
+    with pytest.raises(HTTPException) as error:
+        validate_state(state)
+    assert error.value.status_code == 422
+
+
+def test_stock_balance_changes_require_matching_transactions():
+    before = valid_state()
+    after = copy.deepcopy(before)
+    after["parts"][0]["locations"][0]["onHand"] = 4
+    with pytest.raises(HTTPException, match="transactions"):
+        validate_state(after, before)
+    after["stockTransactions"].append({"id": "T2", "partId": "P1", "storeId": "ST1", "type": "Receipt", "qty": 2})
+    validate_state(after, before)
+
+
+def test_technician_can_advance_only_the_completed_floating_plan():
+    before = valid_state()
+    validate_state(before)
+    before["scheduledMaintenance"] = [{"id": "PM1", "scheduleMode": "Floating", "awaitingCompletionWorkOrderId": "W1",
+        "nextDue": "2026-10-01", "triggers": [{"type": "Time", "active": True, "description": "Every 7 days", "nextDue": "2026-10-01"}]}]
+    before["workOrders"][0]["status"] = "Open"
+    after = copy.deepcopy(before)
+    after["workOrders"][0].update(status="Completed", closedAt="2026-10-06T12:00:00+00:00")
+    after["scheduledMaintenance"][0].update(awaitingCompletionWorkOrderId=None, nextDue="2026-10-13")
+    after["scheduledMaintenance"][0]["triggers"][0]["nextDue"] = "2026-10-13"
+    authorize_changes({"scheduledMaintenance"}, {"work.execute"}, current=after, previous=before)
+    after["scheduledMaintenance"][0]["triggers"][0]["nextDue"] = "2030-10-13"
+    with pytest.raises(HTTPException, match="floating"):
+        authorize_changes({"scheduledMaintenance"}, {"work.execute"}, current=after, previous=before)
+
+
+def test_custom_fields_do_not_inherit_business_field_types():
+    state = valid_state()
+    state['assets'][0]['customFields'] = {'min': 'Low pressure', 'parts': 'Optional', 'nested': {'hours': 'Evening'}}
+    validate_state(state)

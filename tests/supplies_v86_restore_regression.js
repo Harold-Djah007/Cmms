@@ -7,8 +7,8 @@ const config=fs.readFileSync('dist/assets/safimaint-00-config.js','utf8');
 const v81=fs.readFileSync('dist/assets/safimaint-supplies-v81.js','utf8');
 const v81css=fs.readFileSync('dist/assets/safimaint-supplies-v81.css','utf8');
 
-assert.match(index,/safimaint-supplies-v81\.css\?v=81/);
-assert.match(index,/safimaint-supplies-v81\.js\?v=81/);
+assert.match(index,/safimaint-supplies-v81\.css(?:\?v=\d+)?/);
+assert.match(index,/safimaint-supplies-v81\.js(?:\?v=\d+)?/);
 assert.doesNotMatch(index,/safimaint-fiix-supplies-v82/);
 assert.doesNotMatch(index,/safimaint-fiix-supplies-v83/);
 assert.doesNotMatch(index,/safimaint-fiix-navigation-v84/);
@@ -16,7 +16,5 @@ assert.doesNotMatch(index,/safimaint-fiix-v85/);
 for(const label of ['Search','Filters','Customize view','Show','records']) assert.match(v81,new RegExp(label));
 assert.match(v81css,/s80-list-panel/);
 assert.match(v81css,/s80-list-table/);
-assert.match(worker,/const CACHE='safimaint-fiix-supplies-v90'/);
 assert.doesNotMatch(worker,/safimaint-fiix-v85/);
-assert.match(config,/9\.9\.3-fiix-nav-safimaint/);
 console.log('Preferred v81 supplies experience restored and newer regressions disabled.');

@@ -1,0 +1,153 @@
+/* Reference: Fiix v5 location register and compact Stock record. */
+body.safimaint-stock-first .s93-list,body.safimaint-stock-first .s93-record{color:#354755;font-size:14px}
+.s93-actionbar{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px;background:#edf1f4;border:1px solid #c5d0d8;border-radius:3px 3px 0 0}
+body.safimaint-stock-first .s93-actionbar .button{min-height:34px!important;padding:7px 14px!important;font-size:13px!important;border-radius:3px!important;box-shadow:none!important}
+.s93-register{border:1px solid #c5d0d8;border-top:0;background:#fff;min-height:560px}.s93-register-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;background:#dde6ec;border-bottom:1px solid #bdcbd5}
+.s93-register-head h1{font-size:19px!important;margin:0!important;letter-spacing:0!important;color:#354755}.s93-view{display:flex;gap:2px}.s93-view button{padding:7px 10px;border:1px solid #b7c7d2;background:#f5f7f9;cursor:pointer;color:#456074}.s93-view [aria-pressed=true]{background:#c2d4df;color:#193a4e}
+.s93-register-head label{display:flex;align-items:center;gap:7px;font-size:12px}.s93-register-head select,.s93-register-head input{min-height:34px!important;font-size:13px!important;border-radius:3px!important;padding:6px 10px!important;max-width:240px}.s93-search{margin-left:auto}.s93-availability{display:flex;gap:16px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid #d2dce3;background:#f8fafb}.s93-availability button{border:0;padding:4px;background:transparent;color:#536c7a;font-size:12px;cursor:pointer}.s93-availability [aria-pressed=true]{color:#087f6f;font-weight:700;text-decoration:underline;text-underline-offset:5px}
+.s93-table-scroll{overflow:auto;min-height:440px}.s93-table{width:100%;border-collapse:collapse;min-width:900px}.s93-table th{background:#cbd9e3;color:#3f5565;font-size:12px;font-weight:500;text-align:left;border-right:1px solid #b8c8d3;border-bottom:1px solid #aebfc9;padding:9px 12px;white-space:nowrap}.s93-table td{padding:10px 12px;border-bottom:1px solid #d8e0e6;font-size:13px}.s93-table th:first-child,.s93-table td:first-child{width:32px;padding:8px}.s93-table input{min-height:0!important}.s93-table tbody tr:nth-child(even){background:#f3f5f7}.s93-table [data-s80-part-row]{cursor:pointer}.s93-table [data-s80-part-row]:hover{background:#e5f1f6}.s93-name{min-width:210px}.s93-name strong{font-weight:500}.s93-indent{margin:0 12px 0 18px;color:#9baab5}.s93-location{background:#e9eef2!important}.s93-location button{background:transparent;border:0;padding:3px 0;color:#354755;font-size:14px;text-align:left;cursor:pointer;min-width:200px}.s93-location small{font-size:11px;margin-left:12px;color:#6d808c}.s93-register footer{padding:12px 16px;border-top:1px solid #c5d0d8;color:#657d8c;font-size:12px}.s93-register [data-s80-no-results]{padding:30px}
+body.safimaint-stock-first .s93-record{background:#fff;border:1px solid #c5d0d8;border-radius:3px;overflow:hidden}
+body.safimaint-stock-first .s93-record .s80-record-actions{margin:0!important;border:0!important;border-bottom:1px solid #c5d0d8!important;border-radius:0!important;padding:9px 12px!important;gap:8px!important;background:#edf1f4!important}
+body.safimaint-stock-first .s93-record .s80-record-actions button,body.safimaint-stock-first .s93-record .s80-record-actions summary{font-size:13px!important;padding:7px 14px!important;min-height:34px!important;border-radius:3px!important}
+.s93-record-title{font-size:21px!important;font-weight:500!important;padding:18px 22px 0;margin:0!important;color:#455663;letter-spacing:0!important}
+body.safimaint-stock-first .s93-record .s80-record-heading{display:grid!important;grid-template-columns:150px minmax(0,1fr) 125px!important;gap:18px!important;padding:22px!important;border:0!important;border-radius:0!important;background:#fff!important;min-height:210px!important;align-items:start!important}
+body.safimaint-stock-first .s93-record .s80-part-photo{width:150px!important;height:170px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;background:#f1f3f5!important;border:0!important;border-radius:3px!important;gap:14px!important}.s93-record .s80-part-photo svg{width:50px!important;height:50px!important;color:#6c8798!important}.s93-record .s80-part-photo div{text-align:center;font-size:13px}.s93-record .s80-part-photo small,.s93-record .s80-part-photo strong{display:block;line-height:1.7}.s93-record .s80-part-photo strong{font-weight:500;color:#546f7e}
+body.safimaint-stock-first .s93-record .s80-name-field>span,body.safimaint-stock-first .s93-record .s80-description-field>span{display:none!important}.s93-record .s80-record-core{max-width:900px!important}.s93-record .s80-name-field input{font-size:19px!important;font-weight:400!important;height:40px!important;min-height:40px!important}.s93-record .s80-description-field textarea{font-size:14px!important;min-height:75px!important;height:75px!important;margin-top:6px!important}.s93-record .s80-core-row{margin-top:18px!important;grid-template-columns:1fr 1fr 80px!important;gap:16px!important}.s93-record .s80-core-row>.s80-status{display:none!important}
+body.safimaint-stock-first .s93-record label>span{font-size:13px!important;letter-spacing:0!important;text-transform:none!important;font-weight:400!important;color:#6e7f8b!important}.s93-record input,.s93-record textarea,.s93-record select{border-radius:2px!important;box-shadow:none!important;border:1px solid #bac7d1!important;padding:7px 9px!important;font-size:14px!important;background:#fff!important}.s93-record .s80-record-qr{border:0!important;padding:30px 0 0!important}.s93-record .s80-record-qr svg{width:110px!important;height:110px!important}.s93-record .s80-record-qr strong,.s93-record .s80-record-qr small{display:none!important}
+body.safimaint-stock-first .s93-record .s80-tabs{display:flex!important;gap:0!important;flex-wrap:wrap!important;padding:0 12px!important;margin:0!important;border:0!important;border-bottom:1px solid #b8c9d6!important;border-radius:0!important;background:#fff!important}.s93-record .s80-tabs button{border:1px solid #b8c9d6!important;border-right:0!important;background:#d6e2ea!important;border-radius:0!important;font-size:14px!important;padding:12px 18px!important;min-height:44px!important;color:#496577!important}.s93-record .s80-tabs button:last-child{border-right:1px solid #b8c9d6!important}.s93-record .s80-tabs button.active{background:#b6ccd9!important;color:#243f51!important;border-bottom:3px solid #087f6f!important}
+body.safimaint-stock-first .s93-record .s80-tab-content{padding:14px!important;background:#fff!important}.s93-record .s80-stock-grid{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(240px,1fr)!important;gap:14px!important;align-items:start!important}.s93-stock-left{display:grid;gap:16px;min-width:0}.s93-record .s80-record-section{border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}.s93-record .s80-record-section>header{background:#fff!important;border:0!important;padding:0 0 7px!important;min-height:0!important}.s93-record .s80-record-section h2{font-size:16px!important;font-weight:400!important;color:#657d8c!important}.s93-record .s80-record-section header p{display:none!important}.s93-record .s80-data-table{border:1px solid #bdcbd5!important;border-radius:0!important}.s93-record .s80-data-table table{width:100%;min-width:620px}.s93-record .s80-data-table th{background:#cbd9e3!important;border-right:1px solid #b8c8d3!important;font-size:12px!important;padding:8px!important;color:#466274!important;text-transform:none!important;letter-spacing:0!important}.s93-record .s80-data-table td{font-size:13px!important;padding:10px 8px!important;border-bottom:1px solid #d8e0e6!important}.s93-record .s80-data-table tbody tr:nth-child(even){background:#f0f3f5!important}.s93-record .s80-stock-fields{padding:0!important;border:0!important;border-radius:0!important;background:#fff!important;display:grid!important;grid-template-columns:1fr!important;gap:12px!important}.s93-record .s80-stock-fields h2{display:none!important}.s93-record .s80-stock-fields label{grid-column:1!important}.s93-record .s80-total-stock{background:#f1f4f6!important;border:1px solid #cbd9e3!important;border-radius:0!important;padding:12px!important}.s93-record .s80-total-stock strong{font-size:21px!important}.s93-record .s80-receipt-preview{margin:0!important}.s93-record .s80-table-add{border-radius:0!important;background:#f4f6f8!important;color:#536c7a!important}
+@media(max-width:900px){.s93-search{margin-left:0}.s93-register-head label{flex-wrap:wrap}.s93-register-head input{max-width:100%}.s93-record .s80-stock-grid{grid-template-columns:1fr!important}.s93-record .s80-stock-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}.s93-record .s80-stock-fields label{grid-column:auto!important}body.safimaint-stock-first .s93-record .s80-record-heading{grid-template-columns:100px minmax(0,1fr)!important}.s93-record .s80-record-qr{display:none!important}body.safimaint-stock-first .s93-record .s80-part-photo{width:100px!important;height:150px!important}.s93-record .s80-core-row{grid-template-columns:1fr!important}}
+@media(max-width:600px){body.safimaint-stock-first .s93-record .s80-record-heading{grid-template-columns:1fr!important;padding:16px!important}body.safimaint-stock-first .s93-record .s80-part-photo{width:100%!important;height:90px!important;flex-direction:row!important}.s93-record .s80-stock-fields{grid-template-columns:1fr!important}.s93-record-title{font-size:18px!important;padding:16px!important}.s93-record .s80-tabs button{padding:9px 12px!important;font-size:12px!important}.s93-search{width:100%}.s93-search input{width:100%!important}}
+/* Catalog and record finish: familiar CMMS density with SafiMaintain identity. */
+body.safimaint-stock-first .s93-actionbar{background:#fff;border:1px solid #dce6eb;border-radius:10px 10px 0 0;padding:13px 16px;gap:8px}
+body.safimaint-stock-first .s93-actionbar .button{border-radius:6px!important;min-height:36px!important}
+body.safimaint-stock-first .s93-register{border-color:#dce6eb;min-height:0;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:0 3px 12px #20364004}
+body.safimaint-stock-first .s93-register-head{background:#fff;border-color:#e2eaf0;padding:22px 18px;gap:20px}
+body.safimaint-stock-first .s93-register-head h1{font-size:24px!important;font-weight:650!important;color:#203640;letter-spacing:-.5px!important}
+.s93-title p{font-size:12px;color:#647987;margin:5px 0 0}
+body.safimaint-stock-first .s93-view{background:#f1f5f8;border:1px solid #dce6eb;padding:3px;border-radius:7px;gap:3px}
+body.safimaint-stock-first .s93-view button{border:0;background:transparent;border-radius:5px;padding:8px 10px;font-size:12px}
+body.safimaint-stock-first .s93-view [aria-pressed=true]{background:#fff;color:#087f6f;box-shadow:0 1px 4px #20364012}
+body.safimaint-stock-first .s93-search{flex:1 1 280px;justify-content:flex-end;min-width:0}
+body.safimaint-stock-first .s93-register-head .s93-search input{width:100%;max-width:340px!important;min-width:0}
+body.safimaint-stock-first .s93-availability{background:#fff;padding:0 18px 12px;gap:8px;border-color:#e2eaf0}
+body.safimaint-stock-first .s93-availability button{padding:8px 12px;background:#f3f6f8;border:1px solid transparent;border-radius:6px;font-size:12px;text-decoration:none}
+body.safimaint-stock-first .s93-availability [aria-pressed=true]{background:#e9f5f0;border-color:#b7dacd;color:#08715e;text-decoration:none}
+body.safimaint-stock-first .s93-table-scroll{min-height:330px}
+body.safimaint-stock-first .s93-table th{background:#f0f5f8;border-right:0;border-color:#dce6eb;padding:13px 14px;font-size:11px;font-weight:600;color:#58717f}
+body.safimaint-stock-first .s93-table td{padding:14px;border-color:#e6edf1;font-size:13px;line-height:1.6}
+body.safimaint-stock-first .s93-table tbody tr:nth-child(even){background:#fafcfd}
+body.safimaint-stock-first .s93-name strong{font-weight:600;color:#244651}
+body.safimaint-stock-first .s93-register footer{background:#fafcfd;border-color:#e2eaf0;padding:14px 18px}
+.sm-stock-status{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap}
+.sm-stock-status:before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.sm-stock-status.healthy{background:#e8f5ef;color:#08745d}.sm-stock-status.low{background:#fff2dc;color:#94620d}.sm-stock-status.out{background:#fceceb;color:#a44039}
+body.safimaint-stock-first .s93-record{border-color:#dce6eb;border-radius:10px;box-shadow:0 3px 12px #20364004}
+body.safimaint-stock-first .s93-record .s80-record-actions{background:#f8fafb!important;padding:12px 16px!important;border-color:#e2eaf0!important}
+body.safimaint-stock-first .s93-record .s80-tabs{background:#f5f8fa!important;border-color:#dce6eb!important;padding:0 16px!important}
+body.safimaint-stock-first .s93-record .s80-tabs button{background:transparent!important;border:0!important;border-bottom:3px solid transparent!important;font-size:13px!important;color:#607986!important;padding:12px 16px!important}
+body.safimaint-stock-first .s93-record .s80-tabs button.active{background:#fff!important;border-bottom-color:#087f6f!important;color:#08715e!important;font-weight:600}
+body.safimaint-stock-first .s93-record .s80-tab-content{padding:20px!important}
+body.safimaint-stock-first .s93-record .s80-record-section h2{color:#203640!important;font-size:16px!important;font-weight:600!important}
+body.safimaint-stock-first .s93-record .s80-stock-fields{background:#f7fafb!important;border:1px solid #e0e9ee!important;border-radius:8px!important;padding:16px!important}
+body.safimaint-stock-first .s93-record .s80-data-table th{background:#f0f5f8!important;border-right:0!important;padding:11px!important}
+body.safimaint-stock-first .s93-record .s80-data-table td{padding:13px 11px!important}
+@media(max-width:900px){body.safimaint-stock-first .s93-search{flex-basis:100%;justify-content:flex-start}.s93-search input{max-width:none!important}.s93-register-head{gap:12px!important}}
+@media(max-width:600px){body.safimaint-stock-first .s93-register-head{padding:16px}.s93-title{width:100%}.s93-register-head h1{font-size:22px!important}.s93-register-head label{min-width:0}.s93-availability{gap:5px!important}.s93-availability button{padding:7px 8px!important}.s93-record .s80-tab-content{padding:12px!important}}
+/* Reference checked against the list screenshot in Fiix's March 2026 guide. */
+body.safimaint-stock-first .s93-actionbar{background:#eef1f3;border-color:#c6d2da;padding:7px 10px;border-radius:4px 4px 0 0;gap:5px}
+body.safimaint-stock-first .s93-actionbar .button{min-height:31px!important;font-size:12px!important;padding:5px 12px!important;border-radius:3px!important}
+body.safimaint-stock-first .s93-register{border-color:#c6d2da;border-radius:0 0 4px 4px;box-shadow:none;min-height:510px}
+body.safimaint-stock-first .s93-register-head{background:#e1e9ef;padding:10px 14px;gap:14px;border-color:#beced9}
+body.safimaint-stock-first .s93-register-head h1{font-size:19px!important;font-weight:650!important;letter-spacing:0!important;white-space:nowrap}
+body.safimaint-stock-first .s93-view{padding:0;border-color:#b9cad5;border-radius:3px;background:#e8eef2}
+body.safimaint-stock-first .s93-view button{padding:6px 8px;border-radius:2px}
+body.safimaint-stock-first .s93-view [aria-pressed=true]{background:#c6d8e2;box-shadow:none;color:#244651}
+body.safimaint-stock-first .s93-register-head .s93-search{flex:1 1 210px}
+body.safimaint-stock-first .s93-register-head input,body.safimaint-stock-first .s93-register-head select{min-height:31px!important;padding:5px 8px!important;border-radius:3px!important}
+body.safimaint-stock-first .s93-availability{background:#f5f8fa;padding:5px 12px;gap:12px;border-color:#cfdce5}
+body.safimaint-stock-first .s93-availability button{background:transparent;border:0;border-radius:0;padding:5px 2px;font-size:11px}
+body.safimaint-stock-first .s93-availability [aria-pressed=true]{background:transparent;border-bottom:2px solid #087f6f;color:#087f6f}
+body.safimaint-stock-first .s93-table th{background:#d5e1e9;padding:8px 10px;border-right:1px solid #bdcdd8;border-bottom:1px solid #b4c8d4;font-size:12px;font-weight:500}
+body.safimaint-stock-first .s93-table td{padding:8px 10px;border-bottom:1px solid #d8e1e7;font-size:13px;line-height:1.4}
+body.safimaint-stock-first .s93-table tbody tr:nth-child(even){background:#f3f5f7}
+body.safimaint-stock-first .s93-name strong{font-weight:500}
+body.safimaint-stock-first .s93-table-scroll{min-height:370px}
+body.safimaint-stock-first .s93-register footer{padding:9px 12px;border-color:#c6d2da;background:#f4f7f9}
+body.safimaint-stock-first .s93-record .s80-record-heading{padding:16px!important;gap:14px!important;grid-template-columns:120px minmax(0,1fr) 110px!important;min-height:180px!important}
+body.safimaint-stock-first .s93-record .s80-part-photo{width:120px!important;height:145px!important}
+body.safimaint-stock-first .s93-record .s80-tabs button{padding:9px 13px!important;min-height:36px!important;background:#dbe6ed!important;border-right:1px solid #bdcdd8!important}
+body.safimaint-stock-first .s93-record .s80-tabs button.active{background:#c3d7e2!important}
+@media(max-width:900px){body.safimaint-stock-first .s93-record .s80-record-heading{grid-template-columns:100px minmax(0,1fr)!important}.s93-search{flex-basis:100%!important}.s93-search input{max-width:none!important}}
+@media(max-width:600px){body.safimaint-stock-first .s93-record .s80-record-heading{grid-template-columns:1fr!important}body.safimaint-stock-first .s93-record .s80-part-photo{width:100%!important;height:90px!important}.s93-register-head{gap:10px!important}}
+/* Keep the default register focused on the fields shown in Fiix's list. */
+body.safimaint-stock-first .s93-table th:nth-child(7),body.safimaint-stock-first .s93-table th:nth-child(9),body.safimaint-stock-first .s93-table [data-s80-part-row] td:nth-child(7),body.safimaint-stock-first .s93-table [data-s80-part-row] td:nth-child(9){display:none}
+body.safimaint-stock-first .s93-table [data-s80-part-row] td:nth-child(3),body.safimaint-stock-first .s93-table [data-s80-part-row] td:nth-child(4),body.safimaint-stock-first .s93-table [data-s80-part-row] td:nth-child(5){white-space:nowrap}
+body.safimaint-stock-first .s93-table th:nth-child(3){width:100px}body.safimaint-stock-first .s93-table th:nth-child(4){width:110px}body.safimaint-stock-first .s93-table th:nth-child(5){width:110px}
+/* User-provided Fiix reference: location tree, compact Name and Code register. */
+body.safimaint-stock-first .s93-tree{min-width:700px;table-layout:fixed}
+body.safimaint-stock-first .s93-tree th:first-child{width:28px}
+body.safimaint-stock-first .s93-tree th:nth-child(2){width:52%}
+body.safimaint-stock-first .s93-tree th:nth-child(3){width:30%}
+body.safimaint-stock-first .s93-tree th:nth-child(4){width:18%}
+body.safimaint-stock-first .s93-tree th{padding:6px 9px;font-size:12px}
+body.safimaint-stock-first .s93-tree td{padding:6px 9px;font-size:12px;line-height:1.35;height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.safimaint-stock-first .s93-tree td:first-child{padding:4px 7px}
+body.safimaint-stock-first .s93-tree input[type=checkbox]{width:13px!important;height:13px!important;margin:0;vertical-align:middle}
+body.safimaint-stock-first .s93-tree .s93-location{background:#f5f7f8!important}
+body.safimaint-stock-first .s93-tree .s93-location button{font-size:12px;min-width:0;display:inline-flex;align-items:center;gap:7px;padding:0;font-weight:500}
+.s93-tree-toggle{display:inline-grid;place-items:center;width:13px;height:13px;border:1px solid #aab8c2;background:#fff;font-size:12px;color:#566b78;border-radius:2px}
+.s93-tree-store{color:#4d9384;font-size:15px}.s93-tree-part{display:inline-block;margin:0 7px 0 30px;color:#647c8c;font-size:15px;vertical-align:middle}
+body.safimaint-stock-first .s93-tree-label strong{font-size:12px;font-weight:500}
+.s93-tree-label em{font-size:11px;color:#7b8792;font-weight:400;margin-left:4px}
+/* A readable catalog is the primary stockroom workspace; locations remain optional. */
+body.safimaint-stock-first .s93-actionbar{background:#fff;border-radius:8px 8px 0 0;padding:14px 18px;gap:8px}
+body.safimaint-stock-first .s93-register{min-height:0;border-radius:0 0 8px 8px;border-color:#d4e1e7}
+body.safimaint-stock-first .s93-register-head{background:#fff;padding:20px 18px;gap:16px;flex-wrap:wrap}
+body.safimaint-stock-first .s93-register-head h1{font-size:24px!important;font-weight:650!important;color:#183b4b}
+body.safimaint-stock-first .s93-title p{margin:5px 0 0;color:#637a89;font-size:12px}
+body.safimaint-stock-first .s93-view{background:#f0f5f7;border:1px solid #d8e4ea;border-radius:6px;padding:3px;gap:3px}
+body.safimaint-stock-first .s93-view button{height:32px;padding:0 12px;font-size:12px}
+body.safimaint-stock-first .s93-view [aria-pressed=true]{background:#fff;color:#087f73;box-shadow:0 1px 3px #12364718;border-radius:4px}
+body.safimaint-stock-first .s93-register-head label{font-size:12px;gap:6px}
+body.safimaint-stock-first .s93-register-head input,body.safimaint-stock-first .s93-register-head select{min-height:38px!important;border:1px solid #cedee7!important;border-radius:5px!important;box-shadow:none!important;background:#fff!important;font-size:13px!important}
+body.safimaint-stock-first .s93-availability{padding:10px 18px;gap:10px;background:#f8fbfc}
+body.safimaint-stock-first .s93-availability button{font-size:12px;padding:7px 10px;border:1px solid transparent;border-radius:5px;color:#516a7c}
+body.safimaint-stock-first .s93-availability [aria-pressed=true]{background:#e6f5f0;border-color:#b7ded2;color:#087f73;font-weight:650}
+body.safimaint-stock-first .s93-table-scroll{min-height:0}
+body.safimaint-stock-first .s93-table:not(.s93-tree){min-width:1000px;table-layout:auto}
+body.safimaint-stock-first .s93-table th{background:#edf3f6;color:#516a7c;border-right:0;border-bottom:1px solid #d8e4ea;padding:12px 14px;font-weight:600;font-size:12px}
+body.safimaint-stock-first .s93-table td{padding:14px;font-size:13px;border-color:#e4edf1;color:#284d62}
+body.safimaint-stock-first .s93-table tbody tr:nth-child(even){background:#fff}
+body.safimaint-stock-first .s93-table tbody tr:hover{background:#f0f8f6!important}
+body.safimaint-stock-first .s93-table small{display:block;margin-top:5px;color:#738a98;font-size:11px;font-weight:400}
+body.safimaint-stock-first .s93-name strong{font-weight:600;color:#153e53}
+body.safimaint-stock-first .s93-table:not(.s93-tree) th:nth-child(9),body.safimaint-stock-first .s93-table:not(.s93-tree) td:nth-child(9){display:table-cell}
+body.safimaint-stock-first .s93-register footer{padding:14px 18px;background:#fafcfd;color:#677f8d;font-size:12px}
+body.safimaint-stock-first .s93-record .s80-tabs button{background:#f3f7f9!important;border-right:0!important;color:#516a7c!important;font-size:12px!important}
+body.safimaint-stock-first .s93-record .s80-tabs button.active{background:#fff!important;color:#087f73!important}
+@media(max-width:700px){body.safimaint-stock-first .s93-register-head{align-items:flex-start}body.safimaint-stock-first .s93-title{width:100%}body.safimaint-stock-first .s93-availability{flex-wrap:wrap;gap:4px}}
+body.safimaint-stock-first .s93-tree tbody tr:nth-child(even){background:#f6f7f8}
+body.safimaint-stock-first .s93-view button{min-width:32px;height:28px;display:inline-flex;align-items:center;justify-content:center}
+/* Reference layout: compact toolbar, location tree, name and code. */
+body.safimaint-stock-first .s93-location-workspace .s93-actionbar{padding:9px 12px;background:#edf3f6;border-radius:5px 5px 0 0}
+body.safimaint-stock-first .s93-location-workspace .s93-register-head{padding:12px;background:#e6eef3;gap:12px}
+body.safimaint-stock-first .s93-location-workspace .s93-register-head h1{font-size:19px!important}
+body.safimaint-stock-first .s93-location-workspace .s93-title p{display:none}
+body.safimaint-stock-first .s93-location-workspace .s93-register-head input,body.safimaint-stock-first .s93-location-workspace .s93-register-head select{min-height:32px!important;font-size:12px!important}
+body.safimaint-stock-first .s93-location-workspace .s93-availability{padding:6px 12px;gap:8px}
+body.safimaint-stock-first .s93-location-workspace .s93-availability button{padding:5px 7px;font-size:11px}
+body.safimaint-stock-first .s93-location-workspace .s93-tree th{padding:8px 10px;background:#d7e4ec;border-right:1px solid #c0d0da;font-weight:500}
+body.safimaint-stock-first .s93-location-workspace .s93-tree td{padding:7px 10px;height:33px;font-size:12px}
+body.safimaint-stock-first .s93-location-workspace .s93-register footer{padding:10px 12px}
+.s93-icon{width:16px;height:16px;flex:0 0 16px;display:inline-block;vertical-align:middle}
+body.safimaint-stock-first .s93-actionbar .button,body.safimaint-stock-first .s93-view button,body.safimaint-stock-first .s93-record .s80-record-actions>button,body.safimaint-stock-first .s93-record .s80-tabs button{display:inline-flex!important;align-items:center;justify-content:center;gap:6px}
+body.safimaint-stock-first .s93-tree-store{display:inline-flex;align-items:center;color:#99792d;font-size:0}
+body.safimaint-stock-first .s93-tree-store .s93-icon{width:18px;height:18px;fill:#fff5cf;stroke:#927022}
+body.safimaint-stock-first .s93-tree-part{display:inline-flex;align-items:center;margin:0 7px 0 30px;color:#47637c;font-size:0}
+body.safimaint-stock-first .s93-tree-part .s93-icon{width:17px;height:17px;fill:#e7eef5;stroke:#47637c}
+body.safimaint-stock-first .s93-tree-toggle{width:14px;height:14px;font-size:0;border-radius:2px;vertical-align:middle}
+body.safimaint-stock-first .s93-tree-toggle .s93-icon{width:11px;height:11px;stroke-width:2}
+body.safimaint-stock-first .s93-record .s80-part-photo>.s93-icon{width:48px!important;height:48px!important;stroke:#47637c!important;fill:#e7eef5!important}
+.s93-draft-status{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:#56767b}
+.s93-draft-status:has(button){color:#956615}.s93-draft-status button{border:1px solid #ddcba7;background:#fff9ef;color:#805912;border-radius:4px;padding:5px 8px;font:inherit;cursor:pointer}

@@ -77,17 +77,18 @@
     ensureModel();
     const q=String(ui.workSearch||'').toLowerCase();
     const filter=ui.workStatus||'All statuses';
-    const rows=state.workOrders.filter(w=>(filter==='All statuses'||w.status===filter)&&(!q||([w.id,w.title,w.status,w.priority,assetText(w),assigneeText(w)].join(' ').toLowerCase().includes(q))));
+    const rows=state.workOrders.filter(w=>filter==='All statuses'||w.status===filter);
+    const shown=rows.filter(w=>!q||[w.id,w.title,w.status,w.priority,assetText(w),assigneeText(w)].join(' ').toLowerCase().includes(q));
     const overdue=activeWork().filter(w=>w.due&&new Date(w.due)<new Date(new Date().toDateString())).length;
     const wait=activeWork().filter(w=>w.status==='Awaiting Parts').length;
     const thisMonth=closedWork().filter(w=>w.closedAt&&new Date(w.closedAt).getMonth()===new Date().getMonth()&&new Date(w.closedAt).getFullYear()===new Date().getFullYear()).length;
     return pageHead('Work management','Work orders','The operational center for planning, task execution, labor, parts, evidence, failure data, completion and asset history.',
       '<button class="button" type="button" data-v44-status-config>Workflow statuses</button><button class="button primary" data-action="new-work">＋ New work order</button>')+
       '<div class="v44-work-kpis"><div><small>Pending</small><strong>'+pendingWork().length+'</strong></div><div><small>Active</small><strong>'+activeWork().length+'</strong></div><div><small>Awaiting parts</small><strong>'+wait+'</strong></div><div><small>Overdue</small><strong>'+overdue+'</strong></div><div><small>Closed this month</small><strong>'+thisMonth+'</strong></div></div>'+
-      '<section class="card"><div class="v44-work-toolbar"><input data-filter="work" value="'+esc(ui.workSearch||'')+'" placeholder="Search work orders, assets or assignees"><select data-work-status><option>All statuses</option>'+state.workStatusDefinitions.map(s=>'<option '+(filter===s.name?'selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select><span class="grow"></span><small class="muted">'+rows.length+' records</small></div>'+
+      '<section class="card"><div class="v44-work-toolbar"><input data-filter="work" value="'+esc(ui.workSearch||'')+'" placeholder="Search work orders, assets or assignees"><select data-work-status><option>All statuses</option>'+state.workStatusDefinitions.map(s=>'<option '+(filter===s.name?'selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select><span class="grow"></span><small class="muted" data-work-count>'+shown.length+' records</small></div>'+
       '<div class="table-wrap"><div class="v44-work-head"><div>Work order</div><div>Asset</div><div>Assigned</div><div>Tasks</div><div>Labor</div><div>Priority</div><div>Status</div><div>Cost</div></div>'+
-      rows.map(w=>{const p=taskProgress(w);return '<button class="v44-work-row" type="button" data-open-work="'+esc(w.id)+'"><span><strong>'+esc(w.id)+' · '+esc(w.title)+'</strong><small>'+esc(w.type)+' · '+fmtControl(w)+'</small></span><span>'+esc(assetText(w))+'</span><span>'+esc(assigneeText(w))+'</span><span><strong>'+p.done+'/'+p.total+'</strong><small>'+p.pct+'% complete</small></span><span><strong>'+Number(w.actualHours||0).toFixed(2)+' h</strong><small>'+Number(w.estimateHours||0).toFixed(2)+' h est.</small></span><span>'+status(w.priority)+'</span><span>'+status(w.status)+'<small>'+fmtControl(w)+'</small></span><span><strong>'+money(totalCost(w))+'</strong><small>'+dateFmt(w.due)+'</small></span></button>'}).join('')+
-      (!rows.length?'<div class="empty"><strong>No matching work orders</strong><span>Change the search or workflow-status filter.</span></div>':'')+'</div></section>';
+      rows.map(w=>{const p=taskProgress(w),blob=[w.id,w.title,w.status,w.priority,assetText(w),assigneeText(w)].join(' ').toLowerCase();return '<button class="v44-work-row" type="button" data-work-search-row '+(!q||blob.includes(q)?'':'hidden')+' data-search="'+esc(blob)+'" data-open-work="'+esc(w.id)+'"><span><strong>'+esc(w.id)+' · '+esc(w.title)+'</strong><small>'+esc(w.type)+' · '+fmtControl(w)+'</small></span><span>'+esc(assetText(w))+'</span><span>'+esc(assigneeText(w))+'</span><span><strong>'+p.done+'/'+p.total+'</strong><small>'+p.pct+'% complete</small></span><span><strong>'+Number(w.actualHours||0).toFixed(2)+' h</strong><small>'+Number(w.estimateHours||0).toFixed(2)+' h est.</small></span><span>'+status(w.priority)+'</span><span>'+status(w.status)+'<small>'+fmtControl(w)+'</small></span><span><strong>'+money(totalCost(w))+'</strong><small>'+dateFmt(w.due)+'</small></span></button>'}).join('')+
+      '<div class="empty" data-work-search-empty '+(shown.length?'hidden':'')+'><strong>No matching work orders</strong><span>Change the search or workflow-status filter.</span></div>'+'</div></section>';
   }
   renderWorkOrders=renderWorkOrdersV44;window.renderWorkOrders=renderWorkOrdersV44;
 
@@ -182,18 +183,19 @@
         '<div class="'+(w.type!=='Corrective'||!['problem','cause','action'].some(k=>!w.failureCodes?.[k]||w.failureCodes[k]==='Not selected')?'ok':'bad')+'">'+(w.type!=='Corrective'?'✓':(!['problem','cause','action'].some(k=>!w.failureCodes?.[k]||w.failureCodes[k]==='Not selected')?'✓':'!'))+' Failure data recorded</div>'+
       '</div>'+
       '<div class="form-grid">'+field('completionNote','Completion note',w.completionNote||'',{type:'textarea',required:true,span:true})+
-      '<label class="check-row span-2"><input type="checkbox" name="returnAssets" checked> Return linked offline assets to service</label></div>'+
+      (targetStatus!=='Cancelled'&&(typeof safiCan!=='function'||safiCan('asset.state'))?'<label class="check-row span-2"><input type="checkbox" name="returnAssets" checked> Return linked offline assets to service</label>':'')+'</div>'+
       (initial.length?'<div class="notice" style="margin-top:10px"><strong>Still required:</strong> '+esc(initial.join(' · '))+'</div>':''),
       onSubmit:fd=>{
         w.completionNote=String(fd.get('completionNote')||'').trim();
-        const issues=closureIssues(w);if(issues.length){toast(issues[0]);return}
+        const issues=targetStatus==='Cancelled'?[]:closureIssues(w);if(issues.length){toast(issues[0]);return}
         const now=iso();w.status=targetStatus;w.completedAt=now;w.closedAt=now;w.closedBy=CURRENT_USER;
         workHistory(w,'Closed as '+targetStatus+' by '+(currentUser()?.name||'User')+' — '+w.completionNote);
         if(fd.get('returnAssets')==='on'){
           (w.assetIds||[]).forEach(aid=>{const a=getAsset(aid);if(!a||a.operatingState!=='Offline')return;a.operatingState='Online';delete a.offlineSince;delete a.downtimeReason;const d=state.downtime.find(x=>x.assetId===aid&&!x.endedAt);if(d){d.endedAt=now;d.returnToServiceNote=w.completionNote;d.returnedBy=CURRENT_USER}state.assetEvents.unshift({id:uid('AE'),assetId:aid,type:'Return to service',at:now,userId:CURRENT_USER,detail:'Returned online from '+w.id,workOrderId:w.id});dispatchEvent('Asset returned online',a.code+' is Online',a.name+' returned to service from '+w.id,{assetId:aid,relatedId:w.id})});
         }
         const pm=state.scheduledMaintenance.find(p=>p.id===w.source);
-        if(pm&&pm.scheduleMode==='Floating'&&pm.triggerType==='Time'){const days=parseIntervalDays(pm.trigger);if(days)pm.nextDue=addDaysISO(now,days);pm.awaitingCompletionWorkOrderId=null}
+        if(window.safiCompleteFloatingPlans)window.safiCompleteFloatingPlans(w);
+        else if(pm&&pm.scheduleMode==='Floating'&&pm.triggerType==='Time'){const days=parseIntervalDays(pm.trigger);if(days)pm.nextDue=addDaysISO(now,days);pm.awaitingCompletionWorkOrderId=null}
         addAudit('WORK_ORDER_CLOSED',w.id,targetStatus+' · '+w.completionNote);dispatchEvent('Work order closed',w.id+' closed',w.title+' was closed as '+targetStatus,{assigneeIds:w.assigneeIds,relatedId:w.id});saveState();closeModal();render();toast(w.id+' closed');
       }});
   }

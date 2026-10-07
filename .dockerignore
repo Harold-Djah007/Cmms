@@ -1,0 +1,15 @@
+.git
+.test-tmp
+.venv
+node_modules
+presentation
+data
+backups
+recovery
+.env
+.env.*
+**/__pycache__
+**/*.pyc
+**/*.db
+**/*.db-wal
+**/*.db-shm

@@ -4,7 +4,7 @@
 // Local storage is always the field cache. The shared API is used only after a successful capability probe.
 const SAFI_SYNC_QUEUE='safimaint-sync-queue-v1';
 const SAFI_CONFLICT_BACKUP='safimaint-conflict-backup-v1';
-const safiSync={mode:'device',revision:0,pending:[],busy:false,lastError:'',identity:null,permissions:[],apiAvailable:false,probed:false};
+const safiSync={mode:'device',revision:state.meta?.serverRevision||0,pending:[],busy:false,lastError:'',identity:null,permissions:[],apiAvailable:false,probed:false,sharedWorkspace:false};
 const localSaveState=saveState;
 
 function syncLabel(){
@@ -36,7 +36,8 @@ async function apiJson(path,options={}){
   const response=await fetch(path,{
     ...options,
     headers:{'Accept':'application/json','Content-Type':'application/json',...(options.headers||{})},
-    credentials:'same-origin'
+    credentials:'same-origin',
+    cache:'no-store'
   });
   const contentType=response.headers.get('content-type')||'';
   if(!contentType.includes('application/json')){
@@ -72,8 +73,8 @@ async function probeSharedService(){
   return safiSync.apiAvailable;
 }
 function queueSnapshot(reason='Operational change'){
-  if(!safiSync.apiAvailable)return;
-  safiSync.pending=[{state:structuredClone(state),reason,queuedAt:iso()}];
+  if(!safiSync.apiAvailable&&!safiSync.sharedWorkspace&&!state.meta?.serverRevision)return;
+  safiSync.pending=[{state:structuredClone(state),reason,baseRevision:safiSync.revision,queuedAt:iso()}];
   localStorage.setItem(SAFI_SYNC_QUEUE,JSON.stringify(safiSync.pending));
   flushSync();
 }
@@ -98,7 +99,7 @@ function sparseOperationalState(candidate){
 function shouldBootstrapDemo(payload){
   // Development mode is the repository's acceptance-test workspace. It must
   // stay populated even when an older volume contains a sparse/broken state.
-  return safiSync.identity?.provider==='development'&&sparseOperationalState(payload?.state);
+  return safiSync.identity?.provider==='development'&&!payload?.state?.meta?.onboardingComplete&&sparseOperationalState(payload?.state);
 }
 function developmentDemoState(localCandidate){
   if(localCandidate?.meta?.demo&&!sparseOperationalState(localCandidate))return structuredClone(localCandidate);
@@ -106,8 +107,10 @@ function developmentDemoState(localCandidate){
   return localCandidate;
 }
 async function pullServer(){
+  const revision=safiSync.revision;
   const payload=await apiJson('/api/v1/state');
-  applyServerState(payload);
+  // A read must not overwrite edits or a commit that happened during the request.
+  if(!safiSync.pending.length&&!safiSync.busy&&safiSync.revision===revision)applyServerState(payload);
   return payload;
 }
 async function flushSync(){
@@ -121,8 +124,13 @@ async function flushSync(){
         body:JSON.stringify({revision:safiSync.revision,state:latest.state,reason:latest.reason})
       });
       safiSync.revision=result.revision;
-      safiSync.pending=[];
-      localStorage.removeItem(SAFI_SYNC_QUEUE);
+      state.meta=state.meta||{};state.meta.serverRevision=result.revision;
+      localSaveState();
+      // Only acknowledge the snapshot sent; a newer edit may have arrived meanwhile.
+      safiSync.pending=safiSync.pending.filter(item=>item!==latest);
+      safiSync.pending.forEach(item=>item.baseRevision=result.revision);
+      if(safiSync.pending.length)localStorage.setItem(SAFI_SYNC_QUEUE,JSON.stringify(safiSync.pending));
+      else localStorage.removeItem(SAFI_SYNC_QUEUE);
     }
     safiSync.mode='shared';safiSync.lastError='';
   }catch(error){
@@ -131,13 +139,14 @@ async function flushSync(){
       safiSync.pending=[];
       localStorage.removeItem(SAFI_SYNC_QUEUE);
       try{
+        safiSync.busy=false;
         await pullServer();
         toast('Another device saved first. Server data was loaded; your unsynced copy is preserved for recovery.');
       }catch(_ignored){}
     }else{
       // A failed API request immediately drops back to safe device mode.
       safiSync.apiAvailable=false;
-      safiSync.mode='device';
+      safiSync.mode=error.status&&error.status<500?'error':'device';
       safiSync.lastError='Shared service unavailable · local field data is safe';
     }
   }finally{
@@ -151,8 +160,8 @@ async function startSync(){
   const available=await probeSharedService();
   if(!available){
     // Static test servers such as python -m http.server intentionally stay in device mode.
-    safiSync.pending=[];
-    localStorage.removeItem(SAFI_SYNC_QUEUE);
+    // Keep durable pending edits through temporary outages and page reloads.
+    safiSync.sharedWorkspace=safiSync.pending.length>0||!!state.meta?.serverRevision;
     safiSync.mode='device';
     safiSync.lastError='Local field mode';
     paintSync();
@@ -162,10 +171,18 @@ async function startSync(){
     const session=await apiJson('/api/v1/session');
     safiSync.identity=session.identity;
     safiSync.permissions=Array.isArray(session.permissions)?session.permissions:[];
+    safiSync.sharedWorkspace=true;
+    if(safiSync.pending.length){
+      // The queued base revision, not today's server revision, detects offline conflicts.
+      safiSync.revision=safiSync.pending[0].baseRevision??state.meta?.serverRevision??safiSync.revision;
+      await flushSync();
+      return;
+    }
     safiSync.revision=session.revision;
     try{
       const localCandidate=structuredClone(state);
       const payload=await apiJson('/api/v1/state');
+      if(safiSync.pending.length){await flushSync();return}
       if(shouldBootstrapDemo(payload)){
         const demo=developmentDemoState(localCandidate);
         if(!demo||sparseOperationalState(demo))throw new Error('Demo workspace could not be prepared');
@@ -225,12 +242,13 @@ document.addEventListener('click',async event=>{
   const button=event.target.closest('[data-mail-flush]');
   if(!button||!safiSync.apiAvailable)return;
   event.preventDefault();
+  if(safiSync.busy||safiSync.pending.length){toast('Wait for your changes to save before sending queued mail.');return}
   button.disabled=true;button.textContent='Sending…';
   try{
     const result=await apiJson('/api/v1/mail/flush',{method:'POST',body:'{}'});
     await pullServer();
     toast(`${result.sent} email${result.sent===1?'':'s'} delivered`);
-  }catch(error){toast(error.message)}
+  }catch(error){toast(error.message);try{await pullServer()}catch(_ignored){}}
   finally{button.disabled=false;button.textContent='Send queued mail'}
 });
 window.addEventListener('online',async()=>{

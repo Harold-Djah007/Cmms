@@ -162,6 +162,7 @@ function showFirstRun(){
         <label class="wide">Site / facility name<input name="site" required placeholder="e.g. Safisana Ghana"></label>
         <div class="onboarding-note wide"><strong>We will create only the basics:</strong> your account, your site, and an empty main store. Everything else starts at zero.</div>
         <button class="button primary wide onboarding-submit" type="submit">Create my workspace →</button>
+        <button class="button wide" type="button" data-v67-load-demo>Explore sample workspace</button>
       </form>
     </section>
     <aside class="onboarding-side"><span>Simple by default</span><h2>You only need four ideas.</h2><div class="onboarding-idea"><b>1</b><div><strong>Assets</strong><small>The things you maintain</small></div></div><div class="onboarding-idea"><b>2</b><div><strong>Work</strong><small>The maintenance to be done</small></div></div><div class="onboarding-idea"><b>3</b><div><strong>Stock</strong><small>Parts and supplies used</small></div></div><div class="onboarding-idea"><b>4</b><div><strong>Team</strong><small>The people responsible</small></div></div></aside>
@@ -210,7 +211,12 @@ renderSecurity=function(){
 };
 
 (function bootSimpleExperience(){
-  if(!state.meta?.freshWorkspace){state=freshWorkspace();saveState();}
+  // The fresh-workspace marker is not a migration gate. Existing operational
+  // or demo records must survive reloads and older compatible releases.
+  if(!loadedStoredWorkspace&&!state.meta?.freshWorkspace){state=freshWorkspace();saveState();}
+  else if(loadedStoredWorkspace&&!state.meta?.freshWorkspace&&!state.meta?.onboardingComplete){
+    state.meta=state.meta||{};state.meta.onboardingComplete=true;saveState();
+  }
   simpleNavigation();syncSimpleShell();
   if(!state.meta.onboardingComplete) showFirstRun();
   else {document.body.classList.remove('first-run');ui.route='dashboard';render();}

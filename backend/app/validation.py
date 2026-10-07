@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import math
+import re
+from datetime import datetime, timedelta
+
 from fastapi import HTTPException
 
 
@@ -49,7 +53,7 @@ PERMISSIONS = {
     "workCustomFieldDefinitions": {"work.manage", "admin.people"},
     "projects": {"work.manage"},
     "taskGroups": {"work.manage", "pm.manage"},
-    "scheduledMaintenance": {"pm.manage"},
+    "scheduledMaintenance": {"pm.manage", "work.execute"},
     "requests": {"work.manage"},
     "downtime": {"asset.state"},
     "assetEvents": {"asset.state", "asset.edit"},
@@ -71,10 +75,11 @@ PERMISSIONS = {
     "importJobs": {"admin.people"},
     "exportJobs": {"report.view"},
     "security": {"admin.people"},
+    "workSettings": {"work.manage"},
     "purchasingSettings": {"purchase.manage", "purchase.approve"},
 }
 
-APPEND_ONLY = {"stockTransactions", "audit"}
+APPEND_ONLY = {"stockTransactions", "audit", "mailOutbox"}
 
 
 def _fail(message: str) -> None:
@@ -82,7 +87,11 @@ def _fail(message: str) -> None:
 
 
 def _ids(items: list, name: str) -> set[str]:
-    ids = [str(item.get("id", "")) for item in items]
+    if any(not isinstance(item, dict) for item in items):
+        _fail(f"Every {name} record must be an object")
+    if any(not isinstance(item.get("id"), str) or not item["id"].strip() for item in items):
+        _fail(f"Every {name} record requires a non-empty string id")
+    ids = [item["id"] for item in items]
     if any(not item_id for item_id in ids):
         _fail(f"Every {name} record requires an id")
     if len(ids) != len(set(ids)):
@@ -120,6 +129,44 @@ def _validate_failure_hierarchy(state: dict, work: dict) -> None:
         _fail(f"Work order {work['id']} action is not valid for cause {cause}")
 
 
+# Validate nested input before business rules so malformed JSON produces a useful
+# 422 rather than an AttributeError/ValueError and an HTTP 500.
+def _validate_structure(value, path="state", business_fields=True) -> None:
+    record_lists = {"locations", "readings", "tasks", "parts", "labor", "requiredParts",
+                    "triggers", "businessLinks", "lines", "causes"}
+    scalar_lists = {"assetIds", "assigneeIds", "groupIds", "siteIds", "bom",
+                    "includeTaskGroupIds", "nestedPlanIds", "permissions", "actions"}
+    numeric = {"min", "max", "onHand", "hourlyRate", "weeklyCapacityHours",
+               "qtyOriginal", "qtyRemaining", "unitCost", "estimateHours", "planned",
+               "actual", "hours", "actualHours", "poApprovalThreshold", "qty", "counted",
+               "expected", "variance", "reorderQty", "lastPrice", "qtyBefore", "qtyAfter", "actualCost"}
+    if isinstance(value, dict):
+        for key, child in value.items():
+            field = f"{path}.{key}"
+            if business_fields and key in record_lists | scalar_lists:
+                if not isinstance(child, list):
+                    _fail(f"{field} must be a list")
+                if key in record_lists and any(not isinstance(item, dict) for item in child):
+                    _fail(f"{field} must contain objects")
+                if key in scalar_lists and any(not isinstance(item, str) for item in child):
+                    _fail(f"{field} must contain strings")
+            if business_fields and key == "failureCodes" and child is not None and not isinstance(child, dict):
+                _fail(f"{field} must be an object")
+            if business_fields and (key in numeric or (key == "value" and ".readings[" in path)):
+                try:
+                    number = float(child if child is not None else 0)
+                except (TypeError, ValueError, OverflowError):
+                    _fail(f"{field} must be a finite number")
+                if isinstance(child, bool) or not math.isfinite(number):
+                    _fail(f"{field} must be a finite number")
+            _validate_structure(child, field, business_fields and key != "customFields")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _validate_structure(child, f"{path}[{index}]", business_fields)
+    elif isinstance(value, float) and not math.isfinite(value):
+        _fail(f"{path} must be finite")
+
+
 def validate_state(state: dict, previous: dict | None = None) -> set[str]:
     if not isinstance(state, dict):
         _fail("State must be a JSON object")
@@ -134,6 +181,14 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             state[name] = []
         elif not isinstance(value, list):
             _fail(f"{name} must be a list")
+
+    for key in ("meta", "security", "workSettings", "purchasingSettings"):
+        if key in state and not isinstance(state[key], dict):
+            _fail(f"{key} must be an object")
+    for name in COLLECTIONS:
+        if any(not isinstance(item, dict) for item in state[name]):
+            _fail(f"Every {name} record must be an object")
+    _validate_structure(state)
 
     # Older notification-preference records used userId as their natural key.
     # Give them a stable record id during migration so the expanded model remains
@@ -188,6 +243,8 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         while parent:
             if parent in seen:
                 _fail(f"Asset hierarchy cycle detected at {asset['id']}")
+            if parent not in assets:
+                _fail(f"Asset {asset['id']} references missing ancestor {parent}")
             seen.add(parent)
             parent = assets[parent].get("parentId")
         _require(asset.get("siteId"), site_ids, f"Asset {asset['id']} references a missing site")
@@ -214,10 +271,16 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
             _fail(f"Part {part['id']} minimum stock exceeds maximum stock")
         _require(part.get("vendorId"), vendor_ids, f"Part {part['id']} references a missing vendor")
         _require(part.get("businessId"), business_ids, f"Part {part['id']} references a missing business")
+        for field in ("unitCost", "lastPrice", "reorderQty"):
+            if float(part.get(field, 0) or 0) < 0:
+                _fail(f"Part {part['id']} has a negative {field}")
         for location in part.get("locations", []):
             _require(location.get("storeId"), store_ids, f"Part {part['id']} references a missing store")
             if float(location.get("onHand", 0)) < 0:
                 _fail(f"Part {part['id']} would have negative on-hand stock")
+            minimum, maximum = float(location.get("min", 0) or 0), float(location.get("max", 0) or 0)
+            if minimum < 0 or maximum < 0 or (maximum and minimum > maximum):
+                _fail(f"Part {part['id']} has invalid location stock thresholds")
 
     for tx in state["stockTransactions"]:
         _require(tx.get("partId"), part_ids, f"Stock transaction {tx['id']} references a missing part")
@@ -239,6 +302,8 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
         _require(count.get("partId"), part_ids, f"Cycle count {count['id']} references a missing part")
         _require(count.get("storeId"), store_ids, f"Cycle count {count['id']} references a missing store")
         _require(count.get("userId"), user_ids, f"Cycle count {count['id']} references a missing user")
+        if float(count.get("counted", 0) or 0) < 0:
+            _fail(f"Cycle count {count['id']} has a negative counted quantity")
 
     previous_work_map = {
         item["id"]: item for item in (previous or {}).get("workOrders", [])
@@ -283,14 +348,12 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
                 _fail(f"Scheduled maintenance {pm['id']} has an invalid trigger type")
             _require(trigger.get("meterId"), meter_ids, f"Scheduled maintenance {pm['id']} references a missing meter")
 
-        seen = {pm["id"]}
-        stack = list(pm.get("nestedPlanIds", []))
+        stack = [(child, {pm["id"]}) for child in pm.get("nestedPlanIds", [])]
         while stack:
-            child_id = stack.pop()
-            if child_id in seen:
+            child_id, ancestors = stack.pop()
+            if child_id in ancestors:
                 _fail(f"Scheduled maintenance nesting cycle detected at {pm['id']}")
-            seen.add(child_id)
-            stack.extend(pm_map[child_id].get("nestedPlanIds", []))
+            stack.extend((child, ancestors | {child_id}) for child in pm_map[child_id].get("nestedPlanIds", []))
 
     purchasing_settings = state.get("purchasingSettings") or {}
     if float(purchasing_settings.get("poApprovalThreshold", 0) or 0) < 0:
@@ -388,6 +451,26 @@ def validate_state(state: dict, previous: dict | None = None) -> set[str]:
                         _fail(f"Corrective work order {work['id']} requires Problem, Cause and Action before closure")
 
     if previous:
+        old_mail_ids = {item["id"] for item in previous.get("mailOutbox", [])}
+        for mail in state["mailOutbox"]:
+            if mail["id"] not in old_mail_ids and str(mail.get("status", "")).lower() not in {"queued locally", "queued", "retry"}:
+                _fail("New mail must be queued; only the server can confirm delivery")
+        # The stock ledger must explain every change to an existing part balance.
+        # Initial/imported part balances remain supported on workspace creation.
+        old_parts = {item["id"]: item for item in previous.get("parts", [])}
+        old_transactions = {item["id"] for item in previous.get("stockTransactions", [])}
+        deltas: dict[str, float] = {}
+        for tx in state["stockTransactions"]:
+            if tx["id"] not in old_transactions:
+                part_id = tx.get("partId")
+                deltas[part_id] = deltas.get(part_id, 0) + float(tx.get("qty", 0) or 0)
+        for part in state["parts"]:
+            if part["id"] not in old_parts:
+                continue
+            before = sum(float(loc.get("onHand", 0) or 0) for loc in old_parts[part["id"]].get("locations", []))
+            after = sum(float(loc.get("onHand", 0) or 0) for loc in part.get("locations", []))
+            if not math.isclose(after - before, deltas.get(part["id"], 0), rel_tol=1e-9, abs_tol=1e-8):
+                _fail(f"Part {part['id']} stock change does not match its new transactions")
         for name in APPEND_ONLY:
             current_by_id = {x["id"]: x for x in state[name]}
             for old in previous.get(name, []):
@@ -555,6 +638,51 @@ def _new_purchase_requests_only(current: list, previous: list) -> bool:
     )
 
 
+def _pm_completion_only(current: dict, previous: dict) -> bool:
+    plans, old_plans = current["scheduledMaintenance"], previous.get("scheduledMaintenance", [])
+    if not _same_ids(plans, old_plans):
+        return False
+    old_map = _record_map(old_plans)
+    work_map, old_work = _record_map(current["workOrders"]), _record_map(previous.get("workOrders", []))
+    allowed = {"triggers", "nextDue", "awaitingCompletionWorkOrderId"}
+    for plan in plans:
+        before = old_map[plan["id"]]
+        if plan == before:
+            continue
+        work_id = before.get("awaitingCompletionWorkOrderId")
+        work, was = work_map.get(work_id), old_work.get(work_id)
+        if not work or not was or before.get("scheduleMode") != "Floating":
+            return False
+        closed = {"Completed", "Closed", "Cancelled"}
+        if was.get("status") in closed or work.get("status") not in closed:
+            return False
+        if plan.get("awaitingCompletionWorkOrderId") is not None:
+            return False
+        if any(plan.get(key) != before.get(key) for key in set(plan) | set(before) if key not in allowed):
+            return False
+        expected = [dict(trigger) for trigger in before.get("triggers", [])]
+        if work.get("status") != "Cancelled":
+            try:
+                completed = datetime.fromisoformat(work.get("closedAt") or work.get("completedAt"))
+            except (TypeError, ValueError):
+                return False
+            for trigger in expected:
+                if trigger.get("active") and trigger.get("type") == "Time":
+                    text = str(trigger.get("interval") or trigger.get("description") or before.get("trigger") or "")
+                    match = re.search(r"(\d+(?:\.\d+)?)\s*(days?|d|weeks?|w|months?)\b", text, re.I)
+                    if match:
+                        unit = match[2].lower()
+                        days = float(match[1]) * (7 if unit.startswith("w") else 30 if unit.startswith("month") else 1)
+                        trigger["nextDue"] = (completed + timedelta(days=days)).date().isoformat()
+        if plan.get("triggers", []) != expected:
+            return False
+        first = next((t for t in expected if t.get("active") and t.get("type") == "Time"), None)
+        expected_due = first.get("nextDue") if first and work.get("status") != "Cancelled" else before.get("nextDue")
+        if plan.get("nextDue") != expected_due:
+            return False
+    return True
+
+
 def authorize_changes(
     changed: set[str],
     permissions: set[str],
@@ -606,6 +734,10 @@ def authorize_changes(
     if "workOrders" in changed and "work.manage" not in permissions:
         if "work.execute" not in permissions or not _work_execution_only(current["workOrders"], previous.get("workOrders", [])):
             raise HTTPException(status_code=403, detail="Work execution permission cannot change planning fields or create work orders")
+
+    if "scheduledMaintenance" in changed and "pm.manage" not in permissions:
+        if "work.execute" not in permissions or not _pm_completion_only(current, previous):
+            raise HTTPException(status_code=403, detail="Work execution may only advance floating plans when their linked work closes")
 
     if "purchaseRequests" in changed and not (permissions & {"purchase.manage", "inventory.manage"}):
         if "work.execute" not in permissions or not _new_purchase_requests_only(

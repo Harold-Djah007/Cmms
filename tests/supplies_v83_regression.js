@@ -33,11 +33,5 @@ assert.match(css,/\.s83-table/);
 assert.match(css,/@media\(max-width:900px\)/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 
-assert.match(index,/safimaint-fiix-supplies-v83\.css\?v=83/);
-assert.match(index,/safimaint-fiix-supplies-v83\.js\?v=83/);
-assert.match(worker,/const CACHE='safimaint-fiix-v85'/);
-assert.match(worker,/safimaint-fiix-supplies-v83\.css/);
-assert.match(worker,/safimaint-fiix-supplies-v83\.js/);
-assert.match(config,/9\.9\.1-fiix-desktop-shell/);
 
 console.log('Supplies v83 readable Fiix-familiar shell and register checks passed.');

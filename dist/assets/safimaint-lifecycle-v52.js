@@ -136,6 +136,19 @@
     if(pm.scheduleMode==='Floating')pm.awaitingCompletionWorkOrderId=w.id;
     nestedPlans(pm).filter(pmReady).forEach(child=>advanceTriggers(child,w,seen));
   }
+  window.safiCompleteFloatingPlans=function(work){
+    state.scheduledMaintenance.filter(pm=>pm.scheduleMode==='Floating'&&pm.awaitingCompletionWorkOrderId===work.id).forEach(pm=>{
+      if(work.status!=='Cancelled'){
+        (pm.triggers||[]).filter(t=>t.active&&t.type==='Time').forEach(t=>{
+          const days=intervalDays(t.interval||t.description||pm.trigger);
+          if(days)t.nextDue=plusDays(work.closedAt||work.completedAt||iso(),days);
+        });
+        const first=(pm.triggers||[]).find(t=>t.active&&t.type==='Time');
+        if(first)pm.nextDue=first.nextDue;
+      }
+      pm.awaitingCompletionWorkOrderId=null;
+    });
+  };
   generatePM=generatePMV52;window.generatePM=generatePMV52;
 
   function renderPMV52(){
@@ -169,9 +182,9 @@
       '</div>',onSubmit:fd=>{
         const assets=fd.getAll('assetIds').map(String);if(!assets.length){toast('Select at least one asset');return}
         const triggers=readTriggerRows();if(!triggers.length){toast('Add at least one trigger');return}
-        const rec=existing?pm:{id:uid('PM'),status:'Active',paused:false,lastGenerated:null,requiredParts:[],generatedHistory:[]};
+        const rec=existing?structuredClone(pm):{id:uid('PM'),status:'Active',paused:false,lastGenerated:null,requiredParts:[],generatedHistory:[]};
         rec.name=String(fd.get('name'));rec.assetIds=assets;rec.assetId=assets[0];rec.scheduleMode=String(fd.get('scheduleMode'));rec.triggerLogic=String(fd.get('triggerLogic'));rec.assigneeGroupId=String(fd.get('assigneeGroupId')||'')||null;rec.includeTaskGroupIds=fd.getAll('taskGroupIds').map(String);rec.taskGroupId=rec.includeTaskGroupIds[0]||null;rec.nestedPlanIds=fd.getAll('nestedPlanIds').map(String).filter(id=>id!==rec.id);if(nestedWouldCycle(rec.id,rec.nestedPlanIds)){toast('Nested maintenance would create a circular plan relationship');return}rec.taskTemplate=String(fd.get('inlineTasks')||'').split('\n').map(x=>x.trim()).filter(Boolean);rec.triggers=triggers;const first=triggers[0];rec.triggerType=first.type;rec.trigger=first.description;rec.nextDue=first.nextDue||String(first.threshold??'');
-        if(!existing)state.scheduledMaintenance.unshift(rec);addAudit(existing?'PM_PLAN_UPDATED':'PM_PLAN_CREATED',rec.id,rec.name+' · '+rec.assetIds.length+' assets · '+rec.triggerLogic);saveState();closeModal();render();toast(existing?'Plan updated':'Plan created');
+        if(existing)Object.assign(pm,rec);else state.scheduledMaintenance.unshift(rec);addAudit(existing?'PM_PLAN_UPDATED':'PM_PLAN_CREATED',rec.id,rec.name+' · '+rec.assetIds.length+' assets · '+rec.triggerLogic);saveState();closeModal();render();toast(existing?'Plan updated':'Plan created');
       }});
   }
   function triggerRows(triggers){

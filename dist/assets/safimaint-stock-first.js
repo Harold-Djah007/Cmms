@@ -2,7 +2,8 @@
 
 // SafiMaintain 9: Fiix-familiar maintenance structure with a simpler stock-taking centre.
 (function(){
-  const blockedRoutes=new Set(['purchase-orders','rfqs','purchase-analytics','purchase-settings']);
+  // Full purchasing scope restored for the Fiix workflow rebuild.
+  const blockedRoutes=new Set();
   ui.sfStockFilter=ui.sfStockFilter||'all';
   ui.sfPartTab=ui.sfPartTab||'stock';
 
@@ -140,7 +141,7 @@
 
   function renderReorderList(){
     const parts=arr(state.parts).filter(isLow).sort((a,b)=>(isCritical(b)-isCritical(a))||(Number(a.min||0)-onHand(a))-(Number(b.min||0)-onHand(b))),value=parts.reduce((n,p)=>n+Math.max(0,Number(p.max||p.min||0)-onHand(p))*Number(p.lastPrice||p.unitCost||0),0);
-    return '<div class="sf-restock-page"><header class="sf-page-head"><div><div class="sf-live-label"><i></i> Inventory control</div><h1>Reorder list</h1><p>A simple handoff list for external purchasing. SafiMaintain does not create purchase orders.</p></div><div class="sf-head-actions"><button class="button" data-action="cycle-count">Verify with count</button><button class="button primary" data-route="inventory">Open stockroom</button></div></header><section class="sf-stock-summary"><div class="sf-mini-stat"><span>Items to review</span><strong>'+parts.length+'</strong></div><div class="sf-mini-stat"><span>Stocked out</span><strong>'+parts.filter(isCritical).length+'</strong></div><div class="sf-mini-stat"><span>Suggested restock value</span><strong>'+money(value)+'</strong></div><div class="sf-mini-stat"><span>Workflow</span><strong>External buy</strong></div></section><section class="sf-panel"><div class="sf-panel-head"><div><h2>Stock replenishment signals</h2><p>Confirm physical quantity before placing an order in your purchasing system</p></div></div><div class="sf-table-wrap sf-restock-table"><table class="sf-table"><thead><tr><th>Part</th><th>On hand</th><th>Min / max</th><th>Suggested qty</th><th>Priority</th><th>Supplier</th><th></th></tr></thead><tbody>'+(parts.length?parts.map(p=>{const supplier=arr(state.businesses).find(b=>b.id===p.preferredBusinessId)||getVendor(p.vendorId),suggest=Math.max(1,Number(p.reorderQty||0),Number(p.max||p.min||0)-onHand(p));return '<tr><td>'+partThumb()+'<strong>'+esc(p.code)+' · '+esc(p.name)+'</strong><small>'+esc(p.category||'Stock item')+'</small></td><td><strong>'+onHand(p)+' '+esc(p.uom)+'</strong></td><td>'+Number(p.min||0)+' / '+Number(p.max||0)+'</td><td><strong>'+suggest+' '+esc(p.uom)+'</strong></td><td><span class="sf-priority '+(isCritical(p)?'critical':'')+'">'+(isCritical(p)?'Critical':'Reorder')+'</span></td><td>'+esc(supplier?.name||'Not set')+'</td><td><button class="button small" data-sf-open-part="'+esc(p.id)+'">Review stock</button></td></tr>'}).join(''):'<tr><td colspan="7"><div class="sf-empty"><strong>Nothing to reorder</strong><span>All tracked items meet their minimum stock level.</span></div></td></tr>')+'</tbody></table></div></section></div>'
+    return '<div class="sf-restock-page"><header class="sf-page-head"><div><div class="sf-live-label"><i></i> Inventory control</div><h1>Reorder list</h1><p>Review replenishment needs, then use the purchase planning board to prepare orders.</p></div><div class="sf-head-actions"><button class="button" data-action="cycle-count">Verify with count</button><button class="button primary" data-route="inventory">Open stockroom</button></div></header><section class="sf-stock-summary"><div class="sf-mini-stat"><span>Items to review</span><strong>'+parts.length+'</strong></div><div class="sf-mini-stat"><span>Stocked out</span><strong>'+parts.filter(isCritical).length+'</strong></div><div class="sf-mini-stat"><span>Suggested restock value</span><strong>'+money(value)+'</strong></div><div class="sf-mini-stat"><span>Workflow</span><strong>Purchasing</strong></div></section><section class="sf-panel"><div class="sf-panel-head"><div><h2>Stock replenishment signals</h2><p>Confirm physical quantity before preparing a purchase order</p></div></div><div class="sf-table-wrap sf-restock-table"><table class="sf-table"><thead><tr><th>Part</th><th>On hand</th><th>Min / max</th><th>Suggested qty</th><th>Priority</th><th>Supplier</th><th></th></tr></thead><tbody>'+(parts.length?parts.map(p=>{const supplier=arr(state.businesses).find(b=>b.id===p.preferredBusinessId)||getVendor(p.vendorId),suggest=Math.max(1,Number(p.reorderQty||0),Number(p.max||p.min||0)-onHand(p));return '<tr><td>'+partThumb()+'<strong>'+esc(p.code)+' · '+esc(p.name)+'</strong><small>'+esc(p.category||'Stock item')+'</small></td><td><strong>'+onHand(p)+' '+esc(p.uom)+'</strong></td><td>'+Number(p.min||0)+' / '+Number(p.max||0)+'</td><td><strong>'+suggest+' '+esc(p.uom)+'</strong></td><td><span class="sf-priority '+(isCritical(p)?'critical':'')+'">'+(isCritical(p)?'Critical':'Reorder')+'</span></td><td>'+esc(supplier?.name||'Not set')+'</td><td><button class="button small" data-sf-open-part="'+esc(p.id)+'">Review stock</button></td></tr>'}).join(''):'<tr><td colspan="7"><div class="sf-empty"><strong>Nothing to reorder</strong><span>All tracked items meet their minimum stock level.</span></div></td></tr>')+'</tbody></table></div></section></div>'
   }
   renderPlanning=renderReorderList;window.renderPlanning=renderReorderList;
 
@@ -153,7 +154,6 @@
     stockNavigation();
     const search=document.getElementById('globalSearchButton');if(search){const spans=search.querySelectorAll('span');if(spans[1])spans[1].textContent='Search parts, assets, work orders…'}
     const scan=document.getElementById('scanButton');if(scan)scan.innerHTML=sfIcon('scan')+' Scan';
-    document.querySelectorAll('[data-action="manual-po"],[data-po-from-pr],[data-v56-new-po],[data-v56-create-po]').forEach(el=>el.remove());
     document.body.classList.add('safimaint-stock-first')
   }
   const previousRender=render;
@@ -165,7 +165,7 @@
 
   document.addEventListener('click',event=>{
     const blocked=event.target.closest('[data-action="manual-po"],[data-po-from-pr],[data-v56-new-po],[data-v56-create-po],[data-route="purchase-orders"],[data-route="rfqs"],[data-route="purchase-analytics"]');
-    if(blocked){event.preventDefault();event.stopImmediatePropagation();toast('SafiMaintain uses a simple external reorder list instead of purchase orders.');go('planning');return}
+    if(blocked&&blockedRoutes.size){event.preventDefault();event.stopImmediatePropagation();go('planning');return}
     const filter=event.target.closest('[data-sf-stock-filter]');if(filter){event.preventDefault();event.stopImmediatePropagation();ui.sfStockFilter=filter.dataset.sfStockFilter;render();return}
     const tab=event.target.closest('[data-sf-part-tab]');if(tab){event.preventDefault();event.stopImmediatePropagation();ui.sfPartTab=tab.dataset.sfPartTab;const p=getPart(ui.selectedPart),target=document.querySelector('[data-inventory-detail]');if(target&&p)target.innerHTML=renderPartDetail(p);return}
     const open=event.target.closest('[data-sf-open-part]');if(open){event.preventDefault();event.stopImmediatePropagation();ui.selectedPart=open.dataset.sfOpenPart;ui.sfStockFilter='all';ui.sfPartTab='stock';go('inventory')}

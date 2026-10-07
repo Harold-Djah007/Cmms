@@ -1,141 +1,102 @@
-# SafiMaintain CMMS
+# SafiMaintain
 
-## Compact Fiix-style Supplies v82
+SafiMaintain is a maintenance CMMS for Safisana: clear work queues, connected equipment and inventory records, and familiar workflows with fewer steps. It uses the [public Fiix operating model](https://fiixsoftware.com/cmms/features/) as a reference while retaining its own branding and implementation.
 
-The application shell and Parts / Supplies register now follow the compact operating rhythm shown in Fiix: a narrow module rail, an expandable Supplies group, a small action toolbar and a location-grouped stock register. Promotional navigation cards, oversized route rows and dashboard-style inventory tiles were removed. Stock taking, locations, cycle counts, BOM groups, businesses, part records and QR tags remain functional, while purchase-order creation remains excluded.
+## Version 10
 
-## Current Fiix-informed Supplies v81
+The October 7 rebuild replaces the dashboard, asset/parts registers and work-order register with a new presentation layer. A single active stylesheet supplies the teal/slate design across navigation, tables, record tabs, forms, dialogs and supporting pages. It is based on read-only inspection of the authenticated Fiix workspace; operational data and domain transactions are retained.
 
-Fiix's official 2026 help content still identifies **Parts & Supplies as a v5 area**, while the newer v6 interface is being released in phases across areas such as Equipment and Work Orders. SafiMaintain therefore keeps the proven part/stock relationships without copying the old v5 chrome, and applies the verified v6 interaction patterns: a searchable and sortable list, filters, customizable columns, page-size controls, pagination, clear record summaries and responsive detail cards.
+Run `python scripts/run_demo.py` for the isolated sample workspace. The launcher chooses an available port and opens the browser. Alternatively, `npm run demo` prints a link. Validate with `npm test`, `npm run test:browser`, and `python -m pytest -q backend/tests`. See [PRESENTATION.md](PRESENTATION.md) for the rehearsal and [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for live account/email setup.
 
-The result remains stock-first: locations, quantity on hand, min/max controls, cycle counts, receipts, movements, BOM links and audit history are central. Purchase-order creation is intentionally excluded.
+- A maintenance-first home with open, overdue, due-today, assigned and unassigned work queues, direct record access, equipment attention, preventive maintenance and request triage.
+- Consistent breadcrumbs, permission-aware home actions and clear empty states. Dashboard totals come from saved records and exclude closed work and inactive stock locations.
+- A consistent desktop, tablet and phone interface across dashboard, work, assets, inventory, reports and administration.
+- Clear Work, Assets and Inventory navigation. Reorder demand belongs inside Inventory; offline/sync status is always accessible.
+- Readable lists, forms and record details, visible keyboard focus, keyboard-accessible records and a calmer dashboard.
+- Work-order essentials first, with optional planning details available on demand.
+- Live work search, request triage, tasks, labor, parts consumption, completion controls and closed-record protection.
+- Time, meter and event maintenance plans. Floating time triggers advance after their linked work completes.
+- Multi-location parts, receipts, issues, transfers, counts, batch adjustments, BOMs and supplier records.
+- Validated, auditable stock movements with FIFO costing. Failed issues do not consume value; stock balance changes must match new ledger entries.
+- Asset hierarchy, online/offline state, downtime, meters, maintenance history and QR tags.
+- Shared attachments for assets, work, requests and parts, with local file copies for field use.
+- Durable sync queues that preserve edits during saves, outages and reconnects. Stale changes are retained as a recovery copy.
+- An offline application shell that excludes API responses and supports versioned asset URLs.
+- Existing workspaces survive reloads. New workspaces start empty; demo records are explicitly identified.
+- Server-enforced permissions, revision conflicts, immutable history and explicit authentication-proxy trust.
+- SMTP delivery records are saved after each accepted message, including when later delivery fails or another user saves concurrently.
 
-## Supplies Workspace v79
+Purchasing remains external. SafiMaintain produces a **Reorder list** and does not create purchase orders or RFQs.
 
-Supplies is now a first-class expandable module with **Parts & supplies**, **Current stock**, **Batch stock adjustment**, **Cycle counts**, **Stock history**, **BOM groups**, and **Businesses**. The part record follows a familiar CMMS structure—Stock, Cycle count, BOMs, Businesses, Files, Custom, and History—while keeping stock taking as SafiMaintain's primary workflow. Batch adjustments create auditable variance transactions, part tags contain real offline QR codes, and purchase-order creation remains excluded.
+## Run locally
 
-## Asset Atlas v78
-
-The Assets workspace now uses a split plant navigator and live asset-intelligence layout. Hierarchy branches expand and collapse in place without rebuilding the page, eliminating the visible blank-frame blink. On desktop, the application sidebar is fixed to the viewport while only its navigation list scrolls. Detailed asset records use a two-column operating workspace with a vertical section navigator.
-
-SafiMaintain is Safisana Ghana's stock-first maintenance management application.
-
-The current build uses the **public operating model documented by Fiix CMMS** while giving daily priority to stock taking. It remains SafiMaintain-branded and does not copy Fiix source code, private architecture, or visual assets.
-
-## SafiMaintain 9 stock-first experience
-
-- The Flux visual system replaces the original flat shell with a floating navigation rail, glass command bar, animated ambient grid, larger variable-style typography and fluid page transitions.
-- Dashboard instruments use meaningful live motion: moving stock parcels, a low-stock beacon, a cycle-count scanner and a rotating maintenance mechanism.
-- Fiix-familiar dark navigation, information density, master-detail records, hierarchy and audit patterns.
-- Larger navigation and asset-record typography for operators working on desktop and field tablets.
-- A pinned full-height navigation rail keeps the brand, site and connection state visible while only the menu scrolls; route changes automatically reveal the single active page.
-- A live stockroom control centre replaces the generic maintenance dashboard.
-- Parts, cycle counts, movements, assets and work remain connected without crowding daily navigation.
-- Subtle animated shelves, stock scanner and conveyor background communicate live inventory activity.
-- The main part record has seven connected areas: Stock, Cycle count, BOMs, Businesses, Files, Custom and History.
-- Replenishment stops at a simple **Reorder list** for handoff to Safisana's external purchasing process.
-- SafiMaintain does **not** create purchase orders, RFQs or supplier orders.
-- Motion is disabled automatically for users who prefer reduced motion.
-
-## Implemented operating model
-
-### Work management
-- Work requests that can be converted into corrective work orders.
-- Work-order priority, status, assignment, due date, instructions, tasks, parts and history.
-- Scheduled-maintenance plans with time/meter/event trigger descriptions.
-- Manual generation of work orders from maintenance plans.
-- Maintenance calendar for upcoming work.
-
-### Asset management
-- Unified Asset Command Centre with live availability/work indicators, a responsive hierarchy workspace and a consistent detailed-record design.
-- Parent/child asset hierarchy: site → facility → production area → equipment/subassembly/tool.
-- Stable expand/collapse behavior preserves page position and keyboard focus while animating only the affected branch.
-- Central asset profile with criticality, condition, manufacturer, model, serial, location, warranty, responsible person/group and commissioning date.
-- Independent **condition** and **Online/Offline operating state**.
-- Taking an asset offline requires a reason code and note.
-- Offline transitions create a downtime event and can automatically create corrective work.
-- Returning an asset online closes the active downtime event.
-- Asset log, work history, BOM, meter history and downtime history.
-- Standards-compliant offline QR asset tags with camera scanning where the browser supports `BarcodeDetector`, plus a manual code fallback.
-- Compact asset-location preview with an on-demand OpenStreetMap view; the external map loads only after the user selects **Show live map**, while the plant preview remains available offline.
-
-### Parts and stock taking
-- Parts master with category, UOM, unit cost, barcode, preferred vendor, min/max and reorder quantity.
-- Multiple store/bin locations per part.
-- Dedicated Current Stock and Batch Stock Adjustment pages.
-- Store, aisle, row and bin-level quantities with per-location minimum and maximum controls.
-- Reusable BOM groups and a connected supplier/business directory.
-- Offline part attachments and scannable/printable part QR tags.
-- Receipts, issues, transfers and adjustments.
-- Issues can be posted directly against a work order and update actual parts consumption on that work order.
-- Cycle counts retain expected, counted, variance, person and time.
-- Posting a variance creates the corresponding auditable stock adjustment.
-- Low-stock detection maintains an internal reorder signal when no open signal already exists.
-- A simple reorder list shows on-hand, min/max, suggested quantity, priority and preferred supplier.
-- Purchasing is completed outside SafiMaintain; there is no purchase-order creation workflow.
-- Separate durable-tool crib with check-in/check-out.
-
-### Notifications and mail
-- Event-driven rules for asset offline/online changes, low stock, work assignment and purchasing demand.
-- Stakeholder resolution for operations managers, planners, asset owners/groups, assigned technicians, stores and procurement.
-- In-app inbox with read state.
-- Email outbox records with subject, recipient, body, time and status.
-
-**Important:** new email records begin as **Queued locally** and do not pretend delivery. When the shared service and SMTP relay are configured, SafiMaintain changes them to **Sent** only after the relay accepts each message.
-
-### Administration and security
-- People, groups, manager relationships, roles and permission definitions.
-- User activation/deactivation, MFA-enrolment visibility and email preferences.
-- Site and store master records.
-- Notification-rule configuration.
-- Security policy configuration for MFA expectation, session timeout and audit retention.
-- Audit trail for critical asset, stock, purchasing, security and administration actions.
-- Microsoft Entra-compatible identity, server-enforced RBAC and explicit hosting boundaries for MFA, SSO and IP restrictions.
-
-## Run the shared application locally
-
-Docker is the simplest way to run the UI, API, durable database and attachment service together:
+For the board presentation, double-click **Start Demo.cmd**, or run `python scripts/run_demo.py`. It selects a free port, opens a separate sample workspace, and requires only Python and a browser. See [PRESENTATION.md](PRESENTATION.md) for the rehearsal sequence and deployment boundaries.
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:8080`. Data and uploaded files remain in the named `safimaint_data` volume. The browser probes `/api/health`, so Docker on port 8080 enters Shared mode while a plain static server on the same port safely remains in Device mode.
+Open `http://localhost:8080`. Compose is a development configuration: authentication is deliberately enabled for the local developer and the port binds only to the local machine. The named `safimaint_data` volume holds the database and attachments.
 
-For backend development without Docker:
+Without Docker:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 pip install -r backend/requirements-dev.txt
-SAFIMAINT_DEV_AUTH=true SAFIMAINT_DEV_USER_EMAIL=abena.sarpong@safisana.org \
-  uvicorn backend.app.main:app --reload --port 8000
 ```
 
-API documentation is available at `http://localhost:8000/api/docs`.
+Set `SAFIMAINT_DEV_AUTH=true`, then run:
 
-The old static-only preview still works with `python3 -m http.server 8080 --directory dist`, but it intentionally operates in **Device mode** because there is no API behind it.
+```bash
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
 
-## Production controls now implemented
+The API documentation is at `http://localhost:8000/api/docs`.
 
-- SQLite WAL persistence with automatic schema migration and durable Docker volume.
-- Microsoft Entra / Azure App Service Authentication header support; local development auth is disabled by default.
-- Server-enforced role permissions for every changed operational collection.
-- Optimistic concurrency: a stale device cannot silently overwrite a newer revision.
-- Validation of asset hierarchy cycles, references, IDs, stock floors and work-order relationships.
-- Append-only stock transaction and audit ledgers.
-- Cryptographically hashed, immutable revision history with admin restore capability.
-- Offline field cache and a persistent single-snapshot synchronization queue.
-- Conflict recovery copy when another device saves first.
-- Permission-checked PDF/image/text attachments with size, type and SHA-256 integrity metadata.
-- SMTP relay integration; messages become `Sent` only after relay acceptance.
-- Health endpoint, API documentation, Docker health checks and automated tests.
+For a device-only preview:
 
-## Production deployment
+```bash
+python -m http.server 8765 --bind 127.0.0.1 --directory dist
+```
 
-Build `backend/Dockerfile` in Azure App Service for Containers (or another persistent container host), mount `/app/data` on durable encrypted storage, and configure:
+Open `http://localhost:8765` to create a fresh local workspace, or `http://localhost:8765/?device=1` to explore a sample workspace. Device mode stores records in that browser; Shared mode uses the API, database and attachment service.
+
+## Verify
+
+```bash
+python -m pytest -q backend/tests
+npm ci
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+The browser suite starts its own local server and checks all 29 main pages, live search, creation and closure of work, floating maintenance, stock/FIFO integrity, linked work consumption, mobile navigation and a real offline reload. It uses a disposable browser context and does not write to a shared workspace.
+
+For an existing preview, set `SAFIMAINT_TEST_URL`. To use an installed Chrome/Edge executable, set `SAFIMAINT_BROWSER_PATH`. CI runs backend tests, JavaScript syntax checks, all frontend regressions and browser acceptance checks.
+
+## Project layout
+
+- `backend/app/`: FastAPI service, SQLite persistence, identity, permissions and validation.
+- `backend/tests/`: backend and security regression tests.
+- `dist/`: served application source, including the numbered operational modules.
+- `dist/assets/safimaint-system-v91.css`: current shared visual system.
+- `dist/assets/safimaint-system-v91.js`: shared onboarding, demo labeling and keyboard support.
+- `dist/assets/safimaint-maintenance-workspace.js` and `.css`: maintenance overview, record drill-downs, shared breadcrumbs and consistent operating controls.
+- `dist/assets/safimaint-supplies-v93.js` and `.css`: location hierarchy, parts list and compact Stock record, based on Fiix's March 2026 [list guide](https://helpdesk.fiixsoftware.com/hc/en-us/articles/211751446-Update-parts-and-supplies-using-bulk-import) and [current record guide](https://helpdesk.fiixsoftware.com/hc/en-us/articles/25767494813076-Edit-parts-details). Purchasing remains external.
+- `tests/`: frontend regressions; `tests/run_regressions.js` discovers all suites.
+- `scripts/browser_acceptance.cjs`: connected browser workflow checks.
+
+The frontend retains earlier modules for compatibility. Current scripts are wired in `dist/index.html`; `dist/service-worker.js` must include every loaded asset. Historical tests inspect retained modules, while the app-shell and browser tests verify the active application.
+
+## Production configuration
+
+See [PRODUCTION.md](PRODUCTION.md) for deployment acceptance, monitoring and verified backup/restore commands, and `.env.production.example` for the required configuration. Set `SAFIMAINT_ENVIRONMENT=production` and `SAFIMAINT_ALLOWED_HOSTS` to your real hostname. Runtime dependencies are pinned and audited in CI.
+
+Deploy `backend/Dockerfile` behind Microsoft Entra / Azure App Service Authentication, mount `/app/data` on durable encrypted storage, and configure:
 
 ```text
+SAFIMAINT_DEV_AUTH=false
+SAFIMAINT_TRUST_AUTH_HEADERS=true
 SAFIMAINT_OWNER_EMAILS=operations.manager@company.com
 SAFIMAINT_DATABASE_PATH=/app/data/safimaint.db
 SAFIMAINT_ATTACHMENT_PATH=/app/data/attachments
@@ -146,46 +107,8 @@ SMTP_PASSWORD=...
 SMTP_FROM=SafiMaintain <maintenance@company.com>
 ```
 
-Enable Microsoft Entra authentication at the hosting layer and require authentication for every request. Do **not** enable `SAFIMAINT_DEV_AUTH` in production. The first signed-in owner listed in `SAFIMAINT_OWNER_EMAILS` can initialize the workspace; subsequent access is resolved from the People and Roles records inside SafiMaintain.
+Enable `SAFIMAINT_TRUST_AUTH_HEADERS` only when the authentication proxy removes caller-supplied identity headers and every API request must pass through that proxy. Direct APIs reject those identity headers by default. The first configured owner initializes the workspace; later access resolves through People and Roles.
 
-Back up both the SQLite database and attachment directory together. For a large multi-site rollout, move the same API contract to a managed relational database and object store before high-concurrency use.
+Use the default single API worker for the current SQLite deployment and mail-delivery lock. Back up the database and attachments together. Larger multi-site or multi-worker deployments need a managed database, object storage and a dedicated durable mail worker.
 
-## Verification
-
-```bash
-python -m pytest -q backend/tests
-for file in dist/assets/*.js dist/service-worker.js; do node --check "$file"; done
-node tests/demo_inventory_regression.js
-node tests/stock_first_redesign_regression.js
-node tests/shared_bootstrap_regression.js
-node tests/asset_record_v72_regression.js
-node tests/asset_record_v72_smoke.js
-node tests/qr_v75_regression.js
-node tests/assets_v77_regression.js
-node tests/assets_v78_regression.js
-node tests/supplies_v79_regression.js
-node tests/supplies_v80_regression.js
-node tests/supplies_v81_regression.js
-node tests/supplies_v82_regression.js
-node tests/supplies_v83_regression.js
-```
-
-## Recommended acceptance test
-
-1. Open **Assets** and select `P-201` / Digester Feed Pump 02.
-2. Return it online with a completion note and verify the downtime record closes, the asset log updates, and alerts are created.
-3. Take it offline again with a reason and keep **Create a corrective work order** enabled.
-4. Open **Work orders** and verify the new corrective WO exists.
-5. Open **Supplies → Parts & supplies**, select `MS-40-SS` from the compact list, and confirm it opens as a full editable record rather than a split pane.
-6. In its **Stock** tab, edit Account, Charge department, Inventory code, Barcode, Make, Model or Last price; press **Save** and verify the values persist.
-7. Open a stock-location row and verify Location, Aisle, Row, Bin, Qty on hand, Min qty, Max qty and Active status can be maintained.
-8. Issue one unit against the new WO and confirm its actual parts consumption increases and the part appears on the **Reorder list** when below minimum.
-9. Post a **Cycle count** with a variance and verify both count history and the stock transaction ledger.
-10. Open **Supplies → Batch stock adjustment**, change one location quantity, post it, and verify the before/after values in **Stock history**.
-11. Open **Reorder list** and verify that no purchase-order action is available.
-12. Open **Alerts & mail**, **People & teams**, **Administration**, **Audit trail**, and **Security** and verify their records and controls.
-13. Disconnect networking after the app has loaded once and confirm the application shell remains available.
-
-## Remaining deployment boundary
-
-The repository contains the production foundation, but a GitHub commit by itself does not activate Microsoft Entra, SMTP, encrypted backups, monitoring, retention jobs or disaster-recovery drills. Those are infrastructure controls and must be configured in the actual hosting environment before SafiMaintain is approved for live operational records.
+Entra/MFA policies, SMTP credentials, encrypted backups, monitoring and disaster recovery must be configured and verified in the deployment environment. Automated checks establish the repository's tested behavior; operational acceptance still requires your team's real workflows and data.

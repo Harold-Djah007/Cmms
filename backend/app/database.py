@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from pathlib import Path
 
 from .config import settings
@@ -56,6 +56,12 @@ MIGRATIONS = [
     );
     CREATE INDEX IF NOT EXISTS idx_attachments_entity
       ON attachments(workspace_id, entity_type, entity_id);
+    """,
+    """
+    CREATE TABLE accounts(email TEXT PRIMARY KEY, name TEXT NOT NULL, password_hash TEXT NOT NULL, created_at REAL NOT NULL);
+    CREATE TABLE account_tokens(hash TEXT PRIMARY KEY, kind TEXT NOT NULL, email TEXT NOT NULL, payload TEXT NOT NULL, expires REAL NOT NULL, used INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'Pending');
+    CREATE TABLE account_sessions(hash TEXT PRIMARY KEY, email TEXT NOT NULL REFERENCES accounts(email), expires REAL NOT NULL);
+    CREATE TABLE account_attempts(bucket TEXT PRIMARY KEY, started REAL NOT NULL, count INTEGER NOT NULL);
     """
 ]
 
@@ -72,7 +78,7 @@ def connect() -> sqlite3.Connection:
 
 
 def migrate() -> None:
-    with connect() as db:
+    with closing(connect()) as db:
         db.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
         for version, sql in enumerate(MIGRATIONS, start=1):
             if not db.execute("SELECT 1 FROM schema_migrations WHERE version=?", (version,)).fetchone():
@@ -88,7 +94,8 @@ def transaction():
         yield db
         db.execute("COMMIT")
     except Exception:
-        db.execute("ROLLBACK")
+        if db.in_transaction:
+            db.execute("ROLLBACK")
         raise
     finally:
         db.close()
