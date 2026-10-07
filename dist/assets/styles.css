@@ -64,6 +64,9 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   background: var(--navy-900);
   color: #dbe4ef;
   padding: 12px 8px 12px;
@@ -96,7 +99,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .site-chip b { display: block; color: #fff; font-size: .78rem; }
 .site-chip span { font-size: .68rem; color: #8ea0b8; }
 
-nav { display: grid; gap: 1px; overflow: auto; }
+nav { display: grid; gap: 1px; overflow: auto; flex: 1 1 auto; min-height: 0; }
 .nav-label {
   margin: 12px 10px 4px;
   font-size: .64rem; font-weight: 800;
@@ -121,6 +124,7 @@ nav { display: grid; gap: 1px; overflow: auto; }
   padding: 0 5px; display: grid; place-items: center;
   background: var(--critical); color: #fff; font-size: .64rem;
 }
+.nav-item b[hidden] { display: none !important; }
 .nav-item.active b { background: rgba(0,0,0,.22); }
 .nav-sub { display: none; padding: 0 0 4px; }
 .nav-sub.open { display: grid; gap: 1px; }
@@ -129,7 +133,7 @@ nav { display: grid; gap: 1px; overflow: auto; }
   grid-template-columns: 1fr auto; padding-left: 30px;
 }
 
-.sidebar-foot { margin-top: auto; padding: 10px 6px 4px; border-top: 1px solid rgba(255,255,255,.08); display: grid; gap: 8px; }
+.sidebar-foot { margin-top: auto; flex: 0 0 auto; padding: 10px 6px 4px; border-top: 1px solid rgba(255,255,255,.08); display: grid; gap: 8px; }
 .sidebar-action {
   width: 100%; border: 0; background: transparent; color: #c5d0dc;
   min-height: 32px; padding: 0 8px; border-radius: 2px;
