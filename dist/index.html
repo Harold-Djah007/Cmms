@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1a24">
+  <meta name="theme-color" content="#1b2a4a">
   <meta name="description" content="SafiMaintain is a field-ready CMMS for work orders, assets, preventive maintenance, and spare parts.">
-  <title>SafiMaintain · Field CMMS</title>
+  <title>SafiMaintain · SAFI SANA</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/styles.css">
@@ -50,13 +50,10 @@
   <div class="app-shell" id="appShell">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg><use href="#i-shield"/></svg>
-          <span>S</span>
-        </div>
+        <div class="brand-mark" aria-hidden="true"><span>S</span></div>
         <div>
-          <strong>SafiMaintain</strong>
-          <small>Field CMMS</small>
+          <strong>SAFI SANA</strong>
+          <small>SafiMaintain</small>
         </div>
       </div>
 
@@ -69,28 +66,39 @@
       </div>
 
       <nav aria-label="Main navigation">
-        <p class="nav-label">Operations</p>
         <button class="nav-item active" data-view="dashboard"><svg><use href="#i-grid"/></svg><span>Dashboard</span></button>
-        <button class="nav-item" data-view="my-work"><svg><use href="#i-board"/></svg><span>My Work</span><b id="navMineCount" hidden>0</b></button>
-        <button class="nav-item" data-view="work-orders"><svg><use href="#i-work"/></svg><span>Work Orders</span><b id="navWorkCount">0</b></button>
-        <button class="nav-item" data-view="maintenance"><svg><use href="#i-calendar"/></svg><span>Scheduled</span></button>
-        <button class="nav-item" data-view="messages"><svg><use href="#i-msg"/></svg><span>Messages</span><b id="navMsgCount" hidden>0</b></button>
-        <p class="nav-label">Plant</p>
-        <button class="nav-item" data-view="assets"><svg><use href="#i-asset"/></svg><span>Assets</span></button>
-        <button class="nav-item" data-view="inventory"><svg><use href="#i-box"/></svg><span>Parts &amp; supplies</span></button>
-        <button class="nav-item" data-view="stock-take"><svg><use href="#i-tag"/></svg><span>Stock take</span></button>
-        <p class="nav-label">Insights</p>
+        <button class="nav-group open" data-nav-group="maint" type="button"><svg><use href="#i-work"/></svg><span>Maintenance</span><i>▾</i></button>
+        <div class="nav-sub open" data-sub="maint">
+          <button class="nav-item" data-view="work-orders"><span>Work Orders</span><b id="navWorkCount">0</b></button>
+          <button class="nav-item" data-view="my-work"><span>My Work</span><b id="navMineCount" hidden>0</b></button>
+          <button class="nav-item" data-view="maintenance"><span>Scheduled Maintenance</span></button>
+        </div>
+        <button class="nav-item" data-view="messages"><svg><use href="#i-msg"/></svg><span>Notifications</span><b id="navMsgCount" hidden>0</b></button>
+        <button class="nav-group open" data-nav-group="assets" type="button"><svg><use href="#i-asset"/></svg><span>Assets</span><i>▾</i></button>
+        <div class="nav-sub open" data-sub="assets">
+          <button class="nav-item" data-view="assets" data-jump-kind="all"><span>All Assets</span></button>
+          <button class="nav-item" data-view="assets" data-jump-kind="Facility"><span>Facilities</span></button>
+          <button class="nav-item" data-view="assets" data-jump-kind="Equipment"><span>Equipment</span></button>
+          <button class="nav-item" data-view="assets" data-jump-kind="Tool"><span>Tools</span></button>
+        </div>
+        <button class="nav-group open" data-nav-group="supplies" type="button"><svg><use href="#i-box"/></svg><span>Supplies</span><i>▾</i></button>
+        <div class="nav-sub open" data-sub="supplies">
+          <button class="nav-item" data-view="inventory"><span>Parts and Supplies</span></button>
+          <button class="nav-item" data-view="stock-take"><span>Inventory Cycle Count</span></button>
+        </div>
         <button class="nav-item" data-view="reports"><svg><use href="#i-chart"/></svg><span>Reports</span></button>
       </nav>
 
       <div class="sidebar-foot">
+        <button class="sidebar-action" id="meterButton" type="button"><svg><use href="#i-meter"/></svg>Batch Meter Reading</button>
         <div class="sync-row">
           <span class="connection-dot" id="connectionDot"></span>
           <div>
             <strong id="connectionText">Ready offline</strong>
-            <small id="syncHint">Device cache active</small>
+            <small id="syncHint">Timezone (UTC) Zulu</small>
           </div>
         </div>
+        <button class="sidebar-action" id="logOffButton" type="button">Log Off</button>
       </div>
     </aside>
 
@@ -98,21 +106,20 @@
       <header class="topbar">
         <button class="icon-button mobile-only" id="menuButton" aria-label="Open menu"><svg><use href="#i-menu"/></svg></button>
         <div class="page-heading">
-          <p id="contextLabel">Safi Sana · Operations</p>
-          <h1 id="pageTitle">Command Center</h1>
+          <p id="contextLabel">Safi Sana Ghana Ltd</p>
+          <h1 id="pageTitle">Dashboard</h1>
         </div>
         <div class="command-search" id="commandSearch">
           <svg><use href="#i-search"/></svg>
-          <label class="sr-only" for="globalSearch">Search work orders and assets</label>
-          <input id="globalSearch" type="search" placeholder="Search WO, asset, or technician" autocomplete="off">
+          <label class="sr-only" for="globalSearch">Enter search</label>
+          <input id="globalSearch" type="search" placeholder="Enter search" autocomplete="off">
           <kbd>⌘K</kbd>
           <div class="search-results" id="searchResults" hidden></div>
         </div>
         <div class="top-actions">
           <button class="ghost-button" id="scanButton"><svg><use href="#i-scan"/></svg><span class="hide-sm hide-when-inspector">Scan tag</span></button>
-          <button class="ghost-button hide-when-inspector" id="meterButton"><svg><use href="#i-meter"/></svg><span class="hide-sm">Meters</span></button>
           <button class="ghost-button hide-when-inspector" id="installButton" hidden>Install</button>
-          <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg><span class="hide-sm hide-when-inspector">New work order</span></button>
+          <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg><span class="hide-sm hide-when-inspector">New</span></button>
           <div class="role-switch" role="group" aria-label="Workspace mode">
             <button type="button" class="role-btn active" data-mode="planner">Planner</button>
             <button type="button" class="role-btn" data-mode="technician">Field</button>
@@ -131,9 +138,9 @@
         <section class="view active" id="view-dashboard" aria-labelledby="pageTitle">
           <div class="ops-banner">
             <div>
-              <p class="eyebrow">Live plant status</p>
-              <h2 id="opsHeadline">Here is what needs a decision on the floor</h2>
-              <p id="opsSubhead">Overdue and critical jobs first. Then keep the PM week on schedule.</p>
+              <p class="eyebrow">Safi Sana Ghana Ltd</p>
+              <h2 id="opsHeadline">Active work order insights</h2>
+              <p id="opsSubhead">Open, late, and assigned work at a glance — then open the record.</p>
             </div>
             <div class="ops-meta">
               <span class="live-dot">Live</span>
@@ -147,10 +154,10 @@
             <article class="panel">
               <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Action queue</p>
-                  <h2>Work that cannot wait</h2>
+                  <p class="eyebrow">Priority queue</p>
+                  <h2>Work that needs attention</h2>
                 </div>
-                <button class="text-button" data-view-link="work-orders">Open board <span>→</span></button>
+                <button class="text-button" data-view-link="work-orders">Work Orders <span>→</span></button>
               </div>
               <div id="priorityList" class="queue-list"></div>
             </article>
@@ -158,15 +165,15 @@
               <article class="panel health-panel">
                 <div class="panel-head">
                   <div>
-                    <p class="eyebrow">Asset availability</p>
-                    <h2>Plant health</h2>
+                    <p class="eyebrow">Assets</p>
+                    <h2>Online / Offline</h2>
                   </div>
                 </div>
                 <div class="donut-wrap">
-                  <div class="donut" id="healthDonut"><span id="healthPercent">0%</span><small>Available</small></div>
+                  <div class="donut" id="healthDonut"><span id="healthPercent">0%</span><small>Online</small></div>
                 </div>
                 <div class="health-legend" id="healthLegend"></div>
-                <button class="wide-button" data-view-link="assets">Asset register</button>
+                <button class="wide-button" data-view-link="assets">All Assets</button>
               </article>
               <article class="panel">
                 <div class="panel-head">
@@ -204,14 +211,15 @@
         </section>
 
         <section class="view" id="view-my-work">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" data-open-work-order type="button"><svg><use href="#i-plus"/></svg>New</button>
+            <button class="ribbon-btn" id="scanFromField" type="button"><svg><use href="#i-scan"/></svg>Scan</button>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2 id="myWorkTitle">Assigned to you</h2>
+              <h2 id="myWorkTitle">Assigned Work Orders</h2>
               <p>Start, log, and close jobs from the floor — even without signal.</p>
-            </div>
-            <div class="toolbar-actions">
-              <button class="ghost-button" id="scanFromField"><svg><use href="#i-scan"/></svg>Scan asset</button>
-              <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg>New job</button>
             </div>
           </div>
           <div class="filter-pills" id="myWorkFilters" aria-label="My work filters">
@@ -223,28 +231,27 @@
         </section>
 
         <section class="view" id="view-work-orders">
-          <div class="section-toolbar">
-            <div>
-              <h2>Work order board</h2>
-              <p>Plan, assign, and close every job with a full record behind it.</p>
-            </div>
-            <button class="primary-button" data-open-work-order><svg><use href="#i-plus"/></svg>New work order</button>
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" data-open-work-order type="button"><svg><use href="#i-plus"/></svg>New</button>
+            <button class="ribbon-btn" id="exportWorkButton" type="button"><svg><use href="#i-download"/></svg>Export</button>
+            <button class="ribbon-btn" id="printWorkTags" type="button"><svg><use href="#i-tag"/></svg>Print Tags</button>
+            <label class="ribbon-search">
+              <svg><use href="#i-search"/></svg>
+              <span class="sr-only">Enter search</span>
+              <input id="workSearch" type="search" placeholder="Enter search">
+            </label>
           </div>
           <div class="filter-bar">
-            <label class="search-box">
-              <svg><use href="#i-search"/></svg>
-              <span class="sr-only">Search work orders</span>
-              <input id="workSearch" type="search" placeholder="Search by job, asset, or technician">
-            </label>
             <div class="filter-buttons" aria-label="Filter work orders by status">
               <button class="filter active" data-filter="all">All</button>
               <button class="filter" data-filter="Open">Open</button>
-              <button class="filter" data-filter="In Progress">In progress</button>
-              <button class="filter" data-filter="On Hold">On hold</button>
+              <button class="filter" data-filter="In Progress">In Progress</button>
+              <button class="filter" data-filter="On Hold">On Hold</button>
               <button class="filter" data-filter="Completed">Closed</button>
             </div>
             <div class="filter-selects">
-              <label class="sr-only" for="typeFilter">Work type</label>
+              <label class="sr-only" for="typeFilter">Maintenance type</label>
               <select id="typeFilter">
                 <option value="all">All types</option>
                 <option>Corrective</option>
@@ -253,7 +260,7 @@
               </select>
               <label class="toggle">
                 <input type="checkbox" id="overdueOnly">
-                <span>Overdue only</span>
+                <span>Late only</span>
               </label>
             </div>
           </div>
@@ -263,19 +270,21 @@
                 <table>
                   <thead>
                     <tr>
+                      <th class="check-cell"><input type="checkbox" id="selectAllWork" aria-label="Select all"></th>
                       <th>Code</th>
-                      <th>Description</th>
+                      <th>Name</th>
                       <th>Asset</th>
-                      <th>Type</th>
+                      <th>Maintenance Type</th>
                       <th>Priority</th>
-                      <th>Assigned</th>
-                      <th>Due</th>
+                      <th>Assigned To</th>
+                      <th>Suggested Completion</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody id="workOrderRows"></tbody>
                 </table>
               </div>
+              <div class="list-pager" id="workPager"></div>
             </div>
             <div class="work-cards" id="workOrderCards"></div>
             <div class="empty-state" id="workEmpty" hidden>
@@ -291,12 +300,15 @@
         </section>
 
         <section class="view" id="view-messages">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="newMessageButton" type="button"><svg><use href="#i-plus"/></svg>New</button>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Messages</h2>
-              <p>Talk about a job, an asset, or the storeroom — without leaving the plant record.</p>
+              <h2>Notifications</h2>
+              <p>Messages on a work order, asset, or storeroom record.</p>
             </div>
-            <button class="primary-button" id="newMessageButton"><svg><use href="#i-plus"/></svg>New message</button>
           </div>
           <div class="msg-layout">
             <aside class="msg-list" id="threadList"></aside>
@@ -305,24 +317,25 @@
         </section>
 
         <section class="view" id="view-assets">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn" id="printTagsButton" type="button"><svg><use href="#i-tag"/></svg>Print Tags</button>
+            <button class="ribbon-btn" id="scanFromAssets" type="button"><svg><use href="#i-scan"/></svg>Scan</button>
+            <label class="ribbon-search">
+              <svg><use href="#i-search"/></svg>
+              <span class="sr-only">Enter search</span>
+              <input id="assetSearch" type="search" placeholder="Enter search">
+            </label>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Asset register</h2>
-              <p>Sites, equipment, and tools in one tree — the same hierarchy you use in Fiix, without the extra tabs.</p>
-            </div>
-            <div class="toolbar-actions">
-              <button class="ghost-button" id="printTagsButton"><svg><use href="#i-tag"/></svg>Print tags</button>
-              <button class="ghost-button" id="scanFromAssets"><svg><use href="#i-scan"/></svg>Scan tag</button>
+              <h2 id="assetsHeading">All Assets</h2>
+              <p>Sites, equipment, and tools in one tree.</p>
             </div>
           </div>
           <div class="filter-bar">
-            <label class="search-box">
-              <svg><use href="#i-search"/></svg>
-              <span class="sr-only">Search assets</span>
-              <input id="assetSearch" type="search" placeholder="Search name, code, or location">
-            </label>
             <div class="filter-buttons" id="assetKindFilters" aria-label="Asset type">
-              <button class="filter active" data-asset-kind="all">All</button>
+              <button class="filter active" data-asset-kind="all">All Assets</button>
               <button class="filter" data-asset-kind="Facility">Facilities</button>
               <button class="filter" data-asset-kind="Equipment">Equipment</button>
               <button class="filter" data-asset-kind="Tool">Tools</button>
@@ -334,9 +347,12 @@
         </section>
 
         <section class="view" id="view-maintenance">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="work-orders" type="button"><svg><use href="#i-back"/></svg>Back</button>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Scheduled maintenance</h2>
+              <h2>Scheduled Maintenance</h2>
               <p>Time-based plans that generate a work order when they come due.</p>
             </div>
           </div>
@@ -344,12 +360,21 @@
         </section>
 
         <section class="view" id="view-inventory">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" data-view-link="stock-take" type="button"><svg><use href="#i-tag"/></svg>Cycle Count</button>
+            <button class="ribbon-btn" id="exportPartsButton" type="button"><svg><use href="#i-download"/></svg>Export</button>
+            <label class="ribbon-search">
+              <svg><use href="#i-search"/></svg>
+              <span class="sr-only">Enter search</span>
+              <input id="partSearch" type="search" placeholder="Enter search">
+            </label>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Parts &amp; supplies</h2>
-              <p>Bin location, min/max, and on-hand — open a part to receive stock or start a count.</p>
+              <h2>Parts And Supplies</h2>
+              <p>Aisle, row, bin, min/max, and on-hand. Open a part to receive stock or start a count.</p>
             </div>
-            <button class="primary-button" data-view-link="stock-take"><svg><use href="#i-tag"/></svg>Start stock take</button>
           </div>
           <div class="inventory-summary" id="inventorySummary"></div>
           <div class="table-card">
@@ -357,10 +382,14 @@
               <table>
                 <thead>
                   <tr>
+                    <th class="check-cell"><input type="checkbox" aria-label="Select all parts"></th>
                     <th>Code</th>
-                    <th>Part</th>
-                    <th>Location / bin</th>
-                    <th>On hand</th>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Aisle</th>
+                    <th>Row</th>
+                    <th>Bin</th>
+                    <th>On Hand</th>
                     <th>Min</th>
                     <th>Max</th>
                     <th>Status</th>
@@ -369,16 +398,21 @@
                 <tbody id="inventoryRows"></tbody>
               </table>
             </div>
+            <div class="list-pager" id="partsPager"></div>
           </div>
         </section>
 
         <section class="view" id="view-stock-take">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="inventory" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn primary" id="submitCountButton" type="button">Post Count</button>
+            <button class="ribbon-btn" id="scanFromCount" type="button"><svg><use href="#i-scan"/></svg>Scan</button>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Stock take</h2>
+              <h2>Inventory Cycle Count</h2>
               <p>Walk one store. Scan or tap a part, enter what you see, then post the variance.</p>
             </div>
-            <button class="primary-button" id="submitCountButton">Post count</button>
           </div>
           <div class="count-toolbar">
             <label>Location
@@ -388,7 +422,6 @@
               <input type="checkbox" id="blindCount">
               <span>Blind count (hide system qty)</span>
             </label>
-            <button class="ghost-button" id="scanFromCount"><svg><use href="#i-scan"/></svg>Scan part</button>
             <div class="count-progress" id="countProgress"></div>
           </div>
           <div class="table-card">
@@ -410,12 +443,15 @@
         </section>
 
         <section class="view" id="view-reports">
+          <div class="fiix-ribbon">
+            <button class="ribbon-btn" data-view-link="dashboard" type="button"><svg><use href="#i-back"/></svg>Back</button>
+            <button class="ribbon-btn" id="exportButton" type="button"><svg><use href="#i-download"/></svg>Export</button>
+          </div>
           <div class="section-toolbar">
             <div>
-              <h2>Operational insights</h2>
-              <p>A short brief for the shift meeting — backlog, compliance, and wrench time.</p>
+              <h2>Reports</h2>
+              <p>Backlog, on-time completion, and wrench time for the shift meeting.</p>
             </div>
-            <button class="secondary-button" id="exportButton"><svg><use href="#i-download"/></svg>Export backup</button>
           </div>
           <div class="report-grid">
             <article class="panel">

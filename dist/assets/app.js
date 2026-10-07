@@ -55,7 +55,7 @@ const seedData = {
     { id: '1966', title: 'Monthly cleaning of weather station', asset: 'Tahmo weather station', assetId: 'A170', location: 'Operations', priority: 'High', type: 'Preventive', assignee: 'Simeon Sakyi', due: daysFromNow(3), status: 'Open', estimatedHours: 1.5, loggedHours: 0, summary: 'Keep sensors clear.', instructions: 'Clean radiation shield and check mount bolts.', createdAt: daysFromNow(-8), tasks: [{ id: 't1', text: 'Clean sensors', done: false }, { id: 't2', text: 'Check data feed', done: false }], partsUsed: [], timeLog: [], comments: [] },
     { id: '1994', title: 'Low gas pressure on the pressure regulator', asset: 'Gas pressure regulator', assetId: 'REG', location: 'CHP Container', priority: 'Medium', type: 'Corrective', assignee: 'Simeon Sakyi', due: daysFromNow(0), status: 'In Progress', estimatedHours: 3, loggedHours: 1, summary: 'Pressure dropped after the morning run.', instructions: 'Isolate, inspect diaphragm and downstream filter, replace kit if scored.', createdAt: daysFromNow(-1), tasks: [{ id: 't1', text: 'Isolate and vent safely', done: true }, { id: 't2', text: 'Inspect regulator and filter', done: false }, { id: 't3', text: 'Recommission and log pressure', done: false }], partsUsed: [], timeLog: [{ hours: 1, note: 'Isolated, covers off', at: daysFromNow(0) }], comments: [{ from: 'Simeon Sakyi', text: 'Need the regulator kit from CHP stores before I crack the body.', at: '08:10' }] },
     { id: '2067', title: 'Cleaning of mix pit and checking the feed pump', asset: 'Digester feed pump', assetId: 'PUMP', location: 'Mix Pit', priority: 'High', type: 'Preventive', assignee: 'Kwame Mensah', due: daysFromNow(-1), status: 'Open', estimatedHours: 4, loggedHours: 0, summary: 'Mix pit hygiene and pump check.', instructions: 'Lock out pump, inspect coupling, clear pit, test run.', createdAt: daysFromNow(-3), tasks: [{ id: 't1', text: 'Lock out feed pump', done: false }, { id: 't2', text: 'Clear pit and inspect coupling', done: false }, { id: 't3', text: 'Test run and record amps', done: false }], partsUsed: [], timeLog: [], comments: [] },
-    { id: '1828', title: 'EPA monthly reporting', asset: 'Operations', assetId: 'OPS', location: 'Operations', priority: 'High', type: 'Preventive', assignee: 'Simeon Sakyi', due: daysFromNow(-20), status: 'Completed', estimatedHours: 3, loggedHours: 3, summary: 'Previous cycle closed.', instructions: '', createdAt: daysFromNow(-30), tasks: [{ id: 't1', text: 'File report', done: true }], partsUsed: [], timeLog: [{ hours: 3, note: 'Filed', at: daysFromNow(-20) }], comments: [] }
+    { id: '1828', title: 'EPA monthly reporting', asset: 'Operations', assetId: 'OPS', location: 'Operations', priority: 'High', type: 'Preventive', assignee: 'Simeon Sakyi', due: daysFromNow(-20), status: 'Completed', estimatedHours: 3, loggedHours: 3, summary: 'Previous cycle closed.', instructions: '', createdAt: daysFromNow(-30), completedAt: daysFromNow(-20), completionNotes: 'Filed with EPA.', downtimeHours: 0, cause: 'Scheduled', tasks: [{ id: 't1', text: 'File report', done: true }], partsUsed: [], timeLog: [{ hours: 3, note: 'Filed', at: daysFromNow(-20) }], comments: [] }
   ],
   inventory: [
     { id: 'A123', code: 'A123', name: 'RELAY C10-A10DX/24V R.S.', category: 'Electrical', quantity: 4, minimum: 2, maximum: 8, make: 'Schneider', barcode: 'A123', locations: [{ site: 'SSGL', location: 'CHP Container', aisle: '1', row: 'B', bin: '04', qty: 4 }], receipts: [] },
@@ -111,6 +111,10 @@ let timeTarget = null;
 let scanContext = 'all';
 let collapsed = new Set();
 let deferredInstall;
+let workPage = 1;
+let partsPage = 1;
+const PAGE_SIZE = 20;
+let partSearch = '';
 
 function currentUser() {
   return mode === 'technician' ? people.find(p => p.name === 'Simeon Sakyi') : planner;
@@ -223,12 +227,13 @@ function renderDashboard() {
   const down = state.assets.filter(a => a.status === 'Down');
   const onTimePm = state.schedules.filter(s => s.date >= daysFromNow(0)).length;
   const compliance = Math.round((onTimePm / Math.max(state.schedules.length, 1)) * 100);
+  const dueToday = open.filter(w => w.due === daysFromNow(0)).length;
   const metrics = [
-    ['Open work', open.length, `${open.filter(w => w.priority === 'High' || w.priority === 'Critical').length} high / critical`, 'i-work', '', 'work-orders'],
-    ['Overdue', overdue.length, overdue.length ? 'Act before the next round' : 'Nothing overdue', 'i-alert', overdue.length ? 'danger' : '', 'work-orders'],
-    ['PM on plan', `${compliance}%`, `${state.schedules.filter(s => s.date <= daysFromNow(7)).length} due this week`, 'i-calendar', '', 'maintenance'],
-    ['Assets down', down.length, `${state.assets.filter(a => a.kind !== 'Facility' && a.status === 'Healthy').length} healthy`, 'i-asset', down.length ? 'warn' : '', 'assets'],
-    ['Below min', lowParts.length, 'Count before you issue', 'i-box', 'blue', 'stock-take']
+    ['Active', open.length, `${open.filter(w => w.priority === 'High' || w.priority === 'Critical').length} high / critical`, 'i-work', '', 'work-orders'],
+    ['Late', overdue.length, overdue.length ? 'Past suggested completion' : 'Nothing late', 'i-alert', overdue.length ? 'danger' : '', 'work-orders'],
+    ['Due today', dueToday, `${state.schedules.filter(s => s.date <= daysFromNow(7)).length} PM this week`, 'i-calendar', '', 'maintenance'],
+    ['Offline assets', down.length, `${state.assets.filter(a => a.kind !== 'Facility' && a.status !== 'Down').length} online`, 'i-asset', down.length ? 'warn' : '', 'assets'],
+    ['Low stock', lowParts.length, 'Count before you issue', 'i-box', 'blue', 'stock-take']
   ];
   document.querySelector('#metricGrid').innerHTML = metrics.map(([label, value, note, icon, tone, view]) => `
     <button class="metric-card ${tone}" data-view-link="${view}">
@@ -248,13 +253,20 @@ function renderDashboard() {
       </div>
     </button>`).join('');
 
-  const healthy = state.assets.filter(a => a.kind !== 'Facility' && a.status === 'Healthy').length;
   const tracked = state.assets.filter(a => a.kind !== 'Facility').length;
-  const percent = Math.round((healthy / Math.max(tracked, 1)) * 100);
+  const onlineAssets = state.assets.filter(a => a.kind !== 'Facility' && a.status !== 'Down').length;
+  const percent = Math.round((onlineAssets / Math.max(tracked, 1)) * 100);
   document.querySelector('#healthDonut').style.setProperty('--percent', percent);
   document.querySelector('#healthPercent').textContent = `${percent}%`;
-  document.querySelector('#healthLegend').innerHTML = ['Healthy', 'Attention', 'Down'].map(s =>
-    `<div class="legend-row"><span><i class="legend-dot ${statusClass(s)}"></i>${s}</span><strong>${state.assets.filter(a => a.kind !== 'Facility' && a.status === s).length}</strong></div>`
+  const onlineCount = state.assets.filter(a => a.kind !== 'Facility' && a.status !== 'Down').length;
+  const offlineCount = state.assets.filter(a => a.kind !== 'Facility' && a.status === 'Down').length;
+  const attentionCount = state.assets.filter(a => a.kind !== 'Facility' && a.status === 'Attention').length;
+  document.querySelector('#healthLegend').innerHTML = [
+    ['Online', onlineCount, 'healthy'],
+    ['Attention', attentionCount, 'attention'],
+    ['Offline', offlineCount, 'down']
+  ].map(([label, n, cls]) =>
+    `<div class="legend-row"><span><i class="legend-dot ${cls}"></i>${label}</span><strong>${n}</strong></div>`
   ).join('');
 
   document.querySelector('#crewList').innerHTML = technicians.map(tech => {
@@ -274,11 +286,25 @@ function renderDashboard() {
   ).join('');
 
   document.querySelector('#opsHeadline').textContent = mode === 'technician'
-    ? `${currentUserName().split(' ')[0]}, you have ${open.filter(w => w.assignee === currentUserName()).length} jobs on your board`
-    : 'Work that needs a decision on the floor';
+    ? `${currentUserName().split(' ')[0]}, you have ${open.filter(w => w.assignee === currentUserName()).length} assigned work orders`
+    : 'Active work order insights';
   document.querySelector('#opsSubhead').textContent = overdue.length
-    ? `${overdue.length} overdue. ${unreadCount()} unread messages.`
-    : `Nothing overdue. ${unreadCount()} unread messages.`;
+    ? `${overdue.length} late. ${unreadCount()} unread notifications.`
+    : `Nothing late. ${unreadCount()} unread notifications.`;
+}
+
+function pagerHTML(id, page, total) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const start = total ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const end = Math.min(page * PAGE_SIZE, total);
+  const buttons = Array.from({ length: pages }, (_, i) => i + 1).map(n =>
+    `<button type="button" class="${n === page ? 'active' : ''}" data-page="${id}:${n}">${n}</button>`
+  ).join('');
+  return `<span>${start}–${end} of ${total}</span><div class="pager-btns">${buttons}</div>`;
+}
+
+function assetOnlineLabel(asset) {
+  return asset.status === 'Down' ? 'Offline' : 'Online';
 }
 
 function workOrderMatches(w) {
@@ -293,19 +319,23 @@ function workOrderMatches(w) {
 
 function renderWorkOrders() {
   const rows = state.workOrders.filter(workOrderMatches);
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  if (workPage > pages) workPage = pages;
+  const pageRows = rows.slice((workPage - 1) * PAGE_SIZE, workPage * PAGE_SIZE);
   const selected = id => record.type === 'work' && record.id === id ? 'selected' : '';
-  document.querySelector('#workOrderRows').innerHTML = rows.map(w => `
+  document.querySelector('#workOrderRows').innerHTML = pageRows.map(w => `
     <tr data-open-wo="${w.id}" class="${selected(w.id)}">
-      <td><strong>${w.id}</strong></td>
+      <td class="check-cell"><input type="checkbox" aria-label="Select ${w.id}"></td>
+      <td><span class="code-link">${escapeHTML(w.id)}</span></td>
       <td><strong>${escapeHTML(w.title)}</strong><small>${escapeHTML(w.location)}</small></td>
       <td>${escapeHTML(w.asset)}</td>
-      <td><span class="type-badge ${w.type}">${escapeHTML(w.type)}</span></td>
+      <td class="type-cell ${w.type}">${escapeHTML(w.type)}</td>
       <td><span class="priority-badge ${w.priority}">${w.priority}</span></td>
       <td>${escapeHTML(w.assignee)}</td>
-      <td><strong>${prettyDate(w.due)}</strong>${isOverdue(w) ? '<small class="due-overdue">Overdue</small>' : ''}</td>
+      <td><strong>${prettyDate(w.due)}</strong>${isOverdue(w) ? '<small class="due-overdue">Late</small>' : ''}</td>
       <td><span class="status-badge ${statusClass(w.status)}">${w.status}</span></td>
     </tr>`).join('');
-  document.querySelector('#workOrderCards').innerHTML = rows.map(w => `
+  document.querySelector('#workOrderCards').innerHTML = pageRows.map(w => `
     <button class="work-card ${selected(w.id)}" data-open-wo="${w.id}">
       <div class="field-card-top">
         <div><div class="wo-id">${w.id} · ${escapeHTML(w.type)}</div><h3>${escapeHTML(w.title)}</h3></div>
@@ -313,11 +343,12 @@ function renderWorkOrders() {
       </div>
       <div class="field-meta">
         <span>${escapeHTML(w.asset)}</span>
-        <span>${prettyDate(w.due)}${isOverdue(w) ? ' · Overdue' : ''}</span>
+        <span>${prettyDate(w.due)}${isOverdue(w) ? ' · Late' : ''}</span>
         <span class="priority-badge ${w.priority}">${w.priority}</span>
       </div>
     </button>`).join('');
   document.querySelector('#workEmpty').hidden = rows.length > 0;
+  document.querySelector('#workPager').innerHTML = pagerHTML('work', workPage, rows.length);
   document.querySelector('#navWorkCount').textContent = openWork().length;
   const mine = openWork().filter(w => w.assignee === currentUserName()).length;
   const mineBadge = document.querySelector('#navMineCount');
@@ -335,7 +366,7 @@ function renderMyWork() {
   let jobs = mode === 'planner' ? state.workOrders.filter(w => w.status !== 'Completed') : state.workOrders.filter(w => w.assignee === name);
   if (mineFilter === 'active') jobs = jobs.filter(w => w.status !== 'Completed');
   if (mineFilter === 'today') jobs = jobs.filter(w => w.due <= today && w.status !== 'Completed');
-  document.querySelector('#myWorkTitle').textContent = mode === 'technician' ? 'Assigned to you' : 'Shift board';
+  document.querySelector('#myWorkTitle').textContent = mode === 'technician' ? 'Assigned Work Orders' : 'Active Work Orders';
   document.querySelector('#fieldBoard').innerHTML = jobs.length ? jobs.map(w => {
     const progress = taskProgress(w);
     const action = w.status === 'Completed' ? '' : w.status === 'In Progress'
@@ -384,18 +415,24 @@ function renderAssets() {
     });
   };
   walk(null);
+  const heading = { all: 'All Assets', Facility: 'Facilities', Equipment: 'Equipment', Tool: 'Tools' }[assetKind] || 'All Assets';
+  const assetsHeading = document.querySelector('#assetsHeading');
+  if (assetsHeading) assetsHeading.textContent = heading;
   document.querySelector('#assetTree').innerHTML = ordered.map(a => {
     const kids = state.assets.some(c => c.parent === a.id && visible.has(c.id));
     const open = !collapsed.has(a.id);
-    const pad = 12 + assetDepth(a) * 18;
+    const pad = 8 + assetDepth(a) * 16;
+    const online = assetOnlineLabel(a);
     return `<div class="tree-row" style="padding-left:${pad}px">
+      <span class="check-cell"><input type="checkbox" aria-label="Select ${escapeHTML(a.code)}"></span>
       ${kids ? `<button class="tree-toggle" data-toggle-node="${a.id}">${open ? '▾' : '▸'}</button>` : '<span></span>'}
       <button data-open-asset="${a.id}" style="border:0;background:transparent;text-align:left">
         <strong>${escapeHTML(a.name)}</strong>
-        <small style="display:block;color:var(--muted)">${a.code} · ${escapeHTML(a.kind)} · ${escapeHTML(a.location)}</small>
+        <small style="display:block;color:var(--muted)">${escapeHTML(a.kind)} · ${escapeHTML(a.location)}</small>
       </button>
+      <span class="code">${escapeHTML(a.code)}</span>
       <span class="kind-pill">${a.kind}</span>
-      <span class="status-badge ${statusClass(a.status)}">${a.status}</span>
+      <span class="status-badge ${online === 'Offline' ? 'offline' : 'online'}">${online}</span>
     </div>`;
   }).join('') || '<div class="empty-state"><h3>No assets</h3></div>';
 }
@@ -416,24 +453,37 @@ function renderSchedule(target, schedules, full = true) {
 }
 
 function renderInventory() {
+  const q = (document.querySelector('#partSearch')?.value || partSearch || '').toLowerCase();
+  partSearch = q;
+  const all = state.inventory.filter(p => [p.id, p.code, p.name, p.category, binLabel(p)].join(' ').toLowerCase().includes(q));
+  const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+  if (partsPage > pages) partsPage = pages;
+  const rows = all.slice((partsPage - 1) * PAGE_SIZE, partsPage * PAGE_SIZE);
   const low = state.inventory.filter(p => partOnHand(p) <= p.minimum);
   const units = state.inventory.reduce((sum, p) => sum + partOnHand(p), 0);
   document.querySelector('#inventorySummary').innerHTML = `
     <div class="mini-stat"><span>SKUs</span><strong>${state.inventory.length}</strong></div>
     <div class="mini-stat"><span>Units on hand</span><strong>${units}</strong></div>
     <div class="mini-stat"><span>Below min</span><strong style="color:var(--critical)">${low.length}</strong></div>`;
-  document.querySelector('#inventoryRows').innerHTML = state.inventory.map(p => {
+  document.querySelector('#inventoryRows').innerHTML = rows.map(p => {
     const qty = partOnHand(p);
+    const loc = (p.locations || [])[0] || {};
     return `<tr data-open-part="${p.id}">
-      <td><strong>${p.code}</strong></td>
+      <td class="check-cell"><input type="checkbox" aria-label="Select ${p.code}"></td>
+      <td><span class="code-link">${escapeHTML(p.code)}</span></td>
       <td>${escapeHTML(p.name)}</td>
-      <td>${escapeHTML(binLabel(p))}</td>
+      <td>${escapeHTML(loc.location || '—')}</td>
+      <td>${escapeHTML(loc.aisle || '—')}</td>
+      <td>${escapeHTML(loc.row || '—')}</td>
+      <td>${escapeHTML(loc.bin || '—')}</td>
       <td><strong>${qty}</strong></td>
       <td>${p.minimum}</td>
       <td>${p.maximum}</td>
       <td><span class="status-badge ${qty <= p.minimum ? 'down' : 'healthy'}">${qty <= p.minimum ? 'Reorder' : 'In stock'}</span></td>
     </tr>`;
   }).join('');
+  const pager = document.querySelector('#partsPager');
+  if (pager) pager.innerHTML = pagerHTML('parts', partsPage, all.length);
 }
 
 function stockLocations() {
@@ -521,10 +571,13 @@ function renderRecord() {
   if (record.type === 'part') renderPartRecord(root);
 }
 
-function recordChrome(kind, code, title, badges, extra = '', showSave = false) {
-  return `<div class="record-toolbar">
-      <button class="secondary-button" data-back-list><svg><use href="#i-back"/></svg>Back</button>
-      ${showSave ? '<button class="primary-button" data-save-record>Save</button>' : ''}
+function recordChrome(adminTitle, kind, code, title, badges, extra = '', showSave = false) {
+  return `<div class="record-page">
+    <div class="record-admin-title">${escapeHTML(adminTitle)}</div>
+    <div class="record-toolbar">
+      <button class="ribbon-btn" data-back-list type="button"><svg><use href="#i-back"/></svg>Back</button>
+      ${showSave ? '<button class="ribbon-btn primary" data-save-record type="button">Save</button>' : ''}
+      ${showSave ? '<button class="ribbon-btn" data-save-create type="button">Save and Create Another</button>' : ''}
       ${extra}
     </div>
     <div class="record-hero">
@@ -542,38 +595,53 @@ function renderWorkRecord(root) {
   const w = findWork(record.id);
   if (!w) return;
   const progress = taskProgress(w);
-  const tabs = { details: 'General', tasks: `Tasks (${progress.done}/${progress.total})`, parts: 'Parts', messages: 'Messages', log: 'Work log' };
+  const tabs = {
+    details: 'General',
+    tasks: `Tasks (${progress.done}/${progress.total})`,
+    parts: 'Parts',
+    messages: 'Messages',
+    log: 'Work log',
+    completion: 'Completion'
+  };
   const actions = w.status === 'Completed' ? '' : `
-    ${w.status === 'In Progress' ? '' : `<button class="action-button primary" data-wo-action="start" data-id="${w.id}">${w.status === 'On Hold' ? 'Resume' : 'Start'}</button>`}
-    ${w.status === 'In Progress' ? `<button class="action-button warn" data-wo-action="hold" data-id="${w.id}">Hold</button>` : ''}
-    <button class="action-button" data-wo-action="time" data-id="${w.id}">Log time</button>
-    <button class="action-button ${w.status === 'In Progress' ? 'primary' : ''}" data-wo-action="complete" data-id="${w.id}">Complete</button>`;
+    ${w.status === 'In Progress' ? '' : `<button class="ribbon-btn" data-wo-action="start" data-id="${w.id}">${w.status === 'On Hold' ? 'Resume' : 'Start'}</button>`}
+    ${w.status === 'In Progress' ? `<button class="ribbon-btn" data-wo-action="hold" data-id="${w.id}">Hold</button>` : ''}
+    <button class="ribbon-btn" data-wo-action="time" data-id="${w.id}">Log time</button>
+    <button class="ribbon-btn ${w.status === 'In Progress' ? 'primary' : ''}" data-wo-action="complete" data-id="${w.id}">Complete</button>`;
   const panels = {
     details: `<div class="record-grid" id="woFields">
       <label>Status<select name="status">${['Open', 'In Progress', 'On Hold', 'Completed'].map(s => `<option ${s === w.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
       <label>Asset<select name="assetId">${state.assets.filter(a => a.kind !== 'Facility' || a.id === w.assetId).map(a => `<option value="${a.id}" ${a.id === w.assetId ? 'selected' : ''}>${escapeHTML(a.name)}</option>`).join('')}</select></label>
-      <label>Type<select name="type">${['Corrective', 'Preventive', 'Project'].map(t => `<option ${t === w.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <label>Maintenance Type<select name="type">${['Corrective', 'Preventive', 'Project'].map(t => `<option ${t === w.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       <label>Priority<select name="priority">${['Low', 'Medium', 'High', 'Critical'].map(p => `<option ${p === w.priority ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
-      <label>Assigned to<select name="assignee">${people.map(p => `<option ${p.name === w.assignee ? 'selected' : ''}>${escapeHTML(p.name)}</option>`).join('')}</select></label>
-      <label>Due<input name="due" type="date" value="${w.due}"></label>
-      <label>Estimated hours<input name="estimatedHours" type="number" step="0.5" value="${w.estimatedHours}"></label>
-      <label>Actual hours<input name="loggedHours" type="number" step="0.25" value="${w.loggedHours}"></label>
-      <label class="full">Summary of issue<textarea name="summary" rows="2">${escapeHTML(w.summary || w.title)}</textarea></label>
-      <label class="full">Work instructions<textarea name="instructions" rows="3">${escapeHTML(w.instructions || w.description || '')}</textarea></label>
+      <label>Assigned To<select name="assignee">${people.map(p => `<option ${p.name === w.assignee ? 'selected' : ''}>${escapeHTML(p.name)}</option>`).join('')}</select></label>
+      <label>Suggested Completion Date<input name="due" type="date" value="${w.due}"></label>
+      <label>Estimated Hours<input name="estimatedHours" type="number" step="0.5" value="${w.estimatedHours}"></label>
+      <label>Actual Hours<input name="loggedHours" type="number" step="0.25" value="${w.loggedHours}"></label>
+      <label class="full">Summary of Issue<textarea name="summary" rows="2">${escapeHTML(w.summary || w.title)}</textarea></label>
+      <label class="full">Work Instructions<textarea name="instructions" rows="3">${escapeHTML(w.instructions || w.description || '')}</textarea></label>
     </div>`,
     tasks: `${(w.tasks || []).map(t => `<div class="task-row"><label><input type="checkbox" data-toggle-task="${t.id}" data-id="${w.id}" ${t.done ? 'checked' : ''}><span>${escapeHTML(t.text)}</span></label></div>`).join('') || '<p>No tasks yet.</p>'}
-      <div class="part-add"><input id="newTaskText" placeholder="Add a field task"><button class="action-button primary" data-add-task="${w.id}">Add</button></div>`,
+      <div class="part-add"><input id="newTaskText" placeholder="Add a task"><button class="action-button primary" data-add-task="${w.id}">Add</button></div>`,
     parts: `${(w.partsUsed || []).map(p => `<div class="part-row"><div><strong>${escapeHTML(p.name)}</strong><small> qty ${p.qty}</small></div></div>`).join('') || '<p>No parts issued.</p>'}
       <div class="part-add"><select id="issuePartSelect">${state.inventory.map(p => `<option value="${p.id}">${escapeHTML(p.name)} (${partOnHand(p)})</option>`).join('')}</select>
       <button class="action-button primary" data-issue-part="${w.id}">Issue 1</button></div>`,
-    messages: `${(w.comments || []).map(c => `<div class="bubble ${c.from === currentUserName() ? 'mine' : ''}"><strong>${escapeHTML(c.from)}</strong><p>${escapeHTML(c.text)}</p><small>${escapeHTML(c.at)}</small></div>`).join('') || '<p>No messages on this job.</p>'}
+    messages: `${(w.comments || []).map(c => `<div class="bubble ${c.from === currentUserName() ? 'mine' : ''}"><strong>${escapeHTML(c.from)}</strong><p>${escapeHTML(c.text)}</p><small>${escapeHTML(c.at)}</small></div>`).join('') || '<p>No messages on this work order.</p>'}
       <div class="part-add"><input id="woComment" placeholder="Message the assigned technician">
       <button class="action-button primary" data-wo-comment="${w.id}">Send</button></div>`,
-    log: `${(w.timeLog || []).map(l => `<div class="log-row"><div><strong>${l.hours} h</strong><p>${escapeHTML(l.note || 'Labor')}</p></div><small>${prettyDate(l.at)}</small></div>`).join('') || '<p>No labor logged.</p>'}`
+    log: `${(w.timeLog || []).map(l => `<div class="log-row"><div><strong>${l.hours} h</strong><p>${escapeHTML(l.note || 'Labor')}</p></div><small>${prettyDate(l.at)}</small></div>`).join('') || '<p>No labor logged.</p>'}`,
+    completion: `<div class="record-grid" id="woComplete">
+      <label>Completed On<input name="completedAt" type="date" value="${w.completedAt || ''}"></label>
+      <label>Downtime (hours)<input name="downtimeHours" type="number" step="0.25" value="${w.downtimeHours || 0}"></label>
+      <label>Cause<input name="cause" value="${escapeHTML(w.cause || '')}" placeholder="Wear, breakdown, scheduled"></label>
+      <label class="full">Completion Notes<textarea name="completionNotes" rows="3">${escapeHTML(w.completionNotes || '')}</textarea></label>
+    </div>`
   };
-  root.innerHTML = `${recordChrome('Work order', w.id, w.title, `<span class="status-badge ${statusClass(w.status)}">${w.status}</span> <span class="priority-badge ${w.priority}">${w.priority}</span> <span class="type-badge ${w.type}">${w.type}</span>`, actions, true)}
-    <div class="tabs">${Object.entries(tabs).map(([key, label]) => `<button class="tab ${record.tab === key ? 'active' : ''}" data-tab="${key}">${label}</button>`).join('')}</div>
-    <div class="panel" style="border-radius:0 0 14px 14px">${panels[record.tab]}</div>`;
+  root.innerHTML = `${recordChrome(`Work Order Administration: WO ${w.id}`, 'Work Order', w.id, w.title, `<span class="status-badge ${statusClass(w.status)}">${w.status}</span> <span class="priority-badge ${w.priority}">${w.priority}</span> <span class="type-badge ${w.type}">${w.type}</span>`, actions, true)}
+    <div class="record-body">
+      <div class="tabs">${Object.entries(tabs).map(([key, label]) => `<button class="tab ${record.tab === key ? 'active' : ''}" data-tab="${key}">${label}</button>`).join('')}</div>
+      <div class="record-panel">${panels[record.tab]}</div>
+    </div></div>`;
 }
 
 function renderAssetRecord(root) {
@@ -581,7 +649,9 @@ function renderAssetRecord(root) {
   if (!a) return;
   const related = state.workOrders.filter(w => w.assetId === a.id || w.asset === a.name);
   const kids = state.assets.filter(c => c.parent === a.id);
-  root.innerHTML = `${recordChrome(a.kind, a.code, a.name, `<span class="status-badge ${statusClass(a.status)}">${a.status}</span>`, `<button class="action-button primary" data-wo-for-asset="${a.name}">New WO</button>`)}
+  const online = assetOnlineLabel(a);
+  root.innerHTML = `${recordChrome(`${a.kind} Administration: ${a.code}`, a.kind, a.code, a.name, `<span class="status-badge ${online === 'Offline' ? 'offline' : 'online'}">${online}</span>`, `<button class="ribbon-btn primary" data-wo-for-asset="${a.name}">New</button>`)}
+    <div class="record-body"><div class="record-panel">
     <div class="record-grid">
       <div class="field"><small>Location</small><strong>${escapeHTML(a.location)}</strong></div>
       <div class="field"><small>Criticality</small><strong>${a.criticality || 'B'}</strong></div>
@@ -591,15 +661,17 @@ function renderAssetRecord(root) {
     </div>
     <h3 style="margin:18px 0 8px">Under this record</h3>
     ${kids.length ? kids.map(c => `<button class="queue-item" data-open-asset="${c.id}" style="margin-bottom:8px"><span class="priority-line Medium"></span><div><h3>${escapeHTML(c.name)}</h3><p>${c.code} · ${c.kind}</p></div></button>`).join('') : '<p>No child assets.</p>'}
-    <h3 style="margin:18px 0 8px">Work</h3>
-    ${related.length ? related.slice(0, 8).map(w => `<button class="queue-item" data-open-wo="${w.id}" style="margin-bottom:8px"><span class="priority-line ${w.priority}"></span><div><h3>${escapeHTML(w.title)}</h3><p>${w.id} · ${w.status}</p></div></button>`).join('') : '<p>No work history.</p>'}`;
+    <h3 style="margin:18px 0 8px">Work Orders</h3>
+    ${related.length ? related.slice(0, 8).map(w => `<button class="queue-item" data-open-wo="${w.id}" style="margin-bottom:8px"><span class="priority-line ${w.priority}"></span><div><h3>${escapeHTML(w.title)}</h3><p>${w.id} · ${w.status}</p></div></button>`).join('') : '<p>No work history.</p>'}
+    </div></div></div>`;
 }
 
 function renderPartRecord(root) {
   const p = findPart(record.id);
   if (!p) return;
   const qty = partOnHand(p);
-  root.innerHTML = `${recordChrome('Part', p.code, p.name, `<span class="status-badge ${qty <= p.minimum ? 'down' : 'healthy'}">${qty <= p.minimum ? 'Below min' : 'In stock'}</span>`, `<button class="action-button primary" data-receive-part="${p.id}">Receive</button><button class="action-button" data-view-link="stock-take">Count</button>`)}
+  root.innerHTML = `${recordChrome(`Part Administration: ${p.code}`, 'Part', p.code, p.name, `<span class="status-badge ${qty <= p.minimum ? 'down' : 'healthy'}">${qty <= p.minimum ? 'Below min' : 'In stock'}</span>`, `<button class="ribbon-btn primary" data-receive-part="${p.id}">Receive</button><button class="ribbon-btn" data-view-link="stock-take">Cycle Count</button>`)}
+    <div class="record-body"><div class="record-panel">
     <div class="record-grid">
       <div class="field"><small>On hand</small><strong>${qty}</strong></div>
       <div class="field"><small>Min / max</small><strong>${p.minimum} / ${p.maximum}</strong></div>
@@ -610,7 +682,8 @@ function renderPartRecord(root) {
     <div class="table-card"><table><thead><tr><th>Site</th><th>Location</th><th>Aisle</th><th>Row</th><th>Bin</th><th>Qty</th></tr></thead>
     <tbody>${p.locations.map(l => `<tr><td>${escapeHTML(l.site)}</td><td>${escapeHTML(l.location)}</td><td>${escapeHTML(l.aisle || '—')}</td><td>${escapeHTML(l.row || '—')}</td><td>${escapeHTML(l.bin || '—')}</td><td><strong>${l.qty}</strong></td></tr>`).join('')}</tbody></table></div>
     <h3 style="margin:18px 0 8px">Receipts</h3>
-    ${(p.receipts || []).length ? p.receipts.map(r => `<div class="log-row"><div><strong>+${r.qty}</strong><p>${escapeHTML(r.supplier || 'Receipt')} · ${escapeHTML(r.receipt || '')}</p></div><small>${prettyDate(r.at)}</small></div>`).join('') : '<p>No receipts yet. Use Receive when stock arrives.</p>'}`;
+    ${(p.receipts || []).length ? p.receipts.map(r => `<div class="log-row"><div><strong>+${r.qty}</strong><p>${escapeHTML(r.supplier || 'Receipt')} · ${escapeHTML(r.receipt || '')}</p></div><small>${prettyDate(r.at)}</small></div>`).join('') : '<p>No receipts yet. Use Receive when stock arrives.</p>'}
+    </div></div></div>`;
 }
 
 function renderAll() {
@@ -630,34 +703,48 @@ function renderAll() {
 }
 
 function viewMeta(name) {
+  const assetTitle = { all: 'All Assets', Facility: 'Facilities', Equipment: 'Equipment', Tool: 'Tools' }[assetKind] || 'All Assets';
   return {
-    dashboard: { title: mode === 'technician' ? 'Shift overview' : 'Dashboard', context: 'Safi Sana · Operations' },
-    'my-work': { title: 'My Work', context: 'Field board' },
-    'work-orders': { title: 'Work Orders', context: 'Active jobs' },
-    record: { title: 'Record', context: 'Details' },
-    messages: { title: 'Messages', context: 'Inbox' },
-    assets: { title: 'Assets', context: 'Facilities · equipment · tools' },
-    maintenance: { title: 'Scheduled', context: 'Preventive plans' },
-    inventory: { title: 'Parts & supplies', context: 'Storeroom' },
-    'stock-take': { title: 'Stock take', context: 'Cycle count' },
-    reports: { title: 'Reports', context: 'Shift brief' }
-  }[name] || { title: 'SafiMaintain', context: 'Field CMMS' };
+    dashboard: { title: 'Dashboard', context: 'Safi Sana Ghana Ltd' },
+    'my-work': { title: 'Assigned Work Orders', context: 'Maintenance' },
+    'work-orders': { title: 'Work Orders', context: 'Maintenance' },
+    record: { title: 'Record', context: 'Administration' },
+    messages: { title: 'Notifications', context: 'Inbox' },
+    assets: { title: assetTitle, context: 'Assets' },
+    maintenance: { title: 'Scheduled Maintenance', context: 'Maintenance' },
+    inventory: { title: 'Parts And Supplies', context: 'Supplies' },
+    'stock-take': { title: 'Inventory Cycle Count', context: 'Supplies' },
+    reports: { title: 'Reports', context: 'Insights' }
+  }[name] || { title: 'SafiMaintain', context: 'SAFI SANA' };
 }
 
-function showView(name) {
+function showView(name, jumpKind) {
   if (name !== 'record') lastListView = name;
+  if (name === 'assets' && jumpKind) {
+    assetKind = jumpKind;
+    document.querySelectorAll('[data-asset-kind]').forEach(x => x.classList.toggle('active', x.dataset.assetKind === assetKind));
+    renderAssets();
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === name));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const sameView = n.dataset.view === name;
+    if (n.dataset.jumpKind) {
+      n.classList.toggle('active', sameView && n.dataset.jumpKind === assetKind);
+    } else {
+      n.classList.toggle('active', sameView);
+    }
+  });
   const meta = viewMeta(name);
   if (name === 'record' && record.type === 'work') {
-    document.querySelector('#pageTitle').textContent = `WO ${record.id}`;
-    document.querySelector('#contextLabel').textContent = 'Work order';
+    document.querySelector('#pageTitle').textContent = `Work Order Administration: WO ${record.id}`;
+    document.querySelector('#contextLabel').textContent = 'Maintenance';
   } else if (name === 'record' && record.type === 'part') {
-    document.querySelector('#pageTitle').textContent = findPart(record.id)?.code || 'Part';
-    document.querySelector('#contextLabel').textContent = 'Parts & supplies';
+    document.querySelector('#pageTitle').textContent = `Part Administration: ${findPart(record.id)?.code || ''}`;
+    document.querySelector('#contextLabel').textContent = 'Supplies';
   } else if (name === 'record' && record.type === 'asset') {
-    document.querySelector('#pageTitle').textContent = findAsset(record.id)?.code || 'Asset';
-    document.querySelector('#contextLabel').textContent = 'Asset register';
+    const asset = findAsset(record.id);
+    document.querySelector('#pageTitle').textContent = `${asset?.kind || 'Asset'} Administration: ${asset?.code || ''}`;
+    document.querySelector('#contextLabel').textContent = 'Assets';
   } else {
     document.querySelector('#pageTitle').textContent = meta.title;
     document.querySelector('#contextLabel').textContent = meta.context;
@@ -709,24 +796,35 @@ function openPart(id) {
 
 function saveWorkRecord() {
   const w = findWork(record.id);
+  if (!w) return false;
   const box = document.querySelector('#woFields');
-  if (!w || !box) return;
-  const get = name => box.querySelector(`[name="${name}"]`)?.value;
-  w.status = get('status');
-  w.assetId = get('assetId');
-  const asset = findAsset(w.assetId);
-  if (asset) { w.asset = asset.name; w.location = asset.location; }
-  w.type = get('type');
-  w.priority = get('priority');
-  w.assignee = get('assignee');
-  w.due = get('due');
-  w.estimatedHours = Number(get('estimatedHours')) || 0;
-  w.loggedHours = Number(get('loggedHours')) || 0;
-  w.summary = get('summary');
-  w.instructions = get('instructions');
+  const complete = document.querySelector('#woComplete');
+  const get = (root, name) => root?.querySelector(`[name="${name}"]`)?.value;
+  if (box) {
+    w.status = get(box, 'status');
+    w.assetId = get(box, 'assetId');
+    const asset = findAsset(w.assetId);
+    if (asset) { w.asset = asset.name; w.location = asset.location; }
+    w.type = get(box, 'type');
+    w.priority = get(box, 'priority');
+    w.assignee = get(box, 'assignee');
+    w.due = get(box, 'due');
+    w.estimatedHours = Number(get(box, 'estimatedHours')) || 0;
+    w.loggedHours = Number(get(box, 'loggedHours')) || 0;
+    w.summary = get(box, 'summary');
+    w.instructions = get(box, 'instructions');
+  }
+  if (complete) {
+    w.completedAt = get(complete, 'completedAt') || w.completedAt || '';
+    w.downtimeHours = Number(get(complete, 'downtimeHours')) || 0;
+    w.cause = get(complete, 'cause') || '';
+    w.completionNotes = get(complete, 'completionNotes') || '';
+  }
+  if (w.status === 'Completed' && !w.completedAt) w.completedAt = daysFromNow(0);
   logActivity(`${w.id} saved by ${currentUserName()}`);
   saveState();
   showToast(`${w.id} saved`);
+  return true;
 }
 
 function setWorkStatus(id, status) {
@@ -735,6 +833,7 @@ function setWorkStatus(id, status) {
   item.status = status;
   if (status === 'Completed') {
     item.tasks = (item.tasks || []).map(t => ({ ...t, done: true }));
+    item.completedAt = item.completedAt || daysFromNow(0);
     const asset = findAsset(item.assetId || item.asset);
     if (asset) asset.lastService = daysFromNow(0);
   }
@@ -776,7 +875,7 @@ function generatePm(id) {
     priority: 'Medium', type: 'Preventive', assignee: pm.owner, due: pm.date, status: 'Open',
     estimatedHours: 2, loggedHours: 0, summary: `${pm.interval} plan.`, instructions: 'Carry out the planned inspection and record condition.',
     createdAt: daysFromNow(0), tasks: [{ id: 't1', text: 'Carry out planned work', done: false }, { id: 't2', text: 'Record condition / meters', done: false }],
-    partsUsed: [], timeLog: [], comments: []
+    partsUsed: [], timeLog: [], comments: [], completedAt: '', completionNotes: '', downtimeHours: 0, cause: ''
   };
   state.workOrders.unshift(wo);
   logActivity(`${wo.id} generated from ${pm.id}`);
@@ -902,16 +1001,37 @@ function handleWorkAction(action, id) {
 }
 
 function setupEvents() {
-  document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => showView(b.dataset.view, b.dataset.jumpKind)));
+  document.querySelectorAll('.nav-group').forEach(b => b.addEventListener('click', () => {
+    const group = b.dataset.navGroup;
+    b.classList.toggle('open');
+    document.querySelector(`[data-sub="${group}"]`)?.classList.toggle('open');
+  }));
+  document.querySelector('#logOffButton')?.addEventListener('click', () => {
+    mode = 'planner';
+    localStorage.setItem('safimaint-mode', mode);
+    applyMode();
+    renderAll();
+    showView('dashboard');
+    showToast('Logged off this device session');
+  });
   document.body.addEventListener('click', e => {
+    if (e.target.closest('.check-cell, input[type="checkbox"]') && !e.target.closest('[data-page]')) return;
+    const pageBtn = e.target.closest('[data-page]');
+    if (pageBtn) {
+      const [which, n] = pageBtn.dataset.page.split(':');
+      if (which === 'work') { workPage = Number(n); renderWorkOrders(); }
+      if (which === 'parts') { partsPage = Number(n); renderInventory(); }
+      return;
+    }
     const viewLink = e.target.closest('[data-view-link]');
     if (viewLink) showView(viewLink.dataset.viewLink);
     const openWo = e.target.closest('[data-open-wo]');
-    if (openWo) openWorkOrder(openWo.dataset.openWo);
+    if (openWo && !e.target.closest('.check-cell, input[type="checkbox"]')) openWorkOrder(openWo.dataset.openWo);
     const openAssetBtn = e.target.closest('[data-open-asset]');
-    if (openAssetBtn) openAsset(openAssetBtn.dataset.openAsset);
+    if (openAssetBtn && !e.target.closest('.check-cell, input[type="checkbox"]')) openAsset(openAssetBtn.dataset.openAsset);
     const openPartBtn = e.target.closest('[data-open-part]');
-    if (openPartBtn) openPart(openPartBtn.dataset.openPart);
+    if (openPartBtn && !e.target.closest('.check-cell, input[type="checkbox"]')) openPart(openPartBtn.dataset.openPart);
     const woAction = e.target.closest('[data-wo-action]');
     if (woAction) handleWorkAction(woAction.dataset.woAction, woAction.dataset.id);
     const generate = e.target.closest('[data-generate-pm]');
@@ -922,6 +1042,9 @@ function setupEvents() {
     if (tab) { record.tab = tab.dataset.tab; renderRecord(); }
     if (e.target.closest('[data-back-list]')) showView(lastListView === 'record' ? 'work-orders' : lastListView);
     if (e.target.closest('[data-save-record]')) saveWorkRecord();
+    if (e.target.closest('[data-save-create]')) {
+      if (saveWorkRecord()) openDialog();
+    }
     const addTask = e.target.closest('[data-add-task]');
     if (addTask) {
       const input = document.querySelector('#newTaskText');
@@ -1007,16 +1130,24 @@ function setupEvents() {
   document.querySelectorAll('[data-open-work-order]').forEach(b => b.addEventListener('click', () => openDialog()));
   document.querySelector('#closeDialog').addEventListener('click', () => document.querySelector('#workOrderDialog').close());
   document.querySelector('#cancelDialog').addEventListener('click', () => document.querySelector('#workOrderDialog').close());
-  document.querySelector('#workSearch').addEventListener('input', renderWorkOrders);
+  document.querySelector('#workSearch').addEventListener('input', () => { workPage = 1; renderWorkOrders(); });
   document.querySelector('#assetSearch').addEventListener('input', renderAssets);
-  document.querySelector('#typeFilter').addEventListener('change', e => { typeFilter = e.target.value; renderWorkOrders(); });
-  document.querySelector('#overdueOnly').addEventListener('change', e => { overdueOnly = e.target.checked; renderWorkOrders(); });
+  document.querySelector('#partSearch')?.addEventListener('input', () => { partsPage = 1; renderInventory(); });
+  document.querySelector('#typeFilter').addEventListener('change', e => { typeFilter = e.target.value; workPage = 1; renderWorkOrders(); });
+  document.querySelector('#overdueOnly').addEventListener('change', e => { overdueOnly = e.target.checked; workPage = 1; renderWorkOrders(); });
+  document.querySelector('#selectAllWork')?.addEventListener('change', e => {
+    document.querySelectorAll('#workOrderRows input[type="checkbox"]').forEach(box => { box.checked = e.target.checked; });
+  });
+  document.querySelector('#exportWorkButton')?.addEventListener('click', exportData);
+  document.querySelector('#exportPartsButton')?.addEventListener('click', exportData);
+  document.querySelector('#printWorkTags')?.addEventListener('click', printTags);
   document.querySelector('#countLocation').addEventListener('change', () => { countDraft = {}; renderStockTake(); });
   document.querySelector('#blindCount').addEventListener('change', renderStockTake);
   document.querySelector('#submitCountButton').addEventListener('click', postCount);
   document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => {
     if (!b.dataset.filter) return;
     activeFilter = b.dataset.filter;
+    workPage = 1;
     document.querySelectorAll('#view-work-orders [data-filter]').forEach(x => x.classList.toggle('active', x === b));
     renderWorkOrders();
   }));
@@ -1042,7 +1173,7 @@ function setupEvents() {
       summary: form.get('title').trim(), instructions: form.get('description').trim(),
       createdAt: daysFromNow(0),
       tasks: [{ id: 't1', text: 'Make the area safe', done: false }, { id: 't2', text: 'Complete the assigned work', done: false }, { id: 't3', text: 'Test and record the outcome', done: false }],
-      partsUsed: [], timeLog: [], comments: []
+      partsUsed: [], timeLog: [],       comments: [], completedAt: '', completionNotes: '', downtimeHours: 0, cause: ''
     };
     state.workOrders.unshift(order);
     notify(`WO ${order.id} assigned`, `${order.title} assigned to ${order.assignee}.`, { type: 'work', recordType: 'work', recordId: order.id, with: order.assignee, from: currentUserName() });
@@ -1157,7 +1288,7 @@ function updateConnection() {
   const online = navigator.onLine;
   document.querySelector('#connectionDot').classList.toggle('offline', !online);
   document.querySelector('#connectionText').textContent = online ? 'Online · saved on device' : 'Offline · queue on device';
-  document.querySelector('#syncHint').textContent = online ? 'Ready to sync when a server is connected' : 'Working from the on-device cache';
+  document.querySelector('#syncHint').textContent = 'Timezone (UTC) Zulu';
 }
 
 function registerWebMCP() {
